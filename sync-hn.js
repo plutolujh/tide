@@ -27,8 +27,33 @@ const MINIMAX_MODEL = 'MiniMax-M2.7';
 const ANON_KEY = SUPABASE_KEY;
 const HN_API = 'https://hn.algolia.com/api/v1';
 
+async function fetchWithRetry(url, options = {}, retries = 3, delayMs = 1000) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const res = await fetch(url, options);
+      if (!res.ok && res.status >= 500 && i < retries - 1) {
+        console.log(`  [retry] ${res.status} from ${url}, attempt ${i + 1}/${retries}`);
+        await new Promise(r => setTimeout(r, delayMs * (i + 1)));
+        continue;
+      }
+      return res;
+    } catch (err) {
+      if (i < retries - 1) {
+        console.log(`  [retry] ${err.message}, attempt ${i + 1}/${retries}`);
+        await new Promise(r => setTimeout(r, delayMs * (i + 1)));
+      } else {
+        throw err;
+      }
+    }
+  }
+}
+
 async function fetchTopStories(count = 5) {
-  const res = await fetch(`${HN_API}/search?tags=front_page&hitsPerPage=${count}`);
+  const res = await fetchWithRetry(
+    `${HN_API}/search?tags=front_page&hitsPerPage=${count}`,
+    { headers: { 'Accept': 'application/json' } },
+    3, 2000
+  );
   const data = await res.json();
   return data.hits.filter(s => s.url).map(s => ({
     id: s.objectID, title: s.title, url: s.url,
@@ -38,9 +63,11 @@ async function fetchTopStories(count = 5) {
 
 async function fetchArticleText(url) {
   try {
-    const res = await fetch(`${JINA_API_URL}${encodeURIComponent(url)}`, {
-      headers: { 'Accept': 'text/plain' }
-    });
+    const res = await fetchWithRetry(
+      `${JINA_API_URL}${encodeURIComponent(url)}`,
+      { headers: { 'Accept': 'text/plain' } },
+      2, 1500
+    );
     if (!res.ok) return null;
     let text = await res.text();
     return text
