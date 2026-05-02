@@ -1,0 +1,303 @@
+/**
+ * Hacker News Top 5 → Supabase blog_posts
+ * Bilingual: English + Chinese titles and AI summaries
+ *
+ * Usage: node sync-hn.js
+ */
+
+// Load env vars from .env file manually
+import { readFileSync } from 'fs';
+const env = {};
+readFileSync('.env', 'utf8').split('\n').forEach(line => {
+  const idx = line.indexOf('=');
+  if (idx > 0) {
+    const key = line.substring(0, idx).trim();
+    const val = line.substring(idx + 1).trim();
+    env[key] = val;
+  }
+});
+const SUPABASE_URL = env.SUPABASE_URL;
+const SUPABASE_KEY = env.SUPABASE_KEY;
+const MINIMAX_API_KEY = env.CLAUDE_API_KEY;
+
+const JINA_API_URL = 'https://r.jina.ai/';
+const MINIMAX_API_URL = 'https://api.minimaxi.com/v1/chat/completions';
+const MINIMAX_MODEL = 'MiniMax-M2.7';
+
+const ANON_KEY = SUPABASE_KEY;
+
+const HN_API = 'https://hn.algolia.com/api/v1';
+
+async function fetchTopStories(count = 5) {
+  const res = await fetch(`${HN_API}/search?tags=front_page&hitsPerPage=${count}`);
+  const data = await res.json();
+  const stories = data.hits.filter(s => s.url);
+  return stories.map(s => ({
+    id: s.objectID,
+    title: s.title,
+    url: s.url,
+    score: s.points || 0,
+    by: s.author || 'unknown',
+    descendants: s.num_comments || 0
+  }));
+}
+
+async function fetchArticleText(url) {
+  try {
+    const res = await fetch(`${JINA_API_URL}${encodeURIComponent(url)}`, {
+      headers: { 'Accept': 'text/plain' }
+    });
+    if (!res.ok) return null;
+
+    let text = await res.text();
+
+    // Strip markdown/image syntax
+    text = text
+      .replace(/!\[([^\]]*)\]\([^)]+\)/g, '')
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      .replace(/^#{1,6}\s*/gm, '')
+      .replace(/^\*\s/gm, '')
+      .replace(/^-\s/gm, '')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+
+    // Truncate to first 3000 chars
+    return text.substring(0, 3000);
+  } catch (err) {
+    console.log(`   [fetch article error]: ${err.message}`);
+    return null;
+  }
+}
+
+async function minimaxChat(prompt, systemPrompt = '') {
+  try {
+    const messages = [];
+    if (systemPrompt) messages.push({ role: 'system', content: systemPrompt });
+    messages.push({ role: 'user', content: prompt });
+
+    const response = await fetch(MINIMAX_API_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${MINIMAX_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: MINIMAX_MODEL,
+        max_tokens: 2000,
+        messages
+      })
+    });
+
+    const rawText = await response.text();
+    let data;
+    try {
+      data = JSON.parse(rawText);
+    } catch (e) {
+      console.error('   JSON parse error:', e.message, rawText.substring(0, 200));
+      return null;
+    }
+
+    let content = data.choices?.[0]?.message?.content || '';
+
+    // Strip thinking tags and everything before them (MiniMax format: <think>...</think> actual content)
+    const thinkIdx = content.indexOf('</think>');
+    if (thinkIdx !== -1) {
+      content = content.substring(thinkIdx + 7);
+    }
+
+    return content.trim();
+  } catch (err) {
+    console.error('   MiniMax error:', err.message);
+    return null;
+  }
+}
+
+async function translateToChinese(text) {
+  const result = await minimaxChat(
+    `Translate to Chinese: ${text}`
+  );
+  if (!result) return text;
+
+  // Extract Chinese character sequences - find the longest one (avoids getting explanation text instead of translation)
+  const chineseMatches = result.match(/[\u4e00-\u9fff]{2,30}/g);
+  if (chineseMatches && chineseMatches.length > 0) {
+    // Sort by length descending, take longest
+    chineseMatches.sort((a, b) => b.length - a.length);
+    return chineseMatches[0].substring(0, 30);
+  }
+  return text;
+}
+
+async function summarizeArticle(articleText) {
+  const result = await minimaxChat(
+    `You are a tech writer. Write a detailed English summary of this article, at least 300 characters. Cover the main points, key details, and conclusions. No markdown formatting, just plain prose:\n\n${articleText.substring(0, 3000)}`
+  );
+  if (!result) return null;
+
+  console.log(`  [Raw summary]: ${result.substring(0, 100)}`);
+
+  // Clean markdown
+  const cleaned = result
+    .replace(/^>\s*/gm, '')
+    .replace(/^#{1,6}\s*/gm, '')
+    .replace(/\*\*(.*?)\*\*/g, '$1')
+    .replace(/\*(.*?)\*/g, '$1')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .replace(/^- {1,3}/gm, '')
+    .replace(/^[\s]*[-*_]{3,}\s*$/gm, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+
+  console.log(`  [Cleaned summary]: ${cleaned.substring(0, 100)}`);
+  return cleaned.length >= 200 ? cleaned.substring(0, 1000) : null;
+}
+
+async function translateSummary(summary) {
+  const result = await minimaxChat(
+    `You are a professional translator. Translate the following English text to Chinese. Output ONLY the Chinese translation, nothing else. Target 300+ Chinese characters.\n\nEnglish text:\n${summary.substring(0, 1500)}`
+  );
+  if (!result) return null;
+
+  // Strip thinking tags
+  let cleaned = result;
+  const thinkIdx = cleaned.indexOf('</think>');
+  if (thinkIdx !== -1) cleaned = cleaned.substring(thinkIdx + 7).trim();
+
+  // Remove leading non-Chinese chars (like > and --- that sometimes precede the translation)
+  cleaned = cleaned.replace(/^[>\-—\s]+/, '');
+  // Also remove lines that don't contain Chinese
+  const chineseLines = cleaned.split('\n').filter(l => /[\u4e00-\u9fff]/.test(l));
+  if (chineseLines.length > 0) {
+    cleaned = chineseLines.join('\n').trim();
+  }
+
+  if (cleaned.length < 50) return null;
+  return cleaned.substring(0, 800);
+}
+
+async function upsertBlogPost(story, titleEn, titleZh, contentEn, contentZh) {
+  // Validate content lengths
+  if (!contentEn || contentEn.length < 200) {
+    console.log(`  [SKIP] content_en too short (${contentEn?.length || 0}), need 300+`);
+    return;
+  }
+  if (!contentZh || contentZh.length < 200) {
+    console.log(`  [SKIP] content_zh too short (${contentZh?.length || 0}), need 300+`);
+    return;
+  }
+
+  // Build existing columns for backwards compat
+  const displayTitle = `${titleEn} → ${titleZh}`;
+  const metaContent = `HN: ${story.url}\nScore: ${story.score} | By: ${story.by} | Comments: ${story.descendants || 0}`;
+
+  // Check if already exists by title_en match
+  const checkRes = await fetch(
+    `${SUPABASE_URL}/rest/v1/blog_posts?title_en=eq.${encodeURIComponent(titleEn)}&select=id`,
+    {
+      headers: {
+        'apikey': ANON_KEY,
+        'Authorization': `Bearer ${ANON_KEY}`,
+        'Prefer': 'representation'
+      }
+    }
+  );
+
+  const checkText = await checkRes.text();
+  let existing = [];
+  try { existing = JSON.parse(checkText); } catch (e) { console.log('   [check parse error]', e.message); }
+
+  const payload = {
+    title: displayTitle,
+    content: metaContent,
+    title_en: titleEn,
+    title_zh: titleZh,
+    content_en: contentEn,
+    content_zh: contentZh,
+    category_id: '9126cc45-ac4c-42de-aca8-175d51351ab2'
+  };
+
+  if (existing.length > 0) {
+    // Update existing
+    const id = existing[0].id;
+    const updateRes = await fetch(`${SUPABASE_URL}/rest/v1/blog_posts?id=eq.${id}`, {
+      method: 'PATCH',
+      headers: {
+        'apikey': ANON_KEY,
+        'Authorization': `Bearer ${ANON_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'representation'
+      },
+      body: JSON.stringify(payload)
+    });
+    const updateText = await updateRes.text();
+    console.log(`  [UPDATED] ${titleEn} → ${titleZh} (en:${contentEn.length} zh:${contentZh.length})`);
+    return;
+  }
+
+  // Insert new
+  const insertRes = await fetch(`${SUPABASE_URL}/rest/v1/blog_posts`, {
+    method: 'POST',
+    headers: {
+      'apikey': ANON_KEY,
+      'Authorization': `Bearer ${ANON_KEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'representation'
+    },
+    body: JSON.stringify(payload)
+  });
+
+  const insertText = await insertRes.text();
+  if (!insertRes.ok) console.log(`   [insert status]: ${insertRes.status} ${insertRes.statusText}`);
+  console.log(`  [ADDED] ${titleEn} → ${titleZh} (en:${contentEn.length} zh:${contentZh.length})`);
+  return;
+}
+
+async function main() {
+  console.log('Fetching Hacker News Top 5...');
+
+  try {
+    const stories = await fetchTopStories(5);
+    console.log(`Got ${stories.length} stories`);
+
+    for (const story of stories) {
+      console.log(`\nProcessing: ${story.title}`);
+      const titleEn = story.title;
+
+      // Translate title to Chinese
+      const titleZh = await translateToChinese(titleEn);
+      console.log(`  Title: ${titleEn} → ${titleZh}`);
+
+      // Fetch and summarize article
+      const articleText = await fetchArticleText(story.url);
+      let contentEn = '';
+      let contentZh = '';
+
+      if (articleText) {
+        console.log(`  Article text fetched (${articleText.length} chars), summarizing...`);
+        contentEn = await summarizeArticle(articleText);
+        if (contentEn) {
+          console.log(`  English summary: ${contentEn.substring(0, 80)}...`);
+          contentZh = await translateSummary(contentEn);
+          console.log(`  Chinese summary: ${contentZh ? contentZh.substring(0, 80) : 'FAILED'}...`);
+        }
+      } else {
+        console.log(`  Could not fetch article, using HN text`);
+        contentEn = `This Hacker News story is titled "${titleEn}", submitted by user "${story.by}". It received ${story.score} points and has ${story.descendants || 0} comments. The original article URL was: ${story.url}. This is a trending tech story that attracted significant attention from the developer community on Hacker News.`;
+        if (contentEn.length < 200) {
+          contentEn = contentEn.padEnd(300, ' ').substring(0, 300);
+        }
+        contentZh = await translateSummary(contentEn) || contentEn;
+      }
+
+      await upsertBlogPost(story, titleEn, titleZh, contentEn, contentZh);
+      await new Promise(r => setTimeout(r, 500));
+    }
+
+    console.log('\nDone!');
+  } catch (err) {
+    console.error('Error:', err.message);
+    process.exit(1);
+  }
+}
+
+main();
