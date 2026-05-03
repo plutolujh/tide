@@ -2,22 +2,35 @@
 // MiniMax Provider 实现，封装现有 minimaxChat 逻辑
 
 import { readFileSync } from 'fs';
-const env = {};
-readFileSync('.env', 'utf8').split('\n').forEach(line => {
-  const idx = line.indexOf('=');
-  if (idx > 0) {
-    const key = line.substring(0, idx).trim();
-    const val = line.substring(idx + 1).trim();
-    env[key] = val;
-  }
-});
-
-const API_KEY = env.MINIMAX_API_KEY;
 const API_URL = 'https://api.minimaxi.com/anthropic/v1/messages';
 const MODEL = 'MiniMax-M2.7';
 
+function loadEnv() {
+  const env = {};
+  try {
+    readFileSync('.env', 'utf8').split('\n').forEach(line => {
+      const idx = line.indexOf('=');
+      if (idx > 0) {
+        const key = line.slice(0, idx).trim();
+        const val = line.slice(idx + 1).trim();
+        env[key] = val;
+      }
+    });
+  } catch {
+    // .env not found, continue with empty env
+  }
+  return env;
+}
+
 export class MinimaxProvider {
   async complete(prompt, systemPrompt = '') {
+    const env = loadEnv();
+    const API_KEY = env.MINIMAX_API_KEY;
+
+    if (!API_KEY) {
+      throw new Error('MINIMAX_API_KEY is not set in .env');
+    }
+
     try {
       const response = await fetch(API_URL, {
         method: 'POST',
@@ -33,6 +46,11 @@ export class MinimaxProvider {
           messages: [{ role: 'user', content: prompt }]
         })
       });
+
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}`);
+      }
+
       const data = JSON.parse(await response.text());
 
       let textOutput = '';
@@ -51,9 +69,9 @@ export class MinimaxProvider {
         }
       }
 
-      return textOutput.trim().substring(0, 1000);
+      return textOutput.trim().slice(0, 1000);
     } catch (err) {
-      console.error('   [MiniMax error]:', err.message);
+      console.error('   [MiniMax error]:', err);
       return null;
     }
   }
