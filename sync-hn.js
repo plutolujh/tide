@@ -148,19 +148,6 @@ async function upsertBlogPost(story, {
     content_winner: contentWinner
   };
 
-  // Check duplicate by title_en OR original_url
-  const checkRes = await fetch(
-    `${SUPABASE_URL}/rest/v1/blog_posts?or=(title_en.eq.${encodeURIComponent(titleEn)},original_url.eq.${encodeURIComponent(story.url)})&select=id`,
-    { headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}`, 'Prefer': 'representation' } }
-  );
-  let existing = [];
-  try { existing = JSON.parse(await checkRes.text()); } catch (e) {}
-
-  if (existing.length > 0) {
-    console.log(`  [SKIP] Duplicate found: "${titleEn}" or URL ${story.url}`);
-    return;
-  }
-
   const insertRes = await fetch(`${SUPABASE_URL}/rest/v1/blog_posts`, {
     method: 'POST',
     headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'representation' },
@@ -183,11 +170,17 @@ async function main() {
   // Initialize providers
   console.log(`[PROVIDERS] summarizer=${SUMMARIZER_PROVIDER}, translator=${TRANSLATOR_PROVIDER}, judge=${JUDGE_PROVIDER}`);
 
-  const summarizer = await createProvider(SUMMARIZER_PROVIDER);
-  const translator = TRANSLATOR_PROVIDER === 'both' ? null : await createProvider(TRANSLATOR_PROVIDER);
-  const minimaxTranslator = await createProvider('minimax');
-  const doubaoTranslator = await createProvider('doubao');
-  const judge = await createProvider(JUDGE_PROVIDER);
+  let summarizer, translator, minimaxTranslator, doubaoTranslator, judge;
+  try {
+    summarizer = await createProvider(SUMMARIZER_PROVIDER);
+    translator = TRANSLATOR_PROVIDER === 'both' ? null : await createProvider(TRANSLATOR_PROVIDER);
+    minimaxTranslator = await createProvider('minimax');
+    doubaoTranslator = await createProvider('doubao');
+    judge = await createProvider(JUDGE_PROVIDER);
+  } catch (err) {
+    console.error(`[PROVIDER ERROR] Failed to initialize providers: ${err.message}`);
+    process.exit(1);
+  }
 
   async function run() {
     console.log(`\n[${new Date().toISOString()}] Fetching HN Top ${count}...`);
@@ -209,7 +202,9 @@ async function main() {
           isDup = true;
           console.log(`  [SKIP] Already exists: "${story.title}"`);
         }
-      } catch (e) {}
+      } catch (e) {
+        console.log(`  [ERROR] Failed to parse duplicate check response: ${e.message}`);
+      }
 
       if (isDup) continue;
 
@@ -223,10 +218,16 @@ async function main() {
       console.log(`  Article fetched (${articleText.length} chars), summarizing...`);
 
       // Step 1: Summarize article
-      const contentEn = await summarizer.complete(
-        `Write a detailed English summary, at least 300 characters, plain prose:\n\n${articleText.substring(0, 3000)}`,
-        'You are a tech writer. Write clear, detailed summaries.'
-      );
+      let contentEn;
+      try {
+        contentEn = await summarizer.complete(
+          `Write a detailed English summary, at least 300 characters, plain prose:\n\n${articleText.substring(0, 3000)}`,
+          'You are a tech writer. Write clear, detailed summaries.'
+        );
+      } catch (err) {
+        console.log(`  [ERROR] Summarization failed: ${err.message}`);
+        continue;
+      }
 
       if (!contentEn) {
         console.log(`  Summarization failed, skipping`);
@@ -254,29 +255,35 @@ async function main() {
       if (TRANSLATOR_PROVIDER === 'both') {
         console.log(`  Translating title and content with both providers in parallel...`);
 
-        // Parallel translation of content
-        const [zhMinimax, zhDoubao] = await Promise.all([
-          minimaxTranslator.complete(
-            `Translate to Chinese. Only output Chinese, nothing else:\n${cleanedContentEn.substring(0, 1500)}`,
-            'You are a professional translator.'
-          ),
-          doubaoTranslator.complete(
-            `Translate to Chinese. Only output Chinese, nothing else:\n${cleanedContentEn.substring(0, 1500)}`,
-            'You are a professional translator.'
-          )
-        ]);
+        let zhMinimax, zhDoubao, titleZhMinimaxResult, titleZhDoubaoResult;
+        try {
+          // Parallel translation of content
+          [zhMinimax, zhDoubao] = await Promise.all([
+            minimaxTranslator.complete(
+              `Translate to Chinese. Only output Chinese, nothing else:\n${cleanedContentEn.substring(0, 1500)}`,
+              'You are a professional translator.'
+            ),
+            doubaoTranslator.complete(
+              `Translate to Chinese. Only output Chinese, nothing else:\n${cleanedContentEn.substring(0, 1500)}`,
+              'You are a professional translator.'
+            )
+          ]);
 
-        // Parallel translation of title
-        const [titleZhMinimaxResult, titleZhDoubaoResult] = await Promise.all([
-          minimaxTranslator.complete(
-            `Translate to Chinese: ${story.title}`,
-            'You are a professional translator. Output only the Chinese translation.'
-          ),
-          doubaoTranslator.complete(
-            `Translate to Chinese: ${story.title}`,
-            'You are a professional translator. Output only the Chinese translation.'
-          )
-        ]);
+          // Parallel translation of title
+          [titleZhMinimaxResult, titleZhDoubaoResult] = await Promise.all([
+            minimaxTranslator.complete(
+              `Translate to Chinese: ${story.title}`,
+              'You are a professional translator. Output only the Chinese translation.'
+            ),
+            doubaoTranslator.complete(
+              `Translate to Chinese: ${story.title}`,
+              'You are a professional translator. Output only the Chinese translation.'
+            )
+          ]);
+        } catch (err) {
+          console.log(`  [ERROR] Translation failed: ${err.message}`);
+          continue;
+        }
 
         titleZhMinimax = titleZhMinimaxResult;
         titleZhDoubao = titleZhDoubaoResult;
@@ -304,10 +311,22 @@ Doubao翻译: ${contentZhDoubao ? contentZhDoubao.substring(0, 300) : 'N/A'}
 TITLE_SCORE: X | TITLE_WINNER: minimax/doubao
 CONTENT_SCORE: X | CONTENT_WINNER: minimax/doubao`;
 
-        const judgeResult = await judge.complete(judgePrompt, 'You are a professional translation evaluator.');
+        let judgeResult;
+        try {
+          judgeResult = await judge.complete(judgePrompt, 'You are a professional translation evaluator.');
+        } catch (err) {
+          console.log(`  [ERROR] Judge failed: ${err.message}`);
+          continue;
+        }
         console.log(`  Judge result: ${judgeResult}`);
 
         const { titleScore, titleWinner, contentScore, contentWinner } = parseJudgeResult(judgeResult || '');
+
+        // Validate judge results
+        if (!titleWinner || !contentWinner) {
+          console.log(`  [ERROR] Invalid judge results: titleWinner=${titleWinner}, contentWinner=${contentWinner}`);
+          continue;
+        }
 
         // Step 4: Select winners
         titleZh = titleWinner === 'minimax' ? titleZhMinimax : titleZhDoubao;
@@ -335,36 +354,47 @@ CONTENT_SCORE: X | CONTENT_WINNER: minimax/doubao`;
         // Single translator mode
         console.log(`  Translating with ${TRANSLATOR_PROVIDER}...`);
 
-        titleZh = await translator.complete(
-          `Translate to Chinese: ${story.title}`,
-          'You are a professional translator. Output only the Chinese translation.'
-        );
+        let titleZh, contentZh;
+        try {
+          titleZh = await translator.complete(
+            `Translate to Chinese: ${story.title}`,
+            'You are a professional translator. Output only the Chinese translation.'
+          );
+        } catch (err) {
+          console.log(`  [ERROR] Title translation failed: ${err.message}`);
+          continue;
+        }
 
-        contentZh = await translator.complete(
-          `Translate to Chinese. Only output Chinese, nothing else:\n${cleanedContentEn.substring(0, 1500)}`,
-          'You are a professional translator.'
-        );
+        try {
+          contentZh = await translator.complete(
+            `Translate to Chinese. Only output Chinese, nothing else:\n${cleanedContentEn.substring(0, 1500)}`,
+            'You are a professional translator.'
+          );
+        } catch (err) {
+          console.log(`  [ERROR] Content translation failed: ${err.message}`);
+          continue;
+        }
 
         console.log(`  Title: ${story.title} → ${titleZh}`);
         console.log(`  ZH: ${contentZh?.substring(0, 60) || 'FAILED'}...`);
 
-        // In single translator mode, store only one translation
-        const titleZhMinimax = TRANSLATOR_PROVIDER === 'minimax' ? titleZh : null;
-        const titleZhDoubao = TRANSLATOR_PROVIDER === 'doubao' ? titleZh : null;
-        const contentZhMinimax = TRANSLATOR_PROVIDER === 'minimax' ? contentZh : null;
-        const contentZhDoubao = TRANSLATOR_PROVIDER === 'doubao' ? contentZh : null;
+        // Map translation to provider fields based on actual provider used
+        const titleZhFromMinimax = TRANSLATOR_PROVIDER === 'minimax' ? titleZh : null;
+        const titleZhFromDoubao = TRANSLATOR_PROVIDER === 'doubao' ? titleZh : null;
+        const contentZhFromMinimax = TRANSLATOR_PROVIDER === 'minimax' ? contentZh : null;
+        const contentZhFromDoubao = TRANSLATOR_PROVIDER === 'doubao' ? contentZh : null;
 
         await upsertBlogPost(story, {
           titleEn: story.title,
           titleZh,
           contentEn: cleanedContentEn,
           contentZh,
-          titleZhMinimax,
-          titleZhDoubao,
+          titleZhMinimax: titleZhFromMinimax,
+          titleZhDoubao: titleZhFromDoubao,
           titleTranslationScore: null,
           titleWinner: null,
-          contentZhMinimax,
-          contentZhDoubao,
+          contentZhMinimax: contentZhFromMinimax,
+          contentZhDoubao: contentZhFromDoubao,
           contentTranslationScore: null,
           contentWinner: null
         });
