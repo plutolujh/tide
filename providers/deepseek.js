@@ -7,7 +7,6 @@ let cachedEnv = null;
 
 function getEnv() {
   if (cachedEnv) return cachedEnv;
-  const env = {};
   try {
     cachedEnv = {};
     readFileSync('.env', 'utf8').split('\n').forEach(line => {
@@ -63,7 +62,13 @@ export class DeepSeekProvider {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      const data = JSON.parse(await response.text());
+      let data;
+      try {
+        data = JSON.parse(await response.text());
+      } catch (parseErr) {
+        console.error('   [DeepSeek JSON parse error]:', parseErr);
+        return null;
+      }
       const textOutput = data.choices?.[0]?.message?.content || '';
 
       return textOutput.trim().slice(0, 2000);
