@@ -3,7 +3,14 @@
  * Bilingual: English + Chinese titles and AI summaries
  *
  * Usage: node sync-hn.js
+ *
+ * Providers:
+ * - SUMMARIZER_PROVIDER: minimax/doubao for summarizing articles
+ * - TRANSLATOR_PROVIDER: minimax/doubao/both for translation
+ * - JUDGE_PROVIDER: deepseek to score translations and determine winners
  */
+
+import { createProvider } from './providers/index.js';
 
 // Load env vars from .env file manually
 import { readFileSync } from 'fs';
@@ -18,11 +25,13 @@ readFileSync('.env', 'utf8').split('\n').forEach(line => {
 });
 const SUPABASE_URL = env.SUPABASE_URL;
 const SUPABASE_KEY = env.SUPABASE_KEY;
-const MINIMAX_API_KEY = env.CLAUDE_API_KEY;
+
+// Provider configuration
+const SUMMARIZER_PROVIDER = env.SUMMARIZER_PROVIDER || 'minimax';
+const TRANSLATOR_PROVIDER = env.TRANSLATOR_PROVIDER || 'minimax';
+const JUDGE_PROVIDER = env.JUDGE_PROVIDER || 'deepseek';
 
 const JINA_API_URL = 'https://r.jina.ai/';
-const MINIMAX_API_URL = 'https://api.minimaxi.com/anthropic/v1/messages';
-const MINIMAX_MODEL = 'MiniMax-M2.7';
 
 const ANON_KEY = SUPABASE_KEY;
 const HN_API = 'https://hn.algolia.com/api/v1';
@@ -84,88 +93,32 @@ async function fetchArticleText(url) {
   }
 }
 
-async function minimaxChat(prompt, systemPrompt = '') {
-  try {
-    const response = await fetch(MINIMAX_API_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${MINIMAX_API_KEY}`,
-        'Content-Type': 'application/json',
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: MINIMAX_MODEL,
-        max_tokens: 2000,
-        system: systemPrompt || 'You are a tech writer. Keep responses clear and direct.',
-        messages: [{ role: 'user', content: prompt }]
-      })
-    });
-    const data = JSON.parse(await response.text());
+function parseJudgeResult(result) {
+  const titleMatch = result.match(/TITLE_SCORE:\s*(\d+)\s*\|\s*TITLE_WINNER:\s*(minimax|doubao)/i);
+  const contentMatch = result.match(/CONTENT_SCORE:\s*(\d+)\s*\|\s*CONTENT_WINNER:\s*(minimax|doubao)/i);
 
-    // Collect text blocks (final output, not thinking)
-    let textOutput = '';
-    for (const block of data.content || []) {
-      if (block.type === 'text') textOutput += block.text;
-    }
-
-    // If no text blocks, extract from thinking (for simple Q&A)
-    if (!textOutput) {
-      for (const block of data.content || []) {
-        if (block.type === 'thinking') {
-          // Find patterns like "Thus output: X" or "So answer: X"
-          const m = block.thinking.match(/(?:Thus output:|So answer:|Output:)\s*"([^"]+)"/);
-          if (m) return m[1];
-          // For Chinese: find Chinese chars
-          const cn = block.thinking.match(/[\u4e00-\u9fff]{2,30}/g);
-          if (cn) return cn[cn.length - 1];
-        }
-      }
-    }
-
-    return textOutput.trim().substring(0, 1000);
-  } catch (err) {
-    console.error('   [MiniMax error]:', err.message);
-    return null;
-  }
+  return {
+    titleScore: titleMatch ? parseInt(titleMatch[1]) : null,
+    titleWinner: titleMatch ? titleMatch[2].toLowerCase() : null,
+    contentScore: contentMatch ? parseInt(contentMatch[1]) : null,
+    contentWinner: contentMatch ? contentMatch[2].toLowerCase() : null
+  };
 }
 
-async function translateToChinese(text) {
-  const result = await minimaxChat(
-    `Translate to Chinese: ${text}`,
-    'You are a professional translator. Output only the Chinese translation.'
-  );
-  if (!result) return text;
-  const m = result.match(/[\u4e00-\u9fff]{2,30}/);
-  return m ? m[0].substring(0, 30) : text;
-}
-
-async function summarizeArticle(articleText) {
-  const result = await minimaxChat(
-    `Write a detailed English summary, at least 300 characters, plain prose:\n\n${articleText.substring(0, 3000)}`,
-    'You are a tech writer. Write clear, detailed summaries.'
-  );
-  if (!result) return null;
-  const cleaned = result
-    .replace(/^>\s*/gm, '').replace(/^#{1,6}\s*/gm, '')
-    .replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1')
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-    .replace(/^- {1,3}/gm, '').replace(/^[\s]*[-*_]{3,}\s*$/gm, '')
-    .replace(/\n{3,}/g, '\n\n').trim();
-  return cleaned.length >= 200 ? cleaned.substring(0, 1000) : null;
-}
-
-async function translateSummary(summary) {
-  const result = await minimaxChat(
-    `Translate to Chinese. Only output Chinese, nothing else:\n${summary.substring(0, 1500)}`,
-    'You are a professional translator.'
-  );
-  if (!result) return null;
-  // Clean up any leading punctuation
-  const cleaned = result.replace(/^[>\-—\s]+/, '').trim();
-  return cleaned.length >= 50 ? cleaned.substring(0, 800) : null;
-}
-
-async function upsertBlogPost(story, titleEn, titleZh, contentEn, contentZh) {
+async function upsertBlogPost(story, {
+  titleEn,
+  titleZh,
+  contentEn,
+  contentZh,
+  titleZhMinimax,
+  titleZhDoubao,
+  titleTranslationScore,
+  titleWinner,
+  contentZhMinimax,
+  contentZhDoubao,
+  contentTranslationScore,
+  contentWinner
+}) {
   if (!contentEn || contentEn.length < 200) {
     console.log(`  [SKIP] content_en too short (${contentEn?.length || 0}), need 300+`);
     return;
@@ -178,10 +131,21 @@ async function upsertBlogPost(story, titleEn, titleZh, contentEn, contentZh) {
   const payload = {
     title: `${titleEn} → ${titleZh}`,
     content: `HN: ${story.url}\nScore: ${story.score} | By: ${story.by} | Comments: ${story.descendants || 0}`,
-    title_en: titleEn, title_zh: titleZh,
-    content_en: contentEn, content_zh: contentZh,
+    title_en: titleEn,
+    title_zh: titleZh,
+    content_en: contentEn,
+    content_zh: contentZh,
     original_url: story.url,
-    category_id: '9126cc45-ac4c-42de-aca8-175d51351ab2'
+    category_id: '9126cc45-ac4c-42de-aca8-175d51351ab2',
+    // Translation provider comparison fields
+    title_zh_minimax: titleZhMinimax,
+    title_zh_doubao: titleZhDoubao,
+    title_translation_score: titleTranslationScore,
+    title_winner: titleWinner,
+    content_zh_minimax: contentZhMinimax,
+    content_zh_doubao: contentZhDoubao,
+    content_translation_score: contentTranslationScore,
+    content_winner: contentWinner
   };
 
   // Check duplicate by title_en OR original_url
@@ -203,6 +167,10 @@ async function upsertBlogPost(story, titleEn, titleZh, contentEn, contentZh) {
     body: JSON.stringify(payload)
   });
   console.log(`  [ADDED] ${titleEn} → ${titleZh} (en:${contentEn.length} zh:${contentZh.length})`);
+  if (titleTranslationScore !== null) {
+    console.log(`    Title winner: ${titleWinner} (score: ${titleTranslationScore})`);
+    console.log(`    Content winner: ${contentWinner} (score: ${contentTranslationScore})`);
+  }
 }
 
 async function main() {
@@ -211,6 +179,15 @@ async function main() {
   const count = countArg ? parseInt(countArg, 10) : 5;
   const loopHours = parseFloat(args.find(a => a.startsWith('--loop='))?.split('=')[1] || '0');
   const intervalMs = loopHours > 0 ? loopHours * 60 * 60 * 1000 : 0;
+
+  // Initialize providers
+  console.log(`[PROVIDERS] summarizer=${SUMMARIZER_PROVIDER}, translator=${TRANSLATOR_PROVIDER}, judge=${JUDGE_PROVIDER}`);
+
+  const summarizer = await createProvider(SUMMARIZER_PROVIDER);
+  const translator = TRANSLATOR_PROVIDER === 'both' ? null : await createProvider(TRANSLATOR_PROVIDER);
+  const minimaxTranslator = await createProvider('minimax');
+  const doubaoTranslator = await createProvider('doubao');
+  const judge = await createProvider(JUDGE_PROVIDER);
 
   async function run() {
     console.log(`\n[${new Date().toISOString()}] Fetching HN Top ${count}...`);
@@ -236,28 +213,162 @@ async function main() {
 
       if (isDup) continue;
 
-      const [articleText, titleZh] = await Promise.all([
-        fetchArticleText(story.url),
-        translateToChinese(story.title)
-      ]);
-      console.log(`  Title: ${story.title} → ${titleZh}`);
-
-      let contentEn = '', contentZh = '';
-      if (articleText) {
-        console.log(`  Article fetched (${articleText.length} chars), summarizing...`);
-        contentEn = await summarizeArticle(articleText);
-        if (contentEn) {
-          console.log(`  EN: ${contentEn.substring(0, 60)}...`);
-          contentZh = await translateSummary(contentEn);
-          console.log(`  ZH: ${contentZh ? contentZh.substring(0, 60) : 'FAILED'}...`);
-        }
-      } else {
+      const articleText = await fetchArticleText(story.url);
+      if (!articleText) {
         console.log(`  No article text, skipping`);
         await new Promise(r => setTimeout(r, 200));
         continue;
       }
 
-      await upsertBlogPost(story, story.title, titleZh, contentEn, contentZh);
+      console.log(`  Article fetched (${articleText.length} chars), summarizing...`);
+
+      // Step 1: Summarize article
+      const contentEn = await summarizer.complete(
+        `Write a detailed English summary, at least 300 characters, plain prose:\n\n${articleText.substring(0, 3000)}`,
+        'You are a tech writer. Write clear, detailed summaries.'
+      );
+
+      if (!contentEn) {
+        console.log(`  Summarization failed, skipping`);
+        continue;
+      }
+
+      const cleanedContentEn = contentEn
+        .replace(/^>\s*/gm, '').replace(/^#{1,6}\s*/gm, '')
+        .replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1')
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+        .replace(/^- {1,3}/gm, '').replace(/^[\s]*[-*_]{3,}\s*$/gm, '')
+        .replace(/\n{3,}/g, '\n\n').trim();
+
+      if (cleanedContentEn.length < 200) {
+        console.log(`  [SKIP] Summary too short (${cleanedContentEn.length}), need 300+`);
+        continue;
+      }
+
+      console.log(`  EN: ${cleanedContentEn.substring(0, 60)}...`);
+
+      // Step 2: Translate summary to Chinese
+      let titleZhMinimax, titleZhDoubao, contentZhMinimax, contentZhDoubao;
+      let titleZh, contentZh;
+
+      if (TRANSLATOR_PROVIDER === 'both') {
+        console.log(`  Translating title and content with both providers in parallel...`);
+
+        // Parallel translation of content
+        const [zhMinimax, zhDoubao] = await Promise.all([
+          minimaxTranslator.complete(
+            `Translate to Chinese. Only output Chinese, nothing else:\n${cleanedContentEn.substring(0, 1500)}`,
+            'You are a professional translator.'
+          ),
+          doubaoTranslator.complete(
+            `Translate to Chinese. Only output Chinese, nothing else:\n${cleanedContentEn.substring(0, 1500)}`,
+            'You are a professional translator.'
+          )
+        ]);
+
+        // Parallel translation of title
+        const [titleZhMinimaxResult, titleZhDoubaoResult] = await Promise.all([
+          minimaxTranslator.complete(
+            `Translate to Chinese: ${story.title}`,
+            'You are a professional translator. Output only the Chinese translation.'
+          ),
+          doubaoTranslator.complete(
+            `Translate to Chinese: ${story.title}`,
+            'You are a professional translator. Output only the Chinese translation.'
+          )
+        ]);
+
+        titleZhMinimax = titleZhMinimaxResult;
+        titleZhDoubao = titleZhDoubaoResult;
+        contentZhMinimax = zhMinimax;
+        contentZhDoubao = zhDoubao;
+
+        console.log(`  Title MiniMax: ${titleZhMinimax?.substring(0, 30) || 'FAILED'}...`);
+        console.log(`  Title Doubao: ${titleZhDoubao?.substring(0, 30) || 'FAILED'}...`);
+        console.log(`  Content MiniMax: ${contentZhMinimax?.substring(0, 30) || 'FAILED'}...`);
+        console.log(`  Content Doubao: ${contentZhDoubao?.substring(0, 30) || 'FAILED'}...`);
+
+        // Step 3: Judge translation quality with DeepSeek
+        console.log(`  Judging translations with DeepSeek...`);
+
+        const judgePrompt = `标题英文原文: ${story.title}
+MiniMax翻译: ${titleZhMinimax || 'N/A'}
+Doubao翻译: ${titleZhDoubao || 'N/A'}
+
+内容英文摘要: ${cleanedContentEn.substring(0, 500)}
+MiniMax翻译: ${contentZhMinimax ? contentZhMinimax.substring(0, 300) : 'N/A'}
+Doubao翻译: ${contentZhDoubao ? contentZhDoubao.substring(0, 300) : 'N/A'}
+
+请分别对标题和内容的翻译质量打分(0-100)，并指明每个维度的胜者。
+输出格式:
+TITLE_SCORE: X | TITLE_WINNER: minimax/doubao
+CONTENT_SCORE: X | CONTENT_WINNER: minimax/doubao`;
+
+        const judgeResult = await judge.complete(judgePrompt, 'You are a professional translation evaluator.');
+        console.log(`  Judge result: ${judgeResult}`);
+
+        const { titleScore, titleWinner, contentScore, contentWinner } = parseJudgeResult(judgeResult || '');
+
+        // Step 4: Select winners
+        titleZh = titleWinner === 'minimax' ? titleZhMinimax : titleZhDoubao;
+        contentZh = contentWinner === 'minimax' ? contentZhMinimax : contentZhDoubao;
+
+        console.log(`  Title: ${story.title} → ${titleZh} (winner: ${titleWinner})`);
+        console.log(`  Content ZH: ${contentZh?.substring(0, 60) || 'FAILED'}...`);
+
+        await upsertBlogPost(story, {
+          titleEn: story.title,
+          titleZh,
+          contentEn: cleanedContentEn,
+          contentZh,
+          titleZhMinimax,
+          titleZhDoubao,
+          titleTranslationScore: titleScore,
+          titleWinner,
+          contentZhMinimax,
+          contentZhDoubao,
+          contentTranslationScore: contentScore,
+          contentWinner
+        });
+
+      } else {
+        // Single translator mode
+        console.log(`  Translating with ${TRANSLATOR_PROVIDER}...`);
+
+        titleZh = await translator.complete(
+          `Translate to Chinese: ${story.title}`,
+          'You are a professional translator. Output only the Chinese translation.'
+        );
+
+        contentZh = await translator.complete(
+          `Translate to Chinese. Only output Chinese, nothing else:\n${cleanedContentEn.substring(0, 1500)}`,
+          'You are a professional translator.'
+        );
+
+        console.log(`  Title: ${story.title} → ${titleZh}`);
+        console.log(`  ZH: ${contentZh?.substring(0, 60) || 'FAILED'}...`);
+
+        // In single translator mode, store only one translation
+        const titleZhMinimax = TRANSLATOR_PROVIDER === 'minimax' ? titleZh : null;
+        const titleZhDoubao = TRANSLATOR_PROVIDER === 'doubao' ? titleZh : null;
+        const contentZhMinimax = TRANSLATOR_PROVIDER === 'minimax' ? contentZh : null;
+        const contentZhDoubao = TRANSLATOR_PROVIDER === 'doubao' ? contentZh : null;
+
+        await upsertBlogPost(story, {
+          titleEn: story.title,
+          titleZh,
+          contentEn: cleanedContentEn,
+          contentZh,
+          titleZhMinimax,
+          titleZhDoubao,
+          titleTranslationScore: null,
+          titleWinner: null,
+          contentZhMinimax,
+          contentZhDoubao,
+          contentTranslationScore: null,
+          contentWinner: null
+        });
+      }
     }
 
     console.log(`\n[${new Date().toISOString()}] Done!`);
