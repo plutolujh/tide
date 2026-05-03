@@ -1,13 +1,16 @@
 // providers/doubao.js
-// Doubao Provider 实现
+// Doubao Provider implementation with retry and extended timeout
 
 import { readFileSync } from 'fs';
 
 const API_URL = 'https://ark.cn-beijing.volces.com/api/v3/responses';
 const MODEL = 'doubao-seed-2-0-pro-260215';
+const TIMEOUT_MS = 60000;
+const MAX_RETRIES = 2;
 
 // Cache env at module level
 let cachedEnv = null;
+
 function getEnv() {
   if (cachedEnv === null) {
     cachedEnv = {};
@@ -28,7 +31,7 @@ function getEnv() {
 }
 
 export class DoubaoProvider {
-  async complete(prompt, systemPrompt = '', maxRetries = 2) {
+  async complete(prompt, systemPrompt = '') {
     const API_KEY = getEnv().DOUBAO_API_KEY;
 
     if (!API_KEY) {
@@ -36,7 +39,8 @@ export class DoubaoProvider {
     }
 
     let lastError = null;
-    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       try {
         const inputContent = systemPrompt
           ? [{ type: 'input_text', text: systemPrompt + '\n\n' + prompt }]
@@ -48,7 +52,7 @@ export class DoubaoProvider {
             'Authorization': `Bearer ${API_KEY}`,
             'Content-Type': 'application/json'
           },
-          signal: AbortSignal.timeout(60000),  // 60s timeout
+          signal: AbortSignal.timeout(TIMEOUT_MS),
           body: JSON.stringify({
             model: MODEL,
             input: [
@@ -66,20 +70,24 @@ export class DoubaoProvider {
 
         const data = JSON.parse(await response.text());
 
-        // 提取返回的 text
         let textOutput = '';
-        for (const block of data.output?.[0]?.content || []) {
-          if (block.type === 'output_text') {
-            textOutput += block.text;
+        for (const block of data.output || []) {
+          if (block.type === 'message') {
+            for (const content of block.content || []) {
+              if (content.type === 'output_text') {
+                textOutput += content.text;
+              }
+            }
           }
         }
 
         return textOutput.trim().slice(0, 1000);
       } catch (err) {
         lastError = err;
-        if (attempt < maxRetries) {
-          console.error(`   [Doubao attempt ${attempt + 1} failed, retrying...]:`, err.message);
-          await new Promise(r => setTimeout(r, 1000 * (attempt + 1));  // 1s, 2s delay
+        if (attempt < MAX_RETRIES) {
+          const delay = (attempt + 1) * 1000;
+          console.error(`   [Doubao attempt ${attempt + 1} failed, retrying in ${delay}ms...]:`, err.message);
+          await new Promise(r => setTimeout(r, delay));
         }
       }
     }
