@@ -55,7 +55,7 @@ export class DeepSeekProvider {
           reasoning_effort: 'high',
           stream: false
         }),
-        signal: AbortSignal.timeout(30000)
+        signal: AbortSignal.timeout(120000)
       });
 
       if (!response.ok) {
