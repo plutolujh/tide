@@ -1,0 +1,15 @@
+{
+  "name": "refine-blog-frontend",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "HN Top Stories → Supabase bilingual blog",
+  "main": "sync-hn.js",
+  "scripts": {
+    "start": "python3 -m http.server 8888",
+    "sync": "node sync-hn.js",
+    "sync-all": "node sync-all.js",
+    "sync-tc": "node sync-all.js 5 --source=tc",
+    "sync-verge": "node sync-all.js 5 --source=verge",
+    "sync-ars": "node sync-all.js 5 --source=ars"
+  }
+}

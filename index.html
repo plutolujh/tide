@@ -129,9 +129,18 @@
       margin-bottom: 56px;
       padding-bottom: 32px;
       border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+      gap: 12px;
     }
 
-    .lang-toggle {
+    .toggles-row {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .lang-toggle, .source-toggle {
       display: flex;
       gap: 0;
       border: 1px solid var(--border);
@@ -139,7 +148,7 @@
       overflow: hidden;
     }
 
-    .lang-toggle button {
+    .lang-toggle button, .source-toggle button {
       font-family: var(--font-mono);
       font-size: 10px;
       padding: 6px 12px;
@@ -151,9 +160,9 @@
       letter-spacing: 0.05em;
     }
 
-    .lang-toggle button:hover { color: var(--text-primary); background: var(--bg-secondary); }
-    .lang-toggle button.active { background: var(--text-primary); color: var(--bg-primary); }
-    .lang-toggle button + button { border-left: 1px solid var(--border); }
+    .lang-toggle button:hover, .source-toggle button:hover { color: var(--text-primary); background: var(--bg-secondary); }
+    .lang-toggle button.active, .source-toggle button.active { background: var(--text-primary); color: var(--bg-primary); }
+    .lang-toggle button + button, .source-toggle button + button { border-left: 1px solid var(--border); }
 
     .theme-toggle {
       font-family: var(--font-mono);
@@ -211,11 +220,6 @@
 
     .post-item-meta span { display: flex; align-items: center; gap: 5px; }
     .post-item-meta .dot { width: 3px; height: 3px; background: var(--border-light); border-radius: 50%; }
-
-    .en-excerpt {
-      color: var(--text-tertiary);
-      font-style: italic;
-    }
 
     .post-item-excerpt {
       font-size: 14px;
@@ -393,17 +397,6 @@
   </div>
 
   <script>
-    // ========== Display Settings ==========
-    const DISPLAY_CONFIG = {
-      // Title: no limit (show full title)
-      titleMaxLen: { zh: 9999, en: 9999, all: { zh: 9999, en: 9999 } },
-      // Content character limits (post detail page)
-      contentMaxLen: { zh: 2000, en: 2000, all: { zh: 1000, en: 1200 } },
-      // Homepage excerpt character limits (All mode: Chinese / English)
-      excerptMaxLen: { zh: 120, en: 120, all: { zh: 80, en: 120 } }
-    };
-    // ======================================
-
     const SUPABASE_URL = 'https://fzxuotfihpbzozjoplim.supabase.co';
     const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6eHVvdGZpaHBiem96am9wbGltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3OTM1MzMsImV4cCI6MjA5MTM2OTUzM30.pfhwZ7kv4CUy5PT_s62WzfIC3cHeXR2Z4YIXUjjqY1c';
 
@@ -413,6 +406,7 @@
     let titleLang = localStorage.getItem('titleLang') || 'zh';
     let contentLang = localStorage.getItem('contentLang') || 'zh';
     let currentTheme = localStorage.getItem('theme') || 'dark';
+    let sourceFilter = localStorage.getItem('sourceFilter') || 'all';
 
     function applyTheme() {
       document.documentElement.setAttribute('data-theme', currentTheme);
@@ -438,6 +432,12 @@
       handleRoute();
     }
 
+    function setSourceFilter(src) {
+      sourceFilter = src;
+      localStorage.setItem('sourceFilter', src);
+      handleRoute();
+    }
+
     function getPostIdFromHash() {
       const match = window.location.hash.match(/^#\/post\/(.+)/);
       return match ? match[1] : null;
@@ -456,30 +456,24 @@
     }
 
     function getDisplayTitle(post) {
-      const titleEn = post.title_en || post.title || '';
-      const titleZh = post.title_zh || '';
-
-      if (titleLang === 'en') {
-        return escapeHtml(titleEn.substring(0, DISPLAY_CONFIG.titleMaxLen.en));
-      }
-      if (titleLang === 'zh') {
-        return escapeHtml(titleZh.substring(0, DISPLAY_CONFIG.titleMaxLen.zh));
-      }
-      // All: Chinese / English separately
-      const allCfg = DISPLAY_CONFIG.titleMaxLen.all;
-      return escapeHtml(titleZh.substring(0, allCfg.zh) + ' / ' + titleEn.substring(0, allCfg.en));
+      if (titleLang === 'en') return escapeHtml(post.title_en || post.title);
+      if (titleLang === 'zh') return escapeHtml(post.title_zh || post.title_en || post.title);
+      return escapeHtml(post.title);
     }
 
     function getDisplayContent(post) {
       const en = post.content_en || '';
       const zh = post.content_zh || '';
+      if (contentLang === 'en') return en;
+      if (contentLang === 'zh') return zh;
+      if (en && zh) return zh + '\n---\n' + en;
+      return zh || en;
+    }
 
-      if (contentLang === 'en') return en.substring(0, DISPLAY_CONFIG.contentMaxLen.en);
-      if (contentLang === 'zh') return zh.substring(0, DISPLAY_CONFIG.contentMaxLen.zh);
-      // All: Chinese on top, English below
-      const allCfg = DISPLAY_CONFIG.contentMaxLen.all;
-      if (en && zh) return zh.substring(0, allCfg.zh) + '\n---\n' + en.substring(0, allCfg.en);
-      return (zh || en).substring(0, allCfg.zh);
+    function getDisplayExcerpt(post) {
+      if (titleLang === 'en') return post.content_en || '';
+      if (titleLang === 'zh') return post.content_zh || post.content_en || '';
+      return post.content_zh || post.content_en || '';
     }
 
     function langToggleHtml(selected, onChange) {
@@ -495,6 +489,20 @@
         '</div>';
     }
 
+    function sourceToggleHtml(selected) {
+      const sources = [
+        { code: 'all', label: '全部' },
+        { code: 'hn', label: 'HN' },
+        { code: 'tc', label: 'TechCrunch' },
+        { code: 'verge', label: 'The Verge' }
+      ];
+      return '<div class="source-toggle">' +
+        sources.map(s =>
+          `<button class="${s.code === selected ? 'active' : ''}" onclick="setSourceFilter('${s.code}')">${s.label}</button>`
+        ).join('') +
+        '</div>';
+    }
+
     async function fetchPost(id) {
       const response = await fetch(
         `${SUPABASE_URL}/rest/v1/blog_posts?id=eq.${id}&select=*,categories(title)`,
@@ -506,10 +514,11 @@
     }
 
     async function fetchPosts() {
-      const response = await fetch(
-        `${SUPABASE_URL}/rest/v1/blog_posts?select=*,categories(title)&order=created_at.desc`,
-        { headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` } }
-      );
+      let url = `${SUPABASE_URL}/rest/v1/blog_posts?select=*,categories(title)&order=created_at.desc`;
+      if (sourceFilter !== 'all') {
+        url += `&source=eq.${sourceFilter}`;
+      }
+      const response = await fetch(url, { headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` } });
       if (!response.ok) throw new Error('Failed to fetch');
       return response.json();
     }
@@ -597,7 +606,10 @@
             <p class="site-tagline">Stories &amp; Ideas · 故事与思想</p>
           </div>
           <div class="controls">
-            ${langToggleHtml(titleLang, 'setTitleLang')}
+            <div class="toggles-row">
+              ${sourceToggleHtml(sourceFilter)}
+              ${langToggleHtml(titleLang, 'setTitleLang')}
+            </div>
             <button class="theme-toggle" onclick="toggleTheme()">Light Mode</button>
           </div>
           <div style="text-align:center;padding:80px 0;color:var(--text-tertiary);font-family:var(--font-mono);font-size:11px;">No posts yet</div>
@@ -612,7 +624,10 @@
           <p class="site-tagline">Stories &amp; Ideas · 故事与思想</p>
         </div>
         <div class="controls">
-          ${langToggleHtml(titleLang, 'setTitleLang')}
+          <div class="toggles-row">
+            ${sourceToggleHtml(sourceFilter)}
+            ${langToggleHtml(titleLang, 'setTitleLang')}
+          </div>
           <button class="theme-toggle" onclick="toggleTheme()">Light Mode</button>
         </div>
         <ul class="posts-list">
@@ -621,14 +636,12 @@
               <div class="post-link" onclick="goTo('/post/${post.id}')">
                 <div class="post-item-title">${getDisplayTitle(post)}</div>
                 <div class="post-item-meta">
+                  ${post.source ? `<span>${escapeHtml(post.source.toUpperCase())}</span>` : ''}
                   ${post.categories ? `<span>${escapeHtml(post.categories.title)}</span>` : ''}
                   <span class="dot"></span>
                   <span>${formatDate(post.created_at)}</span>
                 </div>
-                ${post.content_zh || post.content_en ? titleLang === 'all'
-                  ? `<div class="post-item-excerpt">${escapeHtml((post.content_zh || '').substring(0, DISPLAY_CONFIG.excerptMaxLen.all.zh))}</div><div class="post-item-excerpt en-excerpt">${escapeHtml((post.content_en || '').substring(0, DISPLAY_CONFIG.excerptMaxLen.all.en))}</div>`
-                  : `<div class="post-item-excerpt">${escapeHtml((titleLang === 'en' ? post.content_en : post.content_zh || post.content_en || '').substring(0, DISPLAY_CONFIG.excerptMaxLen[titleLang]))}</div>`
-                : ''}
+                ${post.content_zh || post.content_en ? `<div class="post-item-excerpt">${escapeHtml(getDisplayExcerpt(post).substring(0, 120))}</div>` : ''}
               </div>
             </li>
           `).join('')}
@@ -665,6 +678,7 @@
     window.goTo = goTo;
     window.setTitleLang = setTitleLang;
     window.setContentLang = setContentLang;
+    window.setSourceFilter = setSourceFilter;
     window.toggleTheme = toggleTheme;
 
     handleRoute();
