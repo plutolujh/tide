@@ -12,7 +12,56 @@
  */
 
 import { createProvider } from './providers/index.js';
-import { readFileSync } from 'fs';
+import { readFileSync, appendFileSync, existsSync, mkdirSync } from 'fs';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const sourcesConfig = require('./sources.json');
+
+// Build flattened SOURCES map from groups config
+const SOURCES = {};
+const GROUPS = {};
+
+for (const [groupKey, group] of Object.entries(sourcesConfig.groups)) {
+  if (!group.enabled) continue;
+  GROUPS[groupKey] = {
+    name: group.name,
+    nameEn: group.nameEn,
+    categoryId: group.categoryId,
+    sortOrder: group.sortOrder,
+    syncIntervalHours: group.syncIntervalHours
+  };
+  for (const [sourceKey, source] of Object.entries(group.sources)) {
+    SOURCES[sourceKey] = {
+      name: source.name,
+      tag: sourceKey,
+      category_id: group.categoryId,
+      rssUrl: source.rssUrl,
+      scrapeUrl: source.scrapeUrl,
+      parseFn: source.parseFn
+    };
+  }
+}
+
+const LOG_DIR = './logs';
+
+function getLogFile() {
+  return `${LOG_DIR}/sync-all-${new Date().toISOString().slice(0, 10)}.log`;
+}
+
+function log(...args) {
+  const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ');
+  const timestamp = new Date().toISOString();
+  const line = `[${timestamp}] ${msg}`;
+  console.log(line);
+  try {
+    if (!existsSync(LOG_DIR)) {
+      mkdirSync(LOG_DIR, { recursive: true });
+    }
+    appendFileSync(getLogFile(), line + '\n');
+  } catch (e) {
+    console.error('Failed to write log:', e.message);
+  }
+}
 
 const env = {};
 readFileSync('.env', 'utf8').split('\n').forEach(line => {
@@ -36,52 +85,20 @@ const JINA_API_URL = 'https://r.jina.ai/';
 const ANON_KEY = SUPABASE_KEY;
 const HN_API = 'https://hn.algolia.com/api/v1';
 
-// ---------- Sources config ----------
-const SOURCES = {
-  hn: {
-    name: 'Hacker News',
-    tag: 'hn',
-    category_id: '9126cc45-ac4c-42de-aca8-175d51351ab2',
-    rssUrl: null,
-    parseFn: null
-  },
-  tc: {
-    name: 'TechCrunch',
-    tag: 'tc',
-    category_id: '9126cc45-ac4c-42de-aca8-175d51351ab2',
-    rssUrl: 'https://techcrunch.com/feed/',
-    parseFn: 'rss'
-  },
-  verge: {
-    name: 'The Verge',
-    tag: 'verge',
-    category_id: '9126cc45-ac4c-42de-aca8-175d51351ab2',
-    rssUrl: 'https://www.theverge.com/rss/index.xml',
-    parseFn: 'atom'
-  },
-  ars: {
-    name: 'Ars Technica',
-    tag: 'ars',
-    category_id: '9126cc45-ac4c-42de-aca8-175d51351ab2',
-    rssUrl: 'https://feeds.arstechnica.com/arstechnica/index',
-    parseFn: 'rss'
-  }
-};
-
 // ---------- Fetch with retry ----------
 async function fetchWithRetry(url, options = {}, retries = 3, delayMs = 1000) {
   for (let i = 0; i < retries; i++) {
     try {
       const res = await fetch(url, options);
       if (!res.ok && res.status >= 500 && i < retries - 1) {
-        console.log(`  [retry] ${res.status} from ${url}, attempt ${i + 1}/${retries}`);
+        log(`  [retry] ${res.status} from ${url}, attempt ${i + 1}/${retries}`);
         await new Promise(r => setTimeout(r, delayMs * (i + 1)));
         continue;
       }
       return res;
     } catch (err) {
       if (i < retries - 1) {
-        console.log(`  [retry] ${err.message}, attempt ${i + 1}/${retries}`);
+        log(`  [retry] ${err.message}, attempt ${i + 1}/${retries}`);
         await new Promise(r => setTimeout(r, delayMs * (i + 1)));
       } else {
         throw err;
@@ -165,6 +182,77 @@ async function fetchHNStories(count = 5) {
   }));
 }
 
+// ---------- Fetch stories via Jina AI scrape ----------
+async function fetchScrape(source, count = 5) {
+  const cfg = SOURCES[source];
+  if (!cfg || !cfg.scrapeUrl) return [];
+
+  // Fetch page via Jina AI
+  let text;
+  try {
+    const res = await fetchWithRetry(
+      `${JINA_API_URL}${encodeURIComponent(cfg.scrapeUrl)}`,
+      { headers: { 'Accept': 'text/plain' } },
+      3, 5000
+    );
+    text = await res.text();
+  } catch (err) {
+    log(`  [ERROR] Jina scrape failed: ${err.message}`);
+    return [];
+  }
+
+  // Find URLs and extract title/views from surrounding context
+  const urlRegex = /https?:\/\/www\.autohome\.com\.cn\/news\/\d+\/\d+\.html/g;
+  const urlMatches = [...text.matchAll(urlRegex)];
+
+  const seen = new Set();
+  const articles = [];
+
+  for (const m of urlMatches) {
+    const rawUrl = m[0].split('#')[0];
+    if (seen.has(rawUrl)) continue;
+    seen.add(rawUrl);
+
+    const pos = m.index;
+    const before = text.substring(Math.max(0, pos - 600), pos);
+
+    // Extract title: find ### after [![Image
+    const imgIdx = before.lastIndexOf('[Image');
+    const titleStart = before.indexOf('###', imgIdx);
+    let title = '';
+    if (titleStart > -1) {
+      const titleEnd = before.indexOf('_', titleStart);
+      if (titleEnd > -1 && titleEnd - titleStart < 200) {
+        title = before.substring(titleStart + 3, titleEnd).trim();
+      }
+    }
+
+    // Extract views: find pattern _number_ or _X万_ before [category]
+    const bracketIdx = before.lastIndexOf('[汽车之家');
+    let views = 0;
+    if (bracketIdx > -1) {
+      const viewsArea = before.substring(bracketIdx - 100, bracketIdx);
+      const viewMatch = viewsArea.match(/_(\d+(?:\.\d+)?万?)_\s*_(\d+)_/);
+      if (viewMatch) {
+        const viewStr = viewMatch[1];
+        if (viewStr.includes('万')) {
+          views = parseFloat(viewStr) * 10000;
+        } else {
+          views = parseInt(viewStr, 10);
+        }
+      }
+    }
+
+    if (title && rawUrl.includes('/news/')) {
+      articles.push({ title, url: rawUrl, views });
+    }
+  }
+
+  // Sort by views descending, take top N
+  articles.sort((a, b) => b.views - a.views);
+  return articles.slice(0, count);
+}
+
 // ---------- Fetch article text ----------
 async function fetchArticleText(url) {
   try {
@@ -184,7 +272,7 @@ async function fetchArticleText(url) {
       .replace(/\n{3,}/g, '\n\n')
       .trim().substring(0, 3000);
   } catch (err) {
-    console.log(`   [fetch error]: ${err.message}`);
+    log(`   [fetch error]: ${err.message}`);
     return null;
   }
 }
@@ -210,11 +298,11 @@ async function upsertBlogPost(story, {
   source, categoryId
 }) {
   if (!contentEn || contentEn.length < 200) {
-    console.log(`  [SKIP] content_en too short (${contentEn?.length || 0}), need 300+`);
+    log(`  [SKIP] content_en too short (${contentEn?.length || 0}), need 300+`);
     return;
   }
   if (!contentZh || contentZh.length < 200) {
-    console.log(`  [SKIP] content_zh too short (${contentZh?.length || 0}), need 300+`);
+    log(`  [SKIP] content_zh too short (${contentZh?.length || 0}), need 300+`);
     return;
   }
 
@@ -246,7 +334,7 @@ async function upsertBlogPost(story, {
   try { existing = JSON.parse(await checkRes.text()); } catch (e) {}
 
   if (existing.length > 0) {
-    console.log(`  [SKIP] Duplicate: "${titleEn}"`);
+    log(`  [SKIP] Duplicate: "${titleEn}"`);
     return;
   }
 
@@ -255,20 +343,44 @@ async function upsertBlogPost(story, {
     headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'representation' },
     body: JSON.stringify(payload)
   });
-  console.log(`  [ADDED] ${titleEn} → ${titleZh} (${source})`);
+  log(`  [ADDED] ${titleEn} → ${titleZh} (${source})`);
   if (titleTranslationScore !== null) {
-    console.log(`    Title winner: ${titleWinner} (score: ${titleTranslationScore})`);
-    console.log(`    Content winner: ${contentWinner} (score: ${contentTranslationScore})`);
+    log(`    Title winner: ${titleWinner} (score: ${titleTranslationScore})`);
+    log(`    Content winner: ${contentWinner} (score: ${contentTranslationScore})`);
   }
+}
+
+// ---------- Check if text is primarily Chinese ----------
+function isChineseText(text) {
+  const chineseChars = (text.match(/[\u4e00-\u9fff]/g) || []).length;
+  const totalChars = text.replace(/\s/g, '').length;
+  return totalChars > 0 && chineseChars / totalChars > 0.5;
 }
 
 // ---------- Process single story ----------
 async function processStory(story, source, { summarizer, translator, minimaxTranslator, doubaoTranslator, judge }) {
   const cfg = SOURCES[source];
 
+  // For Chinese sources (scrape), translate title to English for title_en
+  let titleEn = story.title;
+  if (cfg.parseFn === 'scrape' && isChineseText(story.title)) {
+    log(`  Detected Chinese source, translating title to English...`);
+    try {
+      // Use minimaxTranslator for Chinese->English since translator may be null when TRANSLATOR_PROVIDER=both
+      titleEn = await minimaxTranslator.complete(
+        `Translate to English: ${story.title}`,
+        'You are a professional translator. Output only the English translation.'
+      );
+      titleEn = titleEn || story.title;
+      log(`  Title EN: ${titleEn}`);
+    } catch (err) {
+      log(`  [WARN] Title translation to English failed: ${err.message}, using original`);
+    }
+  }
+
   // Check duplicate
   const dupCheckRes = await fetch(
-    `${SUPABASE_URL}/rest/v1/blog_posts?or=(title_en.eq.${encodeURIComponent(story.title)},original_url.eq.${encodeURIComponent(story.url)})&select=id`,
+    `${SUPABASE_URL}/rest/v1/blog_posts?or=(title_en.eq.${encodeURIComponent(titleEn)},original_url.eq.${encodeURIComponent(story.url)})&select=id`,
     { headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}`, 'Prefer': 'representation' } }
   );
   let isDup = false;
@@ -278,18 +390,18 @@ async function processStory(story, source, { summarizer, translator, minimaxTran
   } catch (e) {}
 
   if (isDup) {
-    console.log(`  [SKIP] Already exists: "${story.title}"`);
+    log(`  [SKIP] Already exists: "${titleEn}"`);
     return;
   }
 
   // Fetch article text
   const articleText = await fetchArticleText(story.url);
   if (!articleText) {
-    console.log(`  No article text, skipping`);
+    log(`  No article text, skipping`);
     return;
   }
 
-  console.log(`  Article fetched (${articleText.length} chars), summarizing...`);
+  log(`  Article fetched (${articleText.length} chars), summarizing...`);
 
   // Step 1: Summarize article
   let contentEn;
@@ -299,12 +411,12 @@ async function processStory(story, source, { summarizer, translator, minimaxTran
       'You are a tech writer. Write clear, detailed summaries.'
     );
   } catch (err) {
-    console.log(`  [ERROR] Summarization failed: ${err.message}`);
+    log(`  [ERROR] Summarization failed: ${err.message}`);
     return;
   }
 
   if (!contentEn) {
-    console.log(`  Summarization failed, skipping`);
+    log(`  Summarization failed, skipping`);
     return;
   }
 
@@ -316,18 +428,19 @@ async function processStory(story, source, { summarizer, translator, minimaxTran
     .replace(/\n{3,}/g, '\n\n').trim();
 
   if (cleanedContentEn.length < 200) {
-    console.log(`  [SKIP] Summary too short (${cleanedContentEn.length}), need 300+`);
+    log(`  [SKIP] Summary too short (${cleanedContentEn.length}), need 300+`);
     return;
   }
 
-  console.log(`  EN: ${cleanedContentEn.substring(0, 60)}...`);
+  log(`  EN: ${cleanedContentEn.substring(0, 60)}...`);
 
   // Step 2: Translate with both providers
   let titleZhMinimax, titleZhDoubao, contentZhMinimax, contentZhDoubao;
   let titleZh, contentZh;
+  let titleScore = 80, titleWinner = TRANSLATOR_PROVIDER, contentScore = 80, contentWinner = TRANSLATOR_PROVIDER;
 
   if (TRANSLATOR_PROVIDER === 'both') {
-    console.log(`  Translating title and content with both providers in parallel...`);
+    log(`  Translating title and content with both providers in parallel...`);
 
     try {
       const [zhMinimaxResult, zhDoubaoResult] = await Promise.all([
@@ -356,13 +469,13 @@ async function processStory(story, source, { summarizer, translator, minimaxTran
       contentZhMinimax = contentZhMinimaxResult;
       contentZhDoubao = contentZhDoubaoResult;
     } catch (err) {
-      console.log(`  [ERROR] Translation failed: ${err.message}`);
+      log(`  [ERROR] Translation failed: ${err.message}`);
       return;
     }
 
     // Step 3: Judge which translation is better
-    let titleScore = 80, titleWinner = 'minimax', contentScore = 80, contentWinner = 'minimax';
-    console.log(`  Judging translations...`);
+    titleScore = 80; titleWinner = 'minimax'; contentScore = 80; contentWinner = 'minimax';
+    log(`  Judging translations...`);
     try {
       const judgeResult = await judge.complete(
         `Compare these two Chinese translations and decide which is better.
@@ -386,15 +499,19 @@ CONTENT_SCORE: <0-100> | CONTENT_WINNER: <minimax|doubao>`,
       titleWinner = parsed.titleWinner || 'minimax';
       contentScore = parsed.contentScore || 80;
       contentWinner = parsed.contentWinner || 'minimax';
-      console.log(`  Title: ${titleWinner} won (score: ${titleScore})`);
-      console.log(`  Content: ${contentWinner} won (score: ${contentScore})`);
+      log(`  Title: ${titleWinner} won (score: ${titleScore})`);
+      log(`  Content: ${contentWinner} won (score: ${contentScore})`);
 
       titleZh = titleWinner === 'doubao' ? titleZhDoubao : titleZhMinimax;
       contentZh = contentWinner === 'doubao' ? contentZhDoubao : contentZhMinimax;
     } catch (err) {
-      console.log(`  [ERROR] Judge failed: ${err.message}, using Minimax by default`);
+      log(`  [ERROR] Judge failed: ${err.message}, using Minimax by default`);
       titleZh = titleZhMinimax || titleZhDoubao || story.title;
       contentZh = contentZhMinimax || contentZhDoubao || '';
+      titleScore = 80;
+      titleWinner = 'minimax';
+      contentScore = 80;
+      contentWinner = 'minimax';
     }
   } else {
     // Single provider mode
@@ -408,18 +525,18 @@ CONTENT_SCORE: <0-100> | CONTENT_WINNER: <minimax|doubao>`,
         'You are a professional translator.'
       );
     } catch (err) {
-      console.log(`  [ERROR] Translation failed: ${err.message}`);
+      log(`  [ERROR] Translation failed: ${err.message}`);
       return;
     }
   }
 
   if (!contentZh || contentZh.length < 50) {
-    console.log(`  [SKIP] Translation too short or failed`);
+    log(`  [SKIP] Translation too short or failed`);
     return;
   }
 
   await upsertBlogPost(story, {
-    titleEn: story.title,
+    titleEn: titleEn,
     titleZh,
     contentEn: cleanedContentEn,
     contentZh,
@@ -445,7 +562,7 @@ async function main() {
   const sourceArg = args.find(a => a.startsWith('--source='))?.split('=')[1] || 'all';
   const intervalMs = loopHours > 0 ? loopHours * 60 * 60 * 1000 : 0;
 
-  console.log(`[PROVIDERS] summarizer=${SUMMARIZER_PROVIDER}, translator=${TRANSLATOR_PROVIDER}, judge=${JUDGE_PROVIDER}`);
+  log(`[PROVIDERS] summarizer=${SUMMARIZER_PROVIDER}, translator=${TRANSLATOR_PROVIDER}, judge=${JUDGE_PROVIDER}`);
 
   let summarizer, translator, minimaxTranslator, doubaoTranslator, judge;
   try {
@@ -462,39 +579,46 @@ async function main() {
   const sourcesToFetch = sourceArg === 'all' ? Object.keys(SOURCES) : sourceArg.split(',');
 
   async function run() {
-    console.log(`\n[${new Date().toISOString()}] Starting sync for: ${sourcesToFetch.join(', ')}`);
+    log(`\n[${new Date().toISOString()}] Starting sync for: ${sourcesToFetch.join(', ')}`);
 
     for (const source of sourcesToFetch) {
       const cfg = SOURCES[source];
       if (!cfg) {
-        console.log(`Unknown source: ${source}`);
+        log(`Unknown source: ${source}`);
         continue;
       }
 
-      console.log(`\n--- ${cfg.name} (${source}) ---`);
+      log(`\n--- ${cfg.name} (${source}) ---`);
 
       let stories = [];
-      if (source === 'hn') {
-        stories = await fetchHNStories(count);
-      } else {
-        stories = await fetchRSS(source, count);
+      try {
+        if (source === 'hn') {
+          stories = await fetchHNStories(count);
+        } else if (cfg.parseFn === 'scrape') {
+          stories = await fetchScrape(source, count);
+        } else {
+          stories = await fetchRSS(source, count);
+        }
+      } catch (err) {
+        log(`  [ERROR] Failed to fetch from ${source}: ${err.message}`);
+        continue;
       }
 
-      console.log(`Got ${stories.length} stories`);
+      log(`Got ${stories.length} stories`);
 
       for (const story of stories) {
-        console.log(`Processing: ${story.title}`);
+        log(`Processing: ${story.title}`);
         await processStory(story, source, { summarizer, translator, minimaxTranslator, doubaoTranslator, judge });
       }
     }
 
-    console.log(`\n[${new Date().toISOString()}] Done!`);
+    log(`\n[${new Date().toISOString()}] Done!`);
   }
 
   await run();
 
   if (intervalMs > 0) {
-    console.log(`\nScheduled to run every ${loopHours}h. Press Ctrl+C to stop.`);
+    log(`\nScheduled to run every ${loopHours}h. Press Ctrl+C to stop.`);
     setInterval(run, intervalMs);
   }
 }

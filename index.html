@@ -224,12 +224,13 @@
     .post-item-excerpt {
       font-size: 14px;
       color: var(--text-secondary);
-      line-height: 1.5;
+      line-height: 1.7;
       font-style: italic;
       display: -webkit-box;
-      -webkit-line-clamp: 2;
+      -webkit-line-clamp: 8;
       -webkit-box-orient: vertical;
       overflow: hidden;
+      white-space: pre-line;
     }
 
     /* ---- Post Detail ---- */
@@ -406,7 +407,8 @@
     let titleLang = localStorage.getItem('titleLang') || 'zh';
     let contentLang = localStorage.getItem('contentLang') || 'zh';
     let currentTheme = localStorage.getItem('theme') || 'dark';
-    let sourceFilter = localStorage.getItem('sourceFilter') || 'all';
+    let groupFilter = localStorage.getItem('groupFilter') || 'all';
+    let categories = []; // fetched from Supabase
 
     function applyTheme() {
       document.documentElement.setAttribute('data-theme', currentTheme);
@@ -432,10 +434,19 @@
       handleRoute();
     }
 
-    function setSourceFilter(src) {
-      sourceFilter = src;
-      localStorage.setItem('sourceFilter', src);
+    function setGroupFilter(grp) {
+      groupFilter = grp;
+      localStorage.setItem('groupFilter', grp);
       handleRoute();
+    }
+
+    async function fetchCategories() {
+      const response = await fetch(
+        `${SUPABASE_URL}/rest/v1/categories?select=id,title,sort_order&order=sort_order.asc`,
+        { headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` } }
+      );
+      if (!response.ok) throw new Error('Failed to fetch categories');
+      return response.json();
     }
 
     function getPostIdFromHash() {
@@ -471,9 +482,17 @@
     }
 
     function getDisplayExcerpt(post) {
-      if (titleLang === 'en') return post.content_en || '';
-      if (titleLang === 'zh') return post.content_zh || post.content_en || '';
-      return post.content_zh || post.content_en || '';
+      const en = post.content_en || '';
+      const zh = post.content_zh || '';
+      if (titleLang === 'en') return en.substring(0, 150);
+      if (titleLang === 'zh') return zh.substring(0, 100);
+      // All mode: show both Chinese and English
+      if (titleLang === 'all') {
+        if (en && zh) return zh.substring(0, 80) + '\n\n📖 EN: ' + en.substring(0, 200);
+        if (en) return en.substring(0, 280);
+        if (zh) return zh.substring(0, 280);
+      }
+      return (zh || en).substring(0, 150);
     }
 
     function langToggleHtml(selected, onChange) {
@@ -489,16 +508,11 @@
         '</div>';
     }
 
-    function sourceToggleHtml(selected) {
-      const sources = [
-        { code: 'all', label: '全部' },
-        { code: 'hn', label: 'HN' },
-        { code: 'tc', label: 'TechCrunch' },
-        { code: 'verge', label: 'The Verge' }
-      ];
-      return '<div class="source-toggle">' +
-        sources.map(s =>
-          `<button class="${s.code === selected ? 'active' : ''}" onclick="setSourceFilter('${s.code}')">${s.label}</button>`
+    function groupToggleHtml(selected, groups) {
+      const items = [{ code: 'all', label: '全部' }, ...groups.map(g => ({ code: g.id, label: g.title }))];
+      return '<div class="lang-toggle">' +
+        items.map(g =>
+          `<button class="${g.code === selected ? 'active' : ''}" onclick="setGroupFilter('${g.code}')">${g.label}</button>`
         ).join('') +
         '</div>';
     }
@@ -514,9 +528,9 @@
     }
 
     async function fetchPosts() {
-      let url = `${SUPABASE_URL}/rest/v1/blog_posts?select=*,categories(title)&order=created_at.desc`;
-      if (sourceFilter !== 'all') {
-        url += `&source=eq.${sourceFilter}`;
+      let url = `${SUPABASE_URL}/rest/v1/blog_posts?select=*,categories(title,sort_order)&order=created_at.desc`;
+      if (groupFilter !== 'all') {
+        url += `&category_id=eq.${groupFilter}`;
       }
       const response = await fetch(url, { headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` } });
       if (!response.ok) throw new Error('Failed to fetch');
@@ -607,7 +621,7 @@
           </div>
           <div class="controls">
             <div class="toggles-row">
-              ${sourceToggleHtml(sourceFilter)}
+              ${groupToggleHtml(groupFilter, categories)}
               ${langToggleHtml(titleLang, 'setTitleLang')}
             </div>
             <button class="theme-toggle" onclick="toggleTheme()">Light Mode</button>
@@ -625,7 +639,7 @@
         </div>
         <div class="controls">
           <div class="toggles-row">
-            ${sourceToggleHtml(sourceFilter)}
+            ${groupToggleHtml(groupFilter, categories)}
             ${langToggleHtml(titleLang, 'setTitleLang')}
           </div>
           <button class="theme-toggle" onclick="toggleTheme()">Light Mode</button>
@@ -636,12 +650,12 @@
               <div class="post-link" onclick="goTo('/post/${post.id}')">
                 <div class="post-item-title">${getDisplayTitle(post)}</div>
                 <div class="post-item-meta">
-                  ${post.source ? `<span>${escapeHtml(post.source.toUpperCase())}</span>` : ''}
                   ${post.categories ? `<span>${escapeHtml(post.categories.title)}</span>` : ''}
+                  ${post.source ? `<span>${escapeHtml(post.source.toUpperCase())}</span>` : ''}
                   <span class="dot"></span>
                   <span>${formatDate(post.created_at)}</span>
                 </div>
-                ${post.content_zh || post.content_en ? `<div class="post-item-excerpt">${escapeHtml(getDisplayExcerpt(post).substring(0, 120))}</div>` : ''}
+                ${post.content_zh || post.content_en ? `<div class="post-item-excerpt">${escapeHtml(getDisplayExcerpt(post).substring(0, 350))}</div>` : ''}
               </div>
             </li>
           `).join('')}
@@ -655,6 +669,10 @@
         await renderPost(postId);
       } else {
         try {
+          // Fetch categories if not yet loaded
+          if (categories.length === 0) {
+            categories = await fetchCategories();
+          }
           const posts = await fetchPosts();
           renderPosts(posts);
         } catch (err) {
@@ -678,7 +696,7 @@
     window.goTo = goTo;
     window.setTitleLang = setTitleLang;
     window.setContentLang = setContentLang;
-    window.setSourceFilter = setSourceFilter;
+    window.setGroupFilter = setGroupFilter;
     window.toggleTheme = toggleTheme;
 
     handleRoute();

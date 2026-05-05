@@ -1,0 +1,63 @@
+- generic [ref=e2]:
+  - generic [ref=e6]:
+    - generic [ref=e457]:
+      - generic [ref=e458]: 潮汐 Tides
+      - heading "潮汐 · Tides" [level=1] [ref=e459]
+      - paragraph [ref=e460]: Stories & Ideas · 故事与思想
+    - generic [ref=e461]:
+      - generic [ref=e462]:
+        - generic [ref=e463]:
+          - button "全部" [ref=e464] [cursor=pointer]
+          - button "tech" [ref=e465] [cursor=pointer]
+          - button "科技" [ref=e466] [cursor=pointer]
+          - button "汽车" [ref=e467] [cursor=pointer]
+          - button "新闻" [ref=e468] [cursor=pointer]
+        - generic [ref=e469]:
+          - button "中文" [ref=e470] [cursor=pointer]
+          - button "EN" [ref=e471] [cursor=pointer]
+          - button "All" [ref=e472] [cursor=pointer]
+      - button "Light Mode" [ref=e473] [cursor=pointer]
+    - list [ref=e474]:
+      - listitem [ref=e475]:
+        - generic [ref=e476] [cursor=pointer]:
+          - generic [ref=e477]: Another revolutionary product! Tesla's new Semi rolls off the production line — equipped with three motors, driver's seat in the center. 4 days ago
+          - generic [ref=e478]:
+            - generic [ref=e479]: 汽车
+            - generic [ref=e480]: AUTOHOME
+            - generic [ref=e482]: May 5, 2026
+          - generic [ref=e483]: Tesla's New Semi Electric Truck Enters Mass Production with Revolutionary Design Tesla has officially announced that it
+      - listitem [ref=e484]:
+        - generic [ref=e485] [cursor=pointer]:
+          - generic [ref=e486]: 车企冲击中高端市场,大三排还要火十年,大车利润高是当下车企共识 2天前
+          - generic [ref=e487]:
+            - generic [ref=e488]: 汽车
+            - generic [ref=e489]: AUTOHOME
+            - generic [ref=e491]: May 5, 2026
+          - generic [ref=e492]: Chinese automakers are sharply pivoting toward the mid‑to‑high‑end market, a strategy driven by the realization that lar
+      - listitem [ref=e493]:
+        - generic [ref=e494] [cursor=pointer]:
+          - generic [ref=e495]: Derbis Claims First WSBK Hungary Victory, Zhang Xue Motorcycle Team Secures Third Championship of Season - 2 Days Ago
+          - generic [ref=e496]:
+            - generic [ref=e497]: 汽车
+            - generic [ref=e498]: AUTOHOME
+            - generic [ref=e500]: May 5, 2026
+          - generic [ref=e501]: Derbis clinched his first World‑Superbike (WSBK) victory at the Hungarian round, crossing the finish line ahead of a tig
+      - listitem [ref=e502]:
+        - generic [ref=e503] [cursor=pointer]:
+          - generic [ref=e504]: New Li Auto L9 and BYD Tang Lead SUV Models to Launch After 2026 Beijing Auto Show - 3 Days Ago
+          - generic [ref=e505]:
+            - generic [ref=e506]: 汽车
+            - generic [ref=e507]: AUTOHOME
+            - generic [ref=e509]: May 5, 2026
+          - generic [ref=e510]: Summary The 2026 Beijing Auto Show set new records with 380,000 square meters of exhibition space and 181 new vehicles.
+      - listitem [ref=e511]:
+        - generic [ref=e512] [cursor=pointer]:
+          - generic [ref=e513]: Huayuan S Specs Exposed - All Models Standard with Huawei Qiankun Smart Driving and HarmonyOS Cabin, Launching May 8
+          - generic [ref=e514]:
+            - generic [ref=e515]: 汽车
+            - generic [ref=e516]: AUTOHOME
+            - generic [ref=e518]: May 5, 2026
+          - generic [ref=e519]: The article gives an early look at the configuration of the Huajing S, a newly announced electric vehicle under Huawei’s
+  - contentinfo [ref=e3]:
+    - generic [ref=e4]: 潮汐 Tides · Powered by Supabase
+    - generic [ref=e5]: Light Mode

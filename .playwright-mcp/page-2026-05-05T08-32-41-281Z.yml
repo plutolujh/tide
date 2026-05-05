@@ -1,0 +1,63 @@
+- generic [ref=e2]:
+  - generic [ref=e6]:
+    - generic [ref=e133]:
+      - generic [ref=e134]: 潮汐 Tides
+      - heading "潮汐 · Tides" [level=1] [ref=e135]
+      - paragraph [ref=e136]: Stories & Ideas · 故事与思想
+    - generic [ref=e137]:
+      - generic [ref=e138]:
+        - generic [ref=e139]:
+          - button "全部" [ref=e140] [cursor=pointer]
+          - button "tech" [ref=e141] [cursor=pointer]
+          - button "科技" [ref=e142] [cursor=pointer]
+          - button "汽车" [ref=e143] [cursor=pointer]
+          - button "新闻" [ref=e144] [cursor=pointer]
+        - generic [ref=e145]:
+          - button "中文" [ref=e146] [cursor=pointer]
+          - button "EN" [ref=e147] [cursor=pointer]
+          - button "All" [ref=e148] [cursor=pointer]
+      - button "Light Mode" [ref=e149] [cursor=pointer]
+    - list [ref=e150]:
+      - listitem [ref=e151]:
+        - generic [ref=e152] [cursor=pointer]:
+          - generic [ref=e153]: Second hantavirus case confirmed after three die in suspected cruise ship outbreak → 一艘游轮疑似暴发汉坦病毒疫情致3人死亡，第二例感染病例已确诊。
+          - generic [ref=e154]:
+            - generic [ref=e155]: 新闻
+            - generic [ref=e156]: BBC
+            - generic [ref=e158]: May 5, 2026
+          - generic [ref=e159]: 摘要：邮轮疑似暴发汉坦病毒疫情致3人死亡 由远洋探险公司运营的“洪迪斯号”邮轮出现严重医疗事件，已造成3人死亡，另有多例汉坦病毒疑似病例。死者包括一对荷兰籍夫妇和一名德国公民。一名汉坦病毒检测呈阳性的69岁英国公民目前仍在南非一家医院的重症
+      - listitem [ref=e160]:
+        - generic [ref=e161] [cursor=pointer]:
+          - generic [ref=e162]: Poverty and technology leading to record levels of slavery in UK → 贫困与技术导致英国奴役人数创历史新高
+          - generic [ref=e163]:
+            - generic [ref=e164]: 新闻
+            - generic [ref=e165]: BBC
+            - generic [ref=e167]: May 5, 2026
+          - generic [ref=e168]: 摘要：贫困与科技导致英国奴隶制达到创纪录水平 独立反奴隶制专员（IASC）警告称，不断上涨的生活成本与新技术的结合正在推动英国的剥削达到创纪录水平。2025年，超过23000名现代奴隶制潜在受害者被转介给监测组织，比前一年增加了22%，是
+      - listitem [ref=e169]:
+        - generic [ref=e170] [cursor=pointer]:
+          - generic [ref=e171]: Beyoncé, Rihanna and Heidi Klum turn heads at this year's Met Gala → 碧昂丝、蕾哈娜和海蒂·克洛姆艳压今年Met Gala红毯
+          - generic [ref=e172]:
+            - generic [ref=e173]: 新闻
+            - generic [ref=e174]: BBC
+            - generic [ref=e176]: May 5, 2026
+          - generic [ref=e177]: 2026年大都会艺术博物馆慈善晚宴（Met Gala）群星荟萃，各界名流围绕本届“服饰艺术”的主题，呈现了各自最富戏剧性、最具创意的造型演绎。这场为大都会艺术博物馆服装学院举办的年度筹款盛会上，到场嘉宾都极尽巧思贴合了奢华奇趣的着装要求。百
+      - listitem [ref=e178]:
+        - generic [ref=e179] [cursor=pointer]:
+          - generic [ref=e180]: Antisemitism 'a crisis for all of us', Starmer to say at Downing Street summit → 斯塔默将在唐宁街峰会上表示：反犹太主义是“我们所有人的危机”
+          - generic [ref=e181]:
+            - generic [ref=e182]: 新闻
+            - generic [ref=e183]: BBC
+            - generic [ref=e185]: May 5, 2026
+          - generic [ref=e186]: "### 摘要 英国首相基尔·斯塔默将在唐宁街主办一场旨在打击英国国内反犹太主义的重要峰会。本次峰会召开前，戈尔德斯格林发生持刀袭击事件，造成两名犹太男子受伤，政府已因此将恐怖威胁等级上调至“严重”级。峰会将召集警方、商界领袖及文化界人士参会"
+      - listitem [ref=e187]:
+        - generic [ref=e188] [cursor=pointer]:
+          - generic [ref=e189]: Dangerous baby-sleep advice given to parents by self-described experts, secret filming reveals → 秘密拍摄曝光：自封专家向家长提供危险的婴儿睡眠建议
+          - generic [ref=e190]:
+            - generic [ref=e191]: 新闻
+            - generic [ref=e192]: BBC
+            - generic [ref=e194]: May 5, 2026
+          - generic [ref=e195]: 调查概要 英国广播公司（BBC）通过秘密拍摄开展的一项调查，曝光了自封的婴幼儿睡眠专家向家长提供的危险婴儿睡眠建议。卧底记者发现，至少有一位知名从业者艾莉森·斯科特-赖特建议让新生儿俯卧入睡，这种做法会大幅提升婴儿猝死综合征（SIDS）的风
+  - contentinfo [ref=e3]:
+    - generic [ref=e4]: 潮汐 Tides · Powered by Supabase
+    - generic [ref=e5]: Light Mode

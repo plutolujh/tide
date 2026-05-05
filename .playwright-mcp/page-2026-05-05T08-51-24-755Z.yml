@@ -1,0 +1,31 @@
+- generic [ref=e2]:
+  - generic [ref=e70]:
+    - generic [ref=e71] [cursor=pointer]:
+      - img [ref=e72]
+      - text: Back
+    - generic [ref=e74]:
+      - button "中文" [ref=e75] [cursor=pointer]
+      - button "EN" [ref=e76] [cursor=pointer]
+      - button "All" [ref=e77] [cursor=pointer]
+    - article [ref=e78]:
+      - generic [ref=e79]:
+        - generic [ref=e80]: 新闻
+        - heading "Second hantavirus case confirmed after three die in suspected cruise ship outbreak → 一艘游轮疑似暴发汉坦病毒疫情致3人死亡，第二例感染病例已确诊。" [level=1] [ref=e81]
+        - generic [ref=e83]: May 5, 2026
+      - generic [ref=e84]:
+        - paragraph [ref=e85]: 摘要：邮轮疑似暴发汉坦病毒疫情致3人死亡
+        - paragraph [ref=e86]: 由远洋探险公司运营的“洪迪斯号”邮轮出现严重医疗事件，已造成3人死亡，另有多例汉坦病毒疑似病例。死者包括一对荷兰籍夫妇和一名德国公民。一名汉坦病毒检测呈阳性的69岁英国公民目前仍在南非一家医院的重症监护室接受救治。已确认死亡的荷兰女性感染了汉坦病毒，另外两例死亡的原因仍在调查中。
+        - paragraph [ref=e87]: 卫生部门正在监测与该船相关的另外5例疑似病例，涉事邮轮目前停靠在佛得角附近海域，船上载有来自23个国家的149名乘客和船员。疑似病例中包含一名英国籍船员。据报告，两名船员（一名英国籍、一名荷兰籍）出现急性呼吸道症状，一例为重症，另一例为轻症，不过汉坦病毒
+        - paragraph [ref=e88]: "---"
+        - paragraph [ref=e89]: "Summary: Three Dead in Suspected Hantavirus Outbreak on Cruise Ship"
+        - paragraph
+        - paragraph [ref=e90]: A serious medical situation has unfolded aboard the MV Hondius cruise ship, operated by Oceanwide Expeditions, resulting in three deaths and multiple suspected cases of hantavirus. The deceased include a Dutch husband and wife and a German national. A 69-year-old UK national who tested positive for hantavirus remains in intensive care at a hospital in South Africa. The virus was also confirmed in the Dutch woman who died, while investigations continue into the causes of the other two fatalities.
+        - paragraph
+        - paragraph [ref=e91]: Health authorities are monitoring five additional suspected cases linked to the vessel, which is currently positioned off the coast of Cape Verde carrying 149 passengers and crew from 23 countries. Among the suspected cases is a British crew member. Two crew members—one British and one Dutch—have been reported as experiencing acute respiratory symptoms, with one case described as severe and the other mild, though hantavirus
+      - link "Read Original" [ref=e92] [cursor=pointer]:
+        - /url: https://www.bbc.com/news/articles/cy0294829ndo?at_medium=RSS&at_campaign=rss
+        - img [ref=e93]
+        - text: Read Original
+  - contentinfo [ref=e3]:
+    - generic [ref=e4]: 潮汐 Tides · Powered by Supabase
+    - generic [ref=e5]: Light Mode
