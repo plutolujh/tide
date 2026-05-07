@@ -637,7 +637,7 @@ async function generateStaticIndex() {
   log('[STATIC] Generating static index.html from latest posts...');
 
   // Fetch latest 100 posts from Supabase
-  let url = `${SUPABASE_URL}/rest/v1/blog_posts?select=*,categories(id,title,sort_order)&order=created_at.desc&limit=100`;
+  let url = `${SUPABASE_URL}/rest/v1/blog_posts?select=*,categories(id,title,sort_order)&order=created_at.desc&limit=30`;
   const res = await fetchWithRetry(url, {
     headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` }
   });
@@ -977,7 +977,10 @@ async function generateStaticIndex() {
       isLoadingMore = true;
       renderPosts(true);
       try {
-        const url = SUPABASE_URL + '/rest/v1/blog_posts?select=*,categories(id,title,sort_order)&order=created_at.desc&limit=30&offset=' + currentOffset;
+        let url = SUPABASE_URL + '/rest/v1/blog_posts?select=*,categories(id,title,sort_order)&order=created_at.desc&limit=30&offset=' + currentOffset;
+        if (groupFilter !== 'all') {
+          url += '&categories.title=eq.' + encodeURIComponent(groupFilter);
+        }
         const response = await fetch(url, { headers: { 'apikey': ANON_KEY, 'Authorization': 'Bearer ' + ANON_KEY } });
         const newPosts = await response.json();
         displayedPosts = [...displayedPosts, ...newPosts];
@@ -1004,14 +1007,20 @@ async function generateStaticIndex() {
           if (categories.length === 0) {
             categories = await fetchCategories();
           }
-          // Use embedded data as first page
-          if (window.__POSTS_DATA__ && window.__POSTS_DATA__.length > 0) {
-            let filtered = window.__POSTS_DATA__;
-            if (groupFilter !== 'all') {
-              filtered = filtered.filter(p => p.categories && p.categories.title === groupFilter);
-            }
-            displayedPosts = filtered.slice(0, 30);
-            hasMore = filtered.length > 30;
+          // Use embedded data only for "all" filter, otherwise fetch from API
+          if (groupFilter !== 'all') {
+            // Fetch filtered posts from API
+            const filterUrl = SUPABASE_URL + '/rest/v1/blog_posts?select=*,categories(id,title,sort_order)&categories.title=eq.' + encodeURIComponent(groupFilter) + '&order=created_at.desc&limit=30';
+            const res = await fetch(filterUrl, { headers: { 'apikey': ANON_KEY, 'Authorization': 'Bearer ' + ANON_KEY } });
+            const data = await res.json();
+            displayedPosts = data;
+            hasMore = data.length === 30;
+            currentOffset = 30;
+          } else if (window.__POSTS_DATA__ && window.__POSTS_DATA__.length > 0) {
+            // Use embedded data for "all"
+            displayedPosts = window.__POSTS_DATA__.slice(0, 30);
+            hasMore = window.__POSTS_DATA__.length > 30;
+            currentOffset = 30;
           } else {
             displayedPosts = [];
             hasMore = false;
