@@ -1,369 +1,1348 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>潮汐 · Tides</title>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" media="print" onload="this.media='all'">
-  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap"></noscript>
-  <style>
-    :root {
-      --bg-primary: #0f0e0d;
-      --bg-secondary: #1a1816;
-      --bg-tertiary: #242220;
-      --text-primary: #e8e2d8;
-      --text-secondary: #9a9288;
-      --text-tertiary: #5a5650;
-      --accent: #d4a055;
-      --accent-dim: rgba(212, 160, 85, 0.12);
-      --border: #2a2724;
-      --border-light: #383530;
-      --font-display: 'Cormorant Garamond', Georgia, serif;
-      --font-mono: 'Courier Prime', 'Courier New', monospace;
-      --transition-fast: 0.15s ease;
-      --transition-slow: 0.4s ease;
-    }
-    [data-theme="light"] {
-      --bg-primary: #f5f0e8;
-      --bg-secondary: #ebe5db;
-      --bg-tertiary: #e0d9cc;
-      --text-primary: #1e1a16;
-      --text-secondary: #5c5650;
-      --text-tertiary: #9a9590;
-      --accent: #9b6238;
-      --accent-dim: rgba(155, 98, 56, 0.1);
-      --border: #d4cdc2;
-      --border-light: #e0d9cc;
-    }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
-    body {
-      font-family: var(--font-display);
-      background: var(--bg-primary);
-      color: var(--text-primary);
-      line-height: 1.7;
-      min-height: 100vh;
-      transition: background var(--transition-slow), color var(--transition-slow);
-    }
-    ::selection { background: var(--accent); color: var(--bg-primary); }
-    a { color: inherit; text-decoration: none; }
-    .container { max-width: 680px; margin: 0 auto; padding: 100px 32px 140px; }
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-      opacity: 0.025;
-      z-index: 9999;
-    }
-    .site-header { margin-bottom: 80px; position: relative; }
-    .site-meta { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 24px; display: flex; align-items: center; gap: 16px; }
-    .site-meta::after { content: ''; display: block; width: 40px; height: 1px; background: var(--border); }
-    .site-title { font-size: clamp(36px, 6vw, 56px); font-weight: 300; letter-spacing: -0.02em; line-height: 1.05; color: var(--text-primary); margin-bottom: 8px; }
-    .site-title span { color: var(--accent); font-style: italic; }
-    .site-tagline { font-family: var(--font-mono); font-size: 11px; color: var(--text-tertiary); letter-spacing: 0.08em; }
-    .controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 56px; padding-bottom: 32px; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 12px; }
-    .toggles-row { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
-    .lang-toggle, .source-toggle { display: flex; gap: 0; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
-    .lang-toggle button, .source-toggle button { font-family: var(--font-mono); font-size: 10px; padding: 6px 12px; border: none; background: transparent; color: var(--text-tertiary); cursor: pointer; transition: all var(--transition-fast); letter-spacing: 0.05em; }
-    .lang-toggle button:hover, .source-toggle button:hover { color: var(--text-primary); background: var(--bg-secondary); }
-    .lang-toggle button.active, .source-toggle button.active { background: var(--text-primary); color: var(--bg-primary); }
-    .lang-toggle button + button, .source-toggle button + button { border-left: 1px solid var(--border); }
-    .theme-toggle { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.05em; color: var(--text-tertiary); cursor: pointer; padding: 6px 12px; border: 1px solid var(--border); border-radius: 4px; background: transparent; transition: all var(--transition-fast); }
-    .theme-toggle:hover { color: var(--text-primary); border-color: var(--text-tertiary); }
-    .posts-list { list-style: none; }
-    .post-item { border-bottom: 1px solid var(--border); }
-    .post-link { display: block; padding: 40px 0; cursor: pointer; transition: padding-left var(--transition-fast); }
-    .post-link:hover { padding-left: 16px; }
-    .post-link:hover .post-item-title { color: var(--accent); }
-    .post-item-title { font-size: clamp(20px, 3.5vw, 26px); font-weight: 400; line-height: 1.25; letter-spacing: -0.01em; margin-bottom: 10px; transition: color var(--transition-fast); }
-    .post-item-meta { font-family: var(--font-mono); font-size: 10px; color: var(--text-tertiary); display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 10px; }
-    .post-item-meta span { display: flex; align-items: center; gap: 5px; }
-    .post-item-meta .dot { width: 3px; height: 3px; background: var(--border-light); border-radius: 50%; }
-    .post-item-excerpt { font-size: 14px; color: var(--text-secondary); line-height: 1.7; font-style: italic; display: -webkit-box; -webkit-line-clamp: 8; -webkit-box-orient: vertical; overflow: hidden; white-space: pre-line; }
-    .post-detail { animation: fadeIn 0.5s ease; }
-    .back-link { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 10px; color: var(--text-tertiary); margin-bottom: 56px; cursor: pointer; transition: color var(--transition-fast); letter-spacing: 0.05em; }
-    .back-link:hover { color: var(--accent); }
-    .back-link svg { transition: transform var(--transition-fast); }
-    .back-link:hover svg { transform: translateX(-4px); }
-    .post-header { margin-bottom: 48px; }
-    .post-category { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--accent); margin-bottom: 20px; }
-    .post-title { font-size: clamp(28px, 5vw, 44px); font-weight: 400; line-height: 1.15; letter-spacing: -0.02em; margin-bottom: 24px; }
-    .post-meta { font-family: var(--font-mono); font-size: 10px; color: var(--text-tertiary); display: flex; gap: 16px; flex-wrap: wrap; padding-bottom: 32px; border-bottom: 1px solid var(--border); margin-bottom: 40px; }
-    .post-meta span { display: flex; align-items: center; gap: 6px; }
-    .post-body { font-size: 18px; line-height: 1.85; color: var(--text-secondary); }
-    .post-body p { margin-bottom: 28px; }
-    .post-body p:last-child { margin-bottom: 0; }
-    .content-divider { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
-    .post-url { display: inline-flex; align-items: center; gap: 8px; margin-top: 48px; padding: 14px 28px; background: var(--accent); color: var(--bg-primary); font-family: var(--font-mono); font-size: 11px; border-radius: 3px; transition: opacity var(--transition-fast), transform var(--transition-fast); }
-    .post-url:hover { opacity: 0.85; transform: translateY(-1px); }
-    .loading { text-align: center; padding: 100px 0; font-family: var(--font-mono); font-size: 11px; color: var(--text-tertiary); letter-spacing: 0.1em; }
-    .loading::after { content: ''; display: inline-block; width: 4px; height: 4px; background: var(--accent); border-radius: 50%; margin-left: 10px; animation: blink 1.2s ease infinite; }
-    .error-msg { text-align: center; padding: 60px 40px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 4px; font-family: var(--font-mono); font-size: 11px; color: var(--text-secondary); }
-    .more-btn { display: block; width: 100%; margin: 64px 0; padding: 18px 0; background: transparent; border: 1px solid var(--border); border-radius: 4px; color: var(--text-tertiary); font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; position: relative; overflow: hidden; transition: all var(--transition-slow); }
-    .more-btn::before { content: ''; position: absolute; inset: 0; background: var(--accent-dim); transform: scaleX(0); transform-origin: left; transition: transform var(--transition-slow); }
-    .more-btn:hover { border-color: var(--accent); color: var(--accent); }
-    .more-btn:hover::before { transform: scaleX(1); }
-    .more-btn.loading { color: var(--text-tertiary); border-color: var(--border); cursor: default; pointer-events: none; }
-    .more-btn.loading::before { display: none; }
-    .more-btn.loading::after { content: ''; display: inline-block; width: 4px; height: 4px; background: var(--accent); border-radius: 50%; margin-left: 10px; animation: blink 1.2s ease infinite; }
-    footer { margin-top: 100px; padding-top: 32px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-family: var(--font-mono); font-size: 10px; color: var(--text-tertiary); letter-spacing: 0.05em; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
-    @media (max-width: 600px) { .container { padding: 60px 20px 80px; } .post-link { padding: 28px 0; } .post-link:hover { padding-left: 0; } .controls { flex-direction: column; gap: 12px; align-items: flex-start; } .post-url { display: block; text-align: center; } }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div id="app"></div>
-    <footer>
-      <span>潮汐 Tides · Powered by Supabase</span>
-      <span id="theme-label">Dark Mode</span>
-    </footer>
-  </div>
-  <script>
-    // Embedded posts data — generated at 2026-05-07T08:56:03.297Z
-    window.__POSTS_DATA__ = [{"id":"7f1d934c-4750-4cb6-af0a-a37fbda400e5","title":"The AI fitness instructors selling unreal gains → 推销虚假健身效果的 AI 健身教练","title_en":"The AI fitness instructors selling unreal gains","title_zh":"推销虚假健身效果的 AI 健身教练","content_en":"The BBC Sport investigation reveals that artificial intelligence-generated fitness instructors are flooding social media with misleading advertisements promising dramatic body transformations that are often scientifically implausible. These AI-created characters, which can be difficult to distinguish from real people, are being used to sell fitness app subscriptions while making claims such as helping users look 20 years younger or lose 40 pounds in a single month.\n\nThe investigation found that many of these advertisements breach UK advertising rules by failing to make clear that the featured individuals are not real. Users who engage with such content find their social media feeds quickly populated with similar material through algorithmic recommendation systems.\n\nThe trend has grown substantially over the past two years, with AI experts describing the phenomenon as \"huge.\" People searching for fitness guidance are particularly susceptible to these persuasive AI-generated personas, wh","content_zh":"BBC体育的调查揭示，人工智能生成的健身教练正充斥社交媒体，发布具有误导性的广告，承诺戏剧性的身体转变，而这些承诺往往在科学上站不住脚。这些人工智能创造的虚拟人物可能难以与真人区分，被用于销售健身应用订阅，同时做出诸如帮助用户在一个月内看起来年轻20岁或减重40磅的宣传。\n\n调查发现，这些广告中有许多违反了英国的广告规则，因为它们未能明确表明所展示的个人并非真实存在。参与此类内容的用户会发现，通过算法推荐系统，他们的社交媒体动态中很快充斥着类似的材料。\n\n这一趋势在过去两年中大幅增长，人工智能专家将其描述为“巨大的”现象。搜索健身指导的人特别容易受到这些具有说服力的人工智能生成角色的影响。","source":"bbc","created_at":"2026-05-07T08:56:00.717386+00:00","original_url":"https://www.bbc.com/sport/articles/c5ye7dnxv86o?at_medium=RSS&amp;at_campaign=rss","categories":{"id":"c3d4e5f6-a7b8-9012-cdef-123456789012","title":"新闻","sort_order":3}},{"id":"02873be6-2d41-4f8d-bc89-0ff69d6af37c","title":"What photo ID will you need to vote in the elections? → 你需要什么照片证件才能在选举中投票？","title_en":"What photo ID will you need to vote in the elections?","title_zh":"你需要什么照片证件才能在选举中投票？","content_en":"Summary: Photo ID Requirements for May Elections\n\nIn the upcoming local elections in England on 7 May, all voters casting ballots in person will be required to present valid photo identification at their polling station. However, this requirement does not extend to Scotland and Wales, where voters participating in Scottish Parliament or Senedd elections on the same day will not need to show any form of ID.\n\nThe UK government has approved more than twenty different forms of photo ID that voters in England can use, including passports, driving licences, older or Disabled Person's bus passes, Oyster 60+ cards, and Armed Forces Veteran Cards. Importantly, out-of-date photo identification remains valid provided the voter still resembles their photograph. Voters wearing face coverings for medical or religious reasons will be asked to briefly remove them so polling station staff can verify that the ID matches the individual presenting it.\n\nFor voters who have lost or had their ID stolen bef","content_zh":"总结：五月选举的身份证照片要求\n\n即将于5月7日举行的英格兰地方选举中，所有亲自投票的选民必须在投票站出示有效的带照片身份证件。然而，这一要求不适用于苏格兰和威尔士，在同一天参加苏格兰议会或威尔士议会选举的选民不需要出示任何形式的身份证件。\n\n英国政府已批准超过二十种不同形式的身份证件供英格兰选民使用，包括护照、驾驶执照、老年人或残疾人公交车票、牡蛎卡60岁以上卡和武装部队退伍军人卡。重要的是，只要选民的照片仍然与其本人相似，过期的身份证件仍然有效。\n\n出于医疗或宗教原因佩戴面罩的选民将被要求短暂取下面罩，以便投票站工作人员核实身份证件与持证人相符。\n\n对于丢失或被盗身份证件的选民...","source":"bbc","created_at":"2026-05-07T08:32:24.490711+00:00","original_url":"https://www.bbc.com/news/articles/czjg288xk93o?at_medium=RSS&amp;at_campaign=rss","categories":{"id":"c3d4e5f6-a7b8-9012-cdef-123456789012","title":"新闻","sort_order":3}},{"id":"fd59d5e6-7476-4e1f-a9bd-138e436a79f7","title":"Ukraine is a global surrogacy hub - but that could be about to end → 乌克兰是全球代孕中心——但这可能即将结束","title_en":"Ukraine is a global surrogacy hub - but that could be about to end","title_zh":"乌克兰是全球代孕中心——但这可能即将结束","content_en":"Ukraine has emerged as one of the world's leading commercial surrogacy destinations, second only to the United States, with foreigners comprising approximately 95% of intended parents seeking surrogacy services in the country. However, Ukraine's parliament is now considering legislation that would impose stricter regulations on the industry and effectively prohibit foreigners from accessing Ukrainian surrogacy services. The proposed bill has garnered widespread support among legislators who argue that the industry exploits vulnerable women and that Ukrainian women should not be bearing children for foreigners during a period when the nation's birthrate has sharply declined due to ongoing conflict with Russia.\n\nThe article features the personal story of Karina Tarasenko, a 22-year-old surrogate from eastern Ukraine who is six months pregnant with an embryo from Chinese parents. Karina's home in Bakhmut was destroyed during Russia's full-scale invasion, forcing her and her partner to rel","content_zh":"乌克兰已成为全球领先的商业代孕目的地之一，仅次于美国，外国人约占该国寻求代孕服务的准父母的95%。然而，乌克兰议会目前正在考虑立法，对该行业实施更严格的监管，并有效地禁止外国人使用乌克兰的代孕服务。该法案获得了议员们的广泛支持，他们认为该行业剥削弱势妇女，在乌克兰因与俄罗斯持续冲突导致出生率急剧下降的时期，乌克兰妇女不应该为外国人孕育孩子。该文讲述了来自乌克兰东部22岁的代孕妈妈卡丽娜·塔拉先科的个人故事，她已怀孕六个月，怀的是中国父母的孩子。卡丽娜在巴赫穆特的家园在俄罗斯全面入侵期间被摧毁，迫使她和她的伴侣重新安置。","source":"bbc","created_at":"2026-05-07T06:43:33.696913+00:00","original_url":"https://www.bbc.com/news/articles/clyp4kp687go?at_medium=RSS&amp;at_campaign=rss","categories":{"id":"c3d4e5f6-a7b8-9012-cdef-123456789012","title":"新闻","sort_order":3}},{"id":"9f6426bf-5d90-4e48-951d-312f4e9f40bc","title":"Programming Still Sucks → 编程仍然很糟糕","title_en":"Programming Still Sucks","title_zh":"编程仍然很糟糕","content_en":"Summary\n\nIn this candid personal essay, Steven Langbroek addresses the anxiety surrounding AI's potential to replace programmers, using a relatable scenario at a birthday party as his starting point. A \"Guy with a Real Job\" asks the perennial question—whether programmers should fear AI taking their work—and the author admits with refreshing honesty that yes, most of them are worried, and it would be foolish not to be.\n\nHowever, Langbroek's real argument runs deeper than AI anxiety. He contends that working in tech has always been a messy, chaotic endeavor that bears little resemblance to public perception. The stereotype—a clean corner office, perfect plans, applauding employees, and flawless software rolling off an assembly line—couldn't be further from reality. In contrast, the actual experience involves constant panic, admitting you have no idea what you're doing, sudden crises where everything falls apart, and employees crying in bathrooms.\n\nLangbroek illustrates this dysfunctio","content_zh":"摘要\n\n在这篇坦诚的个人随笔中，史蒂文·兰布罗克探讨了围绕人工智能可能取代程序员这一问题的焦虑，以在一个生日聚会上发生的场景作为切入点。一位“从事正经工作的人”提出了那个老生常谈的问题——程序员是否应该害怕人工智能抢走他们的工作——作者以一种令人耳目一新的坦诚承认，是的，他们中的大多数人都很担忧，不担忧才是愚蠢的。\n\n然而，兰布罗克的真正论点远比人工智能焦虑更为深刻。他认为，科技行业的工作一直就是混乱无序的，与公众的认知大相径庭。刻板印象——干净的角落办公室、完美的计划、鼓掌的员工、以及像流水线一样产出的完美软件——与现实相去甚远。相比之下，实际的工作体验涉及持续的恐慌、承认自己根本不知道在做什么、突然的危机让一切崩溃、以及员工在洗手间里哭泣。\n\n兰布罗克用这种失序状态来说明……","source":"hn","created_at":"2026-05-07T06:20:11.485565+00:00","original_url":"https://www.stvn.sh/writing/programming-still-sucks-fqffhyp","categories":{"id":"9126cc45-ac4c-42de-aca8-175d51351ab2","title":"tech","sort_order":0}},{"id":"b9608a46-d94c-47dc-97bf-0a550e10079e","title":"Serving Met officer and four ex-officers investigated for handling of Al Fayed allegations → 现任伦敦警察厅警官及四名前警官因处理阿尔法耶德相关指控问题接受调查","title_en":"Serving Met officer and four ex-officers investigated for handling of Al Fayed allegations","title_zh":"现任伦敦警察厅警官及四名前警官因处理阿尔法耶德相关指控问题接受调查","content_en":"Summary\n\nA serving Metropolitan Police officer and four former officers are currently under investigation by the Independent Office for Police Conduct (IOPC) for potential misconduct related to how they handled reports of sexual abuse made against Mohamed Al Fayed, the former owner of Harrods who died in 2023. The investigation, which began in January 2025, involves allegations reported by four victim-survivors. Following the broadcast of a BBC documentary in September 2024 that exposed Al Fayed's predatory behaviour, it was revealed that the Met had previously been approached by 21 women before his death, accusing him of sexual offences including rape, sexual assault and trafficking. However, Al Fayed was never charged with any offences. Complaints from two of the women, whose allegations were originally reported in 2008, were referred to the IOPC in November 2024, with a third complaint referred in February 2025. The IOPC has stated that it has yet to determine whether any of the o","content_zh":"概要\n\n一名现役伦敦警察厅警员和四名前警员目前正接受警察行为独立办公室(IOPC)的调查，原因是他们涉嫌在处理针对穆罕默德·阿尔·法耶德（Mohamed Al Fayed）的性侵举报时存在不当行为。阿尔·法耶德是哈罗德百货公司前业主，于2023年去世。此次调查于2025年1月启动，涉及四名受害幸存者的举报。2024年9月BBC播出了一部揭露阿尔·法耶德 predatory行为的纪录片后，调查显示，在其去世前，伦敦警察厅曾接到21名女性的投诉，指控他犯有包括强奸、性侵和人口贩卖在内的性犯罪。然而，阿尔·法耶德从未被指控任何罪行。其中两名女性的投诉（最初于2008年举报）于2024年11月被移交给IOPC，第三名女性的投诉于2025年2月被移交。IOPC表示，尚未确定这些警员的行为是否构成不当行为。","source":"bbc","created_at":"2026-05-07T06:19:45.864015+00:00","original_url":"https://www.bbc.com/news/articles/crepwqzppqgo?at_medium=RSS&amp;at_campaign=rss","categories":{"id":"c3d4e5f6-a7b8-9012-cdef-123456789012","title":"新闻","sort_order":3}},{"id":"7f8e19b0-7961-4b1e-9c93-5090d8f32b0e","title":"All-new Peugeot 208 expected to debut at Paris Motor Show with new design language 2 days ago → 全新标致208有望于巴黎车展首发亮相 采用全新设计语言 2天前","title_en":"All-new Peugeot 208 expected to debut at Paris Motor Show with new design language 2 days ago","title_zh":"全新标致208有望于巴黎车展首发亮相 采用全新设计语言 2天前","content_en":"The upcoming all‑new Peugeot 208 is rumored to make its public debut at the Paris Motor Show, marking the first appearance of a fresh design language for the brand’s compact hatchback. Previewed by teaser images and early spy shots, the new 208 abandons the previous softer curves in favor of crisper, more aggressive lines, a reinterpreted front grille, and new LED lighting signatures that echo the look of recent Peugeot concept cars. Inside, the cabin is set to receive the latest iteration of Peugeot’s i‑Cockpit, featuring a smaller, flat‑bottom steering wheel, a fully digital 10‑inch instrument cluster, and a larger 12‑inch central touchscreen that houses the newest infotainment software with smartphone‑mirroring, over‑the‑air updates, and enhanced voice‑assistant capabilities.  \n\nUnder the skin, the new 208 will ride on an updated version of the CMP (Common Modular Platform), which promises improved rigidity, a slight weight reduction, and a lower center of gravity for better handlin","content_zh":"即将推出的全新标致208据传将在巴黎车展上首次公开亮相，这将是该品牌紧凑型两厢车全新设计语言的首次亮相。从预告图和早期路试谍照来看，新款208摒弃了之前柔和的曲线，转而采用更加犀利、激进的线条、重新演绎的前格栅，以及与标致最新概念车外观相呼应的全新LED灯光设计。内饰方面，新款208将配备最新版本的标致i-Cockpit座舱系统，搭载更小巧的平底方向盘、全液晶10英寸仪表盘，以及更大的12英寸中控触摸屏，内置最新信息娱乐软件，支持手机互联、空中升级功能和增强型语音助手功能。动力方面，新款208将基于升级版CMP（共用模块化平台），该平台承诺提升车身刚性、略微减轻重量，并通过降低重心来改善操控性。","source":"autohome","created_at":"2026-05-07T06:18:27.21265+00:00","original_url":"https://www.autohome.com.cn/news/202605/1314104.html","categories":{"id":"b2c3d4e5-f6a7-8901-bcde-f12345678901","title":"汽车","sort_order":2}},{"id":"1d4a395c-8c18-4f47-a275-9866760dc0af","title":"Inkscape 1.4.4 → Inkscape 1.4.4","title_en":"Inkscape 1.4.4","title_zh":"Inkscape 1.4.4","content_en":"Inkscape 1.4.4 Release Notes Summary\n\nInkscape 1.4.4 is a maintenance and bugfix release of the popular open-source vector graphics editor, officially released on May 6, 2026. This version addresses numerous issues discovered since the previous release and introduces several practical improvements to enhance the overall user experience.\n\nThe release includes an impressive set of fixes and enhancements: twenty crash fixes, with three particularly critical fixes addressing scenarios where Inkscape would fail to start entirely; nearly twenty additional bug fixes covering various functionality issues; six performance improvements to make the application run more smoothly and efficiently; and a new palette for expanded color options. A notable new feature is a dedicated button for rotating stars and polygons into their \"neutral\" or \"upright\" position, which simplifies a common design task.\n\nFor international users, the release delivers significant localization improvements with twenty-sev","content_zh":"Inkscape 1.4.4 发布说明摘要\n\nInkscape 1.4.4 是这款备受欢迎的开源矢量图形编辑器的维护和错误修复版本，于 2026 年 5 月 6 日正式发布。此版本修复了自上一版本发布以来发现的众多问题，并引入了多项实用性改进，以提升整体用户体验。\n\n本次发布包含一系列令人瞩目的修复和改进：二十个崩溃修复，其中三个特别关键的修复针对 Inkscape 完全无法启动的情况；近二十个额外的错误修复，涵盖各种功能问题；六项性能改进，使应用程序运行更加流畅高效；以及一个新调色板以扩展颜色选项。一个值得注意的新功能是一个专用按钮，用于将星形和多边形旋转到\"中性\"或\"直立\"位置，简化了一项常见的设计任务。\n\n对于国际用户，此版本带来了重要的本地化改进，包含二十多项","source":"hn","created_at":"2026-05-07T06:13:08.281398+00:00","original_url":"https://inkscape.org/doc/release_notes/1.4.4/Inkscape_1.4.4.html","categories":{"id":"9126cc45-ac4c-42de-aca8-175d51351ab2","title":"tech","sort_order":0}},{"id":"05605259-d5b3-49f2-8ed6-2f94394985d7","title":"Nintendo announces a new Star Fox for the Switch 2 → 任天堂宣布为 Switch 2 推出全新星际火狐游戏","title_en":"Nintendo announces a new Star Fox for the Switch 2","title_zh":"任天堂宣布为 Switch 2 推出全新星际火狐游戏","content_en":"Nintendo Announces New Star Fox Game for Switch 2\n\nNintendo has officially announced a new installment in the popular Star Fox franchise, set to be released for the company's upcoming Switch 2 console. The announcement came as a surprise to fans and industry watchers alike, as Nintendo revealed the game during an unexpected Direct presentation rather than saving it for a major press event. This marks the return of the beloved space shooter series, which has seen its most recent mainline entry on the original Wii U.\n\nThe Star Fox franchise, created by Nintendo's legendary designer Shigeru Miyamoto, has been a staple of the company's gaming lineup since its debut on the Super Nintendo Entertainment System in 1993. The series follows the adventures of Fox McCloud and his team of anthropomorphic animals as they battle the evil scientist Andross and defend the Lylat System from various threats. Over the years, the franchise has evolved to include rail shooters, open-world adventures, and","content_zh":"任天堂宣布新的星际火狐游戏将登陆Switch 2\n\n任天堂正式宣布其备受欢迎的星际火狐系列将推出新作，预定在该公司即将推出的Switch 2主机上发布。这一公告令粉丝和行业观察人士都感到意外，因为任天堂是在一场临时安排的Direct直面会上公布这款游戏，而非留到大型新闻发布会。这标志着这款深受喜爱的太空射击系列的回归，该系列最近的正统续作还是在原版Wii U上推出的。\n\n星际火狐系列由任天堂传奇设计师宫本茂创作，自1993年在超级任天堂上首次亮相以来，一直是该公司游戏阵容的重要组成部分。该系列讲述了福克斯·麦克劳德和他那群拟人化动物团队的故事，他们与邪恶科学家安卓斯作战，捍卫利拉特星系免受各种威胁。这些年来，该系列不断进化，涵盖了轨道射击游戏、开放世界冒险等多种游戏类型。","source":"verge","created_at":"2026-05-07T06:08:03.067405+00:00","original_url":"https://www.theverge.com/entertainment/925601/star-fox-nintendo-switch-2","categories":{"id":"9126cc45-ac4c-42de-aca8-175d51351ab2","title":"tech","sort_order":0}},{"id":"bbcb7ef5-5658-4b13-a41e-f4ec71dc328c","title":"Musk’s biggest loyalist became his biggest liability → 马斯克最忠诚的盟友如今成了他最大的负担","title_en":"Musk’s biggest loyalist became his biggest liability","title_zh":"马斯克最忠诚的盟友如今成了他最大的负担","content_en":"Summary: Musk's biggest loyalist became his biggest liability\n\nThis article from The Verge, published on May 6, 2026, examines the shifting dynamics between Elon Musk and Shivon Zilis, who was previously one of Musk's most trusted allies. The piece centers on Zilis's notes, which the article suggests have emerged as potentially crucial evidence in the ongoing legal proceedings involving Musk and OpenAI CEO Sam Altman. According to senior reporter Elizabeth Lopatto, these notes represent what may be the most significant documentation uncovered thus far in the case. The title itself captures the paradox at the heart of the story: someone once considered among Musk's closest supporters and defenders has now become a potential source of damaging information against him. The article falls under The Verge's AI, Tech, and Elon Musk coverage categories, indicating this development is significant within the broader context of the artificial intelligence industry and the legal battles surround","content_zh":"摘要：马斯克最忠心的支持者如今成了他最大的负担\n\n这篇来自The Verge的文章发表于2026年5月6日，探讨了埃隆·马斯克与希文·齐利斯之间不断变化的关系。齐利斯此前曾是马斯克最信任的盟友之一。文章聚焦于齐利斯的笔记，据文章称，这些笔记可能已成为马斯克与OpenAI首席执行官萨姆·阿尔特曼正在进行法律诉讼中的关键证据。据资深记者伊丽莎白·洛帕托报道，这些笔记可能构成了该案迄今为止发现的最重要文件记录。文章标题本身就捕捉到了这个故事的核心悖论：一个曾被视为马斯克最亲密的支持者和捍卫者，如今却可能成为对他不利的信息来源。该文章归属于The Verge的AI、科技和埃隆·马斯克报道类别，表明这一进展在人工智能行业及围绕此的法律战中具有重要意义。","source":"verge","created_at":"2026-05-07T06:07:08.799776+00:00","original_url":"https://www.theverge.com/ai-artificial-intelligence/925665/musk-altman-trial-shivon-zilis-testimony","categories":{"id":"9126cc45-ac4c-42de-aca8-175d51351ab2","title":"tech","sort_order":0}},{"id":"e79c708f-46d1-4295-8a37-d9acfd085922","title":"Five architects of the AI economy explain where the wheels are coming off → AI经济五巨头指出问题所在","title_en":"Five architects of the AI economy explain where the wheels are coming off","title_zh":"AI经济五巨头指出问题所在","content_en":"Summary\n\nThis TechCrunch article reports on a panel discussion held at the Milken Global Conference in Beverly Hills featuring five key figures in the AI industry who offered insights into the current challenges facing the AI economy. The panel included Christophe Fouquet, CEO of ASML, the Dutch company that maintains a monopoly on extreme ultraviolet lithography machines essential for modern chip manufacturing; Francis deSouza, COO of Google Cloud, who discussed the company's massive infrastructure investments; Qasar Younis, co-founder and CEO of Applied Intuition, a $15 billion physical AI company focused on autonomous systems; Dimitry Shevelenko, chief business officer of Perplexity, an AI-native search company; and Eve Bodnia, a quantum physicist and founder of Logical Intelligence, who is questioning the foundational architecture of AI systems.\n\nThe discussion revealed several critical bottlenecks in the AI supply chain. Fouquet emphasized that despite a \"huge acceleration of ch","content_zh":"摘要\n\n这篇TechCrunch文章报道了在比佛利山庄举行的米尔肯全球会议上举行的一场小组讨论，该会议邀请了人工智能行业的五位关键人物，他们就人工智能经济当前面临的挑战提供了见解。小组成员包括：ASML首席执行官Christophe Fouquet，这家荷兰公司垄断了现代芯片制造所必需的极紫外光刻机；谷歌云首席运营官Francis deSouza，他讨论了该公司的大规模基础设施投资；应用智能公司联合创始人兼首席执行官Qasar Younis，这是一家专注于自动驾驶系统、估值150亿美元的物理AI公司；Perplexity首席商务官Dimitry Shevelenko，这是一家AI原生搜索公司；以及量子物理学家、逻辑智能公司创始人Eve Bodnia，她正在质疑AI系统的基础架构。\n\n讨论揭示了AI供应链中的几个关键瓶颈。Fouquet强调，尽管“巨大的加速”","source":"tc","created_at":"2026-05-07T06:04:27.580039+00:00","original_url":"https://techcrunch.com/2026/05/06/five-architects-of-the-ai-economy-explain-where-the-wheels-are-coming-off/","categories":{"id":"9126cc45-ac4c-42de-aca8-175d51351ab2","title":"tech","sort_order":0}},{"id":"2e4c132f-1e69-4063-9ca3-f611c08c0869","title":"Ted Turner has died → 特德·特纳去世了","title_en":"Ted Turner has died","title_zh":"特德·特纳去世了","content_en":"Ted Turner, the visionary media entrepreneur who founded CNN and pioneered the concept of 24‑hour cable news, died on May 6 2026 at the age of 87. Turner launched CNN in 1980, forever changing the way news is produced and distributed by creating the first dedicated all‑news cable channel. Beyond CNN, he built Turner Broadcasting System, acquired the Atlanta Braves baseball franchise, and created WTBS, the superstation that brought sports and entertainment to a broad national audience. He later expanded into film by purchasing the MGM library, established the United Nations Foundation to support global causes, and became a prominent environmentalist through the Turner Endangered Species Fund. Turner’s bold gamble on continuous news coverage transformed global journalism, set the stage for modern cable and satellite news, and cemented his reputation as one of the most influential figures in modern media. His death marks the end of an era for a pioneer whose ideas reshaped how the world r","content_zh":"特德·特纳，这位富有远见的媒体企业家、CNN创始人以及24小时有线电视新闻概念的先驱，于2026年5月6日去世，享年87岁。特纳于1980年创办CNN，通过创建首个专业全新闻有线电视频道，永远改变了新闻的制作和传播方式。除CNN外，他还创建了特纳广播系统，收购了亚特兰大勇士棒球队，并创建了WTBS超级电视台，将体育和娱乐节目带给广大国内观众。后来他通过收购米高梅电影资料库扩展到电影领域，创立了联合国基金会以支持全球事业，并通过特纳濒危物种基金成为著名的环保主义者。特纳对持续新闻报道的大胆赌注改变了全球新闻业，为现代有线和卫星新闻奠定了基础，并巩固了他作为现代媒体最具影响力人物之一的声誉。他的去世标志着一个先驱者时代的终结，这位先驱者的理念重塑了世界了解信息的方式。","source":"hn","created_at":"2026-05-07T06:02:32.634887+00:00","original_url":"https://www.cnn.com/2026/05/06/us/ted-turner-death","categories":{"id":"9126cc45-ac4c-42de-aca8-175d51351ab2","title":"tech","sort_order":0}},{"id":"c6cca331-cadc-4a80-820f-59b83caabc70","title":"Google Cloud fraud defense, the next evolution of reCAPTCHA → 谷歌云欺诈防御，reCAPTCHA 的下一代演进","title_en":"Google Cloud fraud defense, the next evolution of reCAPTCHA","title_zh":"谷歌云欺诈防御，reCAPTCHA 的下一代演进","content_en":"Google Cloud has announced the launch of Fraud Defense, a comprehensive trust platform designed to address the emerging security challenges of the agentic web—where autonomous AI agents increasingly handle complex online transactions. Positioned as the next evolution of reCAPTCHA, Fraud Defense enables businesses to verify and distinguish between legitimate bots, human users, and AI agents, providing the intelligence needed to secure digital interactions and commerce.\n\nThe platform introduces several key capabilities. First, an agentic activity measurement dashboard helps organizations understand and analyze AI-driven traffic by integrating with industry standards such as Web Bot Auth and SPIFFE, while also connecting agent and human identities to assess risk. Second, the agentic policy engine provides granular control over traffic throughout the user journey, allowing businesses to allow or block agents based on conditions including risk scores, automation types, and agent identity. T","content_zh":"Google Cloud 宣布推出 Fraud Defense（欺诈防御），这是一个全面的信任平台，旨在应对代理网络（agentic web）新兴的安全挑战——在这个网络中，自主 AI 代理越来越多地处理复杂的在线交易。Fraud Defense 作为 reCAPTCHA 的下一代演进版本，使企业能够验证并区分合法机器人、人类用户和 AI 代理，提供保护数字互动和商务所需的智能。\n\n该平台推出了几项关键功能。首先，代理活动测量仪表板通过与 Web Bot Auth 和 SPIFFE 等行业标准集成，帮助组织理解和分析 AI 驱动的流量，同时连接代理和人类身份以评估风险。其次，代理策略引擎在整个用户旅程中对流量提供精细化控制，使企业能够根据风险评分、自动化类型和代理身份等条件允许或阻止代理。","source":"hn","created_at":"2026-05-07T06:01:04.67494+00:00","original_url":"https://cloud.google.com/blog/products/identity-security/introducing-google-cloud-fraud-defense-the-next-evolution-of-recaptcha/","categories":{"id":"9126cc45-ac4c-42de-aca8-175d51351ab2","title":"tech","sort_order":0}},{"id":"2d955e38-283b-4c70-bad9-582653a4a0bc","title":"Iran considering US proposal to end war, official says → 官员表示，伊朗正在考虑美国提出的结束战争提议","title_en":"Iran considering US proposal to end war, official says","title_zh":"官员表示，伊朗正在考虑美国提出的结束战争提议","content_en":"Summary: Iran Considering US Proposal to End War\n\nIran has announced that a US proposal to end the ongoing conflict is \"still being reviewed\" following reports that the two nations may be close to reaching an agreement. According to Axios, the White House believes it could be finalizing a 14-point memorandum of understanding with Iran, which would establish a framework for more detailed nuclear negotiations. The proposed memo reportedly includes provisions for suspending Iranian nuclear enrichment, lifting sanctions, and restoring free transit through the Strait of Hormuz.\n\nA senior member of Iran's parliament initially dismissed the proposal as a \"wish list,\" while Iranian foreign ministry spokesman Ismail Baghaei stated that Tehran would share its views on the US proposal with Pakistani mediators, who have been facilitating negotiations between the two sides. Pakistan's foreign minister expressed his country's commitment to \"convert this ceasefire into a permanent end to this war.\"","content_zh":"摘要：伊朗正在考虑美国提出的结束战争方案\n\n伊朗宣布，美国提出的结束持续冲突的方案“仍在审查中”。此前有报道称，两国可能即将达成协议。据Axios报道，白宫认为其可能与伊朗敲定一份包含14个要点的谅解备忘录，这将为更详细的核谈判奠定框架。据报道，该备忘录草案包括暂停伊朗核浓缩计划、解除制裁以及恢复霍尔木兹海峡自由通航等内容。\n\n伊朗议会一名高级成员最初将该方案斥为“愿望清单”，而伊朗外交部发言人伊斯梅尔·巴盖伊则表示，德黑兰将与巴基斯坦调解方分享其对美国提案的看法，巴基斯坦一直在为双方谈判提供便利。巴基斯坦外交部长表示，巴方致力于“将这份停火协议转化为永久终结这场战争”。","source":"bbc","created_at":"2026-05-07T02:57:31.565172+00:00","original_url":"https://www.bbc.com/news/articles/cj0pq2q8221o?at_medium=RSS&amp;at_campaign=rss","categories":{"id":"c3d4e5f6-a7b8-9012-cdef-123456789012","title":"新闻","sort_order":3}},{"id":"edd389b0-4ea3-426c-8cc6-3092c8c30dec","title":"Can CCTV really stop children being abused in nurseries? → 监控真的能阻止幼儿园儿童遭受虐待吗？","title_en":"Can CCTV really stop children being abused in nurseries?","title_zh":"监控真的能阻止幼儿园儿童遭受虐待吗？","content_en":"Summary:\n\nThis BBC News article examines whether mandatory CCTV installation in nurseries across England could effectively protect children from abuse and neglect, prompted by several high-profile cases of child deaths and abuse in early years settings. The piece details the tragic cases of Genevieve, a nine-month-old who died in 2022 at a Stockport nursery after being strapped face down to a beanbag and left unsupervised for over 90 minutes, and Noah Sibanda, a 14-month-old who died at a Dudley nursery after being wrapped in blankets with a nursery worker's leg pressed across his back. Both nurseries had existing CCTV systems, which subsequently helped convict the perpetrators, yet could not prevent the deaths from occurring. The UK government is now consulting experts on whether CCTV should be mandatory in all nurseries, while Scotland, Wales, and Northern Ireland leave such decisions to individual providers. Australia is currently trialling cameras in 300 childcare centres. The","content_zh":"摘要：\n\n这篇BBC新闻报道探讨了英格兰是否应在所有幼儿园强制安装闭路电视，以有效保护儿童免受虐待和忽视。这一议题的提出源于早期教育机构中多起儿童死亡和虐待事件。报道详细叙述了两起悲剧案件：2022年，9个月大的 Genevieve 在斯托克波特一家幼儿园死亡，此前她被脸朝下绑在豆袋椅上，无人看管超过90分钟；以及14个月大的 Noah Sibanda 在达德利一家幼儿园死亡，原因是工作人员用毯子将其裹住，并将腿压在其背上。这两家幼儿园当时都已安装了闭路电视系统，这些录像后来帮助定罪了肇事者，但未能阻止死亡事件的发生。英国政府目前正在咨询专家意见，探讨是否应强制所有幼儿园安装闭路电视；苏格兰、威尔士和北爱尔兰则将此类决定权交给各机构自行决定。澳大利亚目前正在300家儿童保育中心试验安装摄像头。","source":"bbc","created_at":"2026-05-07T00:32:26.96006+00:00","original_url":"https://www.bbc.com/news/articles/czx2kn4n5wxo?at_medium=RSS&amp;at_campaign=rss","categories":{"id":"c3d4e5f6-a7b8-9012-cdef-123456789012","title":"新闻","sort_order":3}},{"id":"c6799577-8a5b-4883-8a11-dcb1f6cf519e","title":"Israel strikes Beirut for first time since Hezbollah ceasefire → 以色列首次在真主党停火后袭击贝鲁特","title_en":"Israel strikes Beirut for first time since Hezbollah ceasefire","title_zh":"以色列首次在真主党停火后袭击贝鲁特","content_en":"Summary of Israel Strikes Beirut Article\n\nIsrael has conducted an air strike on Beirut for the first time since agreeing to a ceasefire with the Lebanese armed group Hezbollah, putting renewed pressure on a fragile peace deal that has failed to halt ongoing hostilities between the two sides. The attack targeted the city's southern suburbs, known as Dahieh, which serves as a Hezbollah stronghold. Israeli Prime Minister Benjamin Netanyahu personally approved the strike, which specifically targeted a commander from Hezbollah's elite Radwan Force. Local media reported that members of the unit were holding a meeting when the strike occurred around 20:00 local time. This marks the first military action against Dahieh since US President Donald Trump announced a ceasefire agreement between Israel and Lebanon on April 16.\n\nDespite the ceasefire deal, both Israel and Hezbollah have continued their attacks, with each side accusing the other of violations. Israel's military strikes have predomin","content_zh":"以色列空袭贝鲁特文章摘要\n\n以色列对贝鲁特发动了空袭，这是自与黎巴嫩武装组织真主党达成停火协议以来的首次，此举给一项脆弱的和平协议带来新的压力，该协议未能阻止双方持续的敌对行动。袭击针对的是城市南部郊区达希耶，该地区是真主党的据点。以色列总理本杰明·内塔尼亚胡亲自批准了这次袭击，此次袭击专门针对真主党精锐拉德万部队的一名指挥官。当地媒体报道称，袭击发生在当地时间约20:00，该部队成员正在举行会议。这是自美国总统唐纳德·特朗普4月16日宣布以色列与黎巴嫩停火协议以来首次对达希耶采取军事行动。\n\n尽管有停火协议，以色列和真主党都继续发动攻击，双方互相指责对方违反协议。以色列的军事袭击主要","source":"bbc","created_at":"2026-05-07T00:31:22.234481+00:00","original_url":"https://www.bbc.com/news/articles/crmpjjl02l2o?at_medium=RSS&amp;at_campaign=rss","categories":{"id":"c3d4e5f6-a7b8-9012-cdef-123456789012","title":"新闻","sort_order":3}},{"id":"bc1ac8bc-91f6-4e3f-a410-d26cc05c4d23","title":"BYD Dahong Information Update: Expected to Debut as Early as Within May with Prices Expected in June (21 hours ago) → 比亚迪大汉信息更新 预计最快5月内完成亮相并于6月份公布价格 21小时前","title_en":"BYD Dahong Information Update: Expected to Debut as Early as Within May with Prices Expected in June (21 hours ago)","title_zh":"比亚迪大汉信息更新 预计最快5月内完成亮相并于6月份公布价格 21小时前","content_en":"BYD Da Han Information Update: Anticipated Market Launch Timeline\n\nAccording to Autohome's news report published on May 6, 2026, BYD's upcoming \"Da Han\" vehicle has received updated information. The Chinese automaker is reportedly planning to unveil the model at the earliest by the end of May, with official pricing expected to be announced in June.\n\nThis timeline suggests that BYD is accelerating its product launch schedule for the Da Han, positioning it as a significant addition to their growing portfolio of new energy vehicles. The company's proactive approach in providing early information updates indicates strong confidence in the vehicle's development progress.\n\nThe Da Han appears to be another strategic model in BYD's diverse lineup, following the company's aggressive expansion strategy in both domestic and international markets. As of the article's publication date, the report had garnered approximately 42,000 views, reflecting substantial public interest in BYD's upcoming rel","content_zh":"比亚迪“大汉”车型信息更新：预计上市时间表\n\n根据汽车之家于2026年5月6日发布的新闻报道，比亚迪即将推出的“大汉”车型获得了最新信息更新。据报道，这家中国汽车制造商计划最早于5月底亮相该车型，并有望在6月公布正式售价。\n\n这一时间表表明，比亚迪正在加快“大汉”的产品上市计划，将其定位为比亚迪不断壮大的新能源汽车产品线中的重要补充。该公司主动提前发布信息更新的做法，显示出对其车辆开发进展的强烈信心。\n\n“大汉”似乎是比亚迪多元化产品阵容中的又一款战略车型，符合该公司在国内和国际市场积极扩张的战略。截至本文发布时，该报道已获得约42,000次浏览，反映出公众对比亚迪即将推出的新车型的浓厚兴趣。","source":"autohome","created_at":"2026-05-07T00:30:15.164393+00:00","original_url":"https://www.autohome.com.cn/news/202605/1314112.html","categories":{"id":"b2c3d4e5-f6a7-8901-bcde-f12345678901","title":"汽车","sort_order":2}},{"id":"95ef2edb-9ced-4e9d-a8ca-e04596d3fd84","title":"Spooked by Mythos, Trump suddenly realized AI safety testing might be good → 被Mythos惊到的特朗普突然意识到，AI安全测试或许是件好事。","title_en":"Spooked by Mythos, Trump suddenly realized AI safety testing might be good","title_zh":"被Mythos惊到的特朗普突然意识到，AI安全测试或许是件好事。","content_en":"The Trump administration has reversed its stance on AI safety testing, signing voluntary agreements with Google DeepMind, Microsoft, and xAI requiring government safety checks on frontier AI models before and after release. This marks a significant shift from Trump's earlier dismissal of Biden-era safety policies as overregulation, and his subsequent rebranding of the US AI Safety Institute to the Center for AI Safety Standards and Innovation (CAISI), which deliberately removed the word \"safety\" from its name. The reversal appears prompted by Anthropic's announcement that it would not release its Claude Mythos model due to concerns about its advanced cybersecurity capabilities being exploited by bad actors. According to reports, Trump may now issue an executive order mandating pre-release government testing of advanced AI systems. CAISI Director Chris Fall emphasized that \"independent, rigorous measurement science is essential to understanding frontier AI and its national security impl","content_zh":"特朗普政府已改变其在人工智能安全测试方面的立场，与谷歌DeepMind、微软和xAI签署自愿协议，要求前沿人工智能模型在发布前后都需接受政府安全检查。\n这标志着特朗普的态度发生了重大转变：此前他曾将拜登时期的安全政策斥为过度监管，随后还将美国人工智能安全研究所更名为人工智能安全标准与创新中心（CAISI），特意将“安全”一词从名称中删去。\n此次立场反转似乎是由Anthropic的公告引发的，该公司宣布因担心旗下Claude Mythos模型的先进网络安全能力会被不法分子利用，将不会发布该模型。\n据报道，特朗普现在可能会发布一项行政命令，强制要求先进人工智能系统在发布前接受政府测试。人工智能安全标准与创新中心主任克里斯·法尔强调：“独立、严谨的测量科学对于了解前沿人工智能及其国家安全影”","source":"ars","created_at":"2026-05-07T00:22:19.248675+00:00","original_url":"https://arstechnica.com/tech-policy/2026/05/everything-that-could-go-wrong-with-trumps-ai-safety-tests-according-to-experts/","categories":{"id":"9126cc45-ac4c-42de-aca8-175d51351ab2","title":"tech","sort_order":0}},{"id":"dab4f42e-d26a-44b3-bed4-024d38d89dc3","title":"Court strikes down FCC anti-discrimination rule opposed by Internet providers → 法院推翻了美国联邦通信委员会（FCC）出台的、遭互联网运营商反对的反歧视规定。","title_en":"Court strikes down FCC anti-discrimination rule opposed by Internet providers","title_zh":"法院推翻了美国联邦通信委员会（FCC）出台的、遭互联网运营商反对的反歧视规定。","content_en":"Summary\n\nA federal court has struck down an anti-discrimination rule issued by the Federal Communications Commission (FCC) that had been strongly opposed by major internet service providers. The ruling represents a significant victory for the telecommunications industry, which had challenged the regulation on various legal grounds. The FCC's rule was designed to prevent internet providers from discriminating against certain types of internet traffic or charging different rates for different types of online services and content. Industry groups argued that the regulation overstepped the commission's authority and would stifle investment in network infrastructure. The court's decision effectively invalidates the FCC's effort to impose stricter oversight of how internet providers manage traffic on their networks. This ruling marks a reversal of the agency's attempt to apply common carrier principles to broadband services, similar to those traditionally applied to telephone networks. The","content_zh":"摘要\n\n一家联邦法院驳回了联邦通信委员会(FCC)发布的一项反歧视规则，该规则曾遭到主要互联网服务提供商的强烈反对。这一裁决代表了电信行业的重大胜利，该行业此前曾以各种法律理由对这一法规提出质疑。FCC的规则旨在防止互联网提供商歧视某些类型的互联网流量，或对不同类型的在线服务和内容收取不同费率。行业组织认为，该法规超越了委员会的权限，将抑制对网络基础设施的投资。法院的裁决实际上使FCC对互联网提供商管理其网络流量实施更严格监督的努力失效。这一裁决标志着该机构试图将运营商共乘原则应用于宽带服务的一次逆转，类似于传统上应用于电话网络的原则。","source":"ars","created_at":"2026-05-07T00:20:44.760056+00:00","original_url":"https://arstechnica.com/tech-policy/2026/05/court-strikes-down-fcc-anti-discrimination-rule-opposed-by-internet-providers/","categories":{"id":"9126cc45-ac4c-42de-aca8-175d51351ab2","title":"tech","sort_order":0}},{"id":"831f1a0c-fe55-4cd3-b22c-eb9c91f1505a","title":"TSMC taps wind power as AI chip demand soars, Taiwan feels energy crunch → 台积电押注风力发电应对AI芯片需求飙升 台湾感受能源压力","title_en":"TSMC taps wind power as AI chip demand soars, Taiwan feels energy crunch","title_zh":"台积电押注风力发电应对AI芯片需求飙升 台湾感受能源压力","content_en":"Summary\n\nTSMC (Taiwan Semiconductor Manufacturing Company), the world's largest contract chipmaker, is increasingly turning to wind power to meet its massive energy demands as artificial intelligence chip demand continues to surge. The company, which produces chips for major tech firms like Apple, Nvidia, and AMD, faces significant energy challenges in Taiwan, where power grid constraints have become a growing concern.\n\nThe semiconductor manufacturing process is extremely energy-intensive, and TSMC's facilities consume substantial amounts of electricity. With the rapid expansion of AI technologies and the corresponding need for advanced chips, the company's power requirements have grown substantially, putting pressure on Taiwan's energy infrastructure.\n\nTaiwan has been working to diversify its energy sources beyond nuclear power, which has been a politically sensitive topic on the island. Wind power, particularly offshore wind farms, has emerged as a promising renewable energy source","content_zh":"摘要\n作为全球最大的芯片代工企业，台积电（台湾积体电路制造公司）在人工智能芯片需求持续飙升的背景下，正越来越多地转向风力发电，以满足自身庞大的能源需求。该公司为苹果、英伟达、超微半导体等头部科技企业供应芯片，目前在台湾面临严峻的能源挑战，当地的电网约束问题正引发越来越多的担忧。\n\n半导体制造过程能耗极高，台积电的生产设施耗电量巨大。随着人工智能技术快速扩张，以及随之而来的先进芯片需求增长，该公司的用电需求大幅提升，给台湾的能源基础设施造成了压力。\n\n台湾一直在推动能源来源多元化，降低对核电的依赖，核电在岛内始终是政治敏感议题。风力发电，尤其是海上风电场，已成为颇具发展前景的可再生能源。","source":"ars","created_at":"2026-05-07T00:19:25.313936+00:00","original_url":"https://arstechnica.com/gadgets/2026/05/tsmc-taps-wind-power-as-ai-chip-demand-soars-taiwan-feels-energy-crunch/","categories":{"id":"9126cc45-ac4c-42de-aca8-175d51351ab2","title":"tech","sort_order":0}},{"id":"440c3d13-728f-4ede-8db9-2297817dee71","title":"Anthropic raises Claude Code usage limits, credits new deal with SpaceX → Anthropic提高Claude Code使用限额，称此举得益于其与太空探索技术公司（SpaceX）达成的新合作协议。\n\n注：因Anthropic暂无官方统一中文译名，业内通常直接保留原名使用，若需音译也可译为“安索匹克”。","title_en":"Anthropic raises Claude Code usage limits, credits new deal with SpaceX","title_zh":"Anthropic提高Claude Code使用限额，称此举得益于其与太空探索技术公司（SpaceX）达成的新合作协议。\n\n注：因Anthropic暂无官方统一中文译名，业内通常直接保留原名使用，若需音译也可译为“安索匹克”。","content_en":"Summary:\n\nAnthropic has announced increased usage limits for its Claude Code product, attributing this expansion to a newly established partnership with SpaceX. The announcement, made on May 6, 2026, signals a significant collaboration between the AI company and the space exploration firm. Claude Code is Anthropic's coding assistant tool that allows developers to leverage AI capabilities for software development tasks. The increased usage limits indicate that Anthropic is scaling up its infrastructure and capacity, likely to accommodate higher demand or specific requirements from its new SpaceX partnership. This deal represents one of several high-profile partnerships Anthropic has established with major technology companies, as the company continues to compete in the rapidly evolving AI assistant market. The collaboration with SpaceX suggests potential applications for AI-assisted coding in aerospace and satellite development, though specific details of how SpaceX plans to utilize","content_zh":"摘要：\nAnthropic宣布上调旗下Claude Code产品的使用限额，并称此次扩容是基于该公司与SpaceX最新建立的合作关系。这项公告于2026年5月6日发布，标志着这家人工智能企业与太空探索公司达成了重磅合作。Claude Code是Anthropic推出的代码助手工具，可让开发者借助人工智能能力完成各类软件开发任务。使用限额上调说明Anthropic正在扩容基础设施、提升服务承载能力，此举大概率是为了应对更高的用户需求，或是满足新合作伙伴SpaceX的特定要求。该交易是Anthropic与各大科技企业达成的多起高关注度合作之一，目前该公司正持续在快速迭代的AI助手市场中展开竞争。与SpaceX的合作意味着AI辅助编码有望在航空航天及卫星开发领域得到应用，不过SpaceX计划如何应用该工具的具体细节尚未公开。","source":"ars","created_at":"2026-05-07T00:17:14.444037+00:00","original_url":"https://arstechnica.com/ai/2026/05/anthropic-raises-claude-code-usage-limits-credits-new-deal-with-spacex/","categories":{"id":"9126cc45-ac4c-42de-aca8-175d51351ab2","title":"tech","sort_order":0}},{"id":"8df867d5-fbf3-4412-9633-ba6306302c32","title":"SpaceX is starting to move on from the world's most successful rocket → SpaceX（太空探索技术公司）正开始逐步告别这款全球最成功的运载火箭。","title_en":"SpaceX is starting to move on from the world's most successful rocket","title_zh":"SpaceX（太空探索技术公司）正开始逐步告别这款全球最成功的运载火箭。","content_en":"SpaceX is beginning to shift its focus away from the Falcon 9, the workhorse rocket that has become the world’s most successful launch vehicle, as the company moves to capitalize on the capabilities of its next‑generation Starship. Over the past decade Falcon 9 has logged hundreds of missions, reliably delivering satellites, cargo and crew to orbit while pioneering first‑stage reusability that dramatically cut launch costs. Now, after achieving a high flight rate and accumulating a wealth of reuse data, SpaceX is redirecting engineering resources, production capacity and launch‑pad scheduling toward Starship, a fully reusable super‑heavy‑lift vehicle designed to serve both cis‑lunar and interplanetary missions. The transition reflects a strategic decision to move beyond the incremental improvements of Falcon 9 and to embrace a vehicle that can haul larger payloads at lower per‑kilogram cost and enable ambitious projects such as a commercial space station, lunar landing services for NAS","content_zh":"SpaceX开始将重点从猎鹰9号转移开来——这款主力火箭已成为全球最成功的运载火箭——该公司正着手利用其下一代星舰的能力。过去十年间，猎鹰9号已完成数百次任务，可靠地将卫星、货物和人员送入轨道，同时开创了第一级可回收技术，大幅降低了发射成本。如今，在实现高飞行频率并积累了大量回收数据后，SpaceX正将工程资源、生产能力和发射台排期转向星舰——一款完全可重复使用的超重型运载火箭，旨在执行地月空间及星际任务。此次转型反映了一个战略决策，即超越猎鹰9号的渐进式改进，拥抱一款能够以更低每公斤成本运输更大有效载荷的运载火箭，并使商业空间站、为NASA提供登月服务等雄心勃勃的项目成为可能。","source":"ars","created_at":"2026-05-07T00:14:52.905414+00:00","original_url":"https://arstechnica.com/space/2026/05/spacex-is-starting-to-move-on-from-the-worlds-most-successful-rocket/","categories":{"id":"9126cc45-ac4c-42de-aca8-175d51351ab2","title":"tech","sort_order":0}},{"id":"8331985d-c99d-487b-bf98-c2ea97f33951","title":"Insurance startup Corgi hits $1.3B valuation 4 months after its Series A → 保险初创公司Corgi在完成A轮融资仅4个月后估值便达到13亿美元。","title_en":"Insurance startup Corgi hits $1.3B valuation 4 months after its Series A","title_zh":"保险初创公司Corgi在完成A轮融资仅4个月后估值便达到13亿美元。","content_en":"Summary: Insurance Startup Corgi Achieves $1.3 Billion Valuation Just Four Months After Series A\n\nCorgi, an insurance technology startup focused on business insurance solutions, has secured a significant funding milestone by raising a $160 million Series B round led by venture capital firm TCV. This latest investment has propelled the company's valuation to an impressive $1.3 billion, marking a remarkable growth trajectory that saw the startup achieve unicorn status just four months after completing its Series A funding round.\n\nThe company's rapid ascent in valuation reflects the strong investor confidence in Corgi's approach to modernizing the business insurance industry. Founded by co NicoLaqu (name appears truncated in source), Corgi has positioned itself as an innovative player in the InsurTech space, offering digital-first solutions that streamline the process of obtaining and managing commercial insurance policies for small and medium-sized businesses.\n\nThe substantial Series B","content_zh":"摘要：保险初创企业Corgi A轮融资仅四个月估值便达13亿美元\n专注于商业保险解决方案的保险科技初创企业Corgi完成了由风险投资公司TCV领投的1.6亿美元B轮融资，达成了重要融资里程碑。这笔最新投资将公司估值推高至亮眼的13亿美元，凸显出其出众的增长态势，这家初创企业在完成A轮融资仅四个月后就跻身独角兽行列。\nCorgi估值的快速攀升，反映出投资者对其推动商业保险行业现代化的发展路径的高度信心。Corgi由联合创始人NicoLaqu（来源资料中该姓名有所截断）创立，是保险科技领域的创新参与者，主打数字化优先的解决方案，可简化中小企业获取和管理商业保险保单的流程。\n此次大额B轮","source":"tc","created_at":"2026-05-07T00:13:00.596246+00:00","original_url":"https://techcrunch.com/2026/05/06/insurance-startup-corgi-hits-1-3b-valuation-4-months-after-its-series-a/","categories":{"id":"9126cc45-ac4c-42de-aca8-175d51351ab2","title":"tech","sort_order":0}},{"id":"7cda82ad-40c0-47ef-8aa1-098c5e22a034","title":"Is xAI a neocloud now? → xAI现在是一家新云公司了吗？","title_en":"Is xAI a neocloud now?","title_zh":"xAI现在是一家新云公司了吗？","content_en":"Summary: Is xAI a Neocloud Now?\n\nIn May 2026, xAI and Anthropic announced a surprise partnership in which Anthropic purchased all the compute capacity at xAI's Colossus 1 data center, approximately 300 megawatts. This deal allowed Anthropic to immediately raise its usage limits and represents a massive financial win for xAI, likely worth billions of dollars. The partnership essentially transforms xAI from a consumer of compute into a provider, monetizing one of the company's most impressive achievements.\n\nWhile some observers might interpret this move as a strategic shot at OpenAI amid ongoing litigation, Elon Musk clarified on X that xAI had already transitioned training operations to its newer Colossus 2 facility and simply did not need both data centers running at full capacity.\n\nThe short-term logic is evident: xAI's flagship product Grok has experienced plummeting user engagement since image generation controversies earlier in the year. By partnering with Anthropic, xAI generate","content_zh":"摘要：xAI如今已是新型云服务商了吗？\n2026年5月，xAI与Anthropic官宣了一项出人意料的合作：Anthropic买断了xAI旗下巨像1号数据中心的全部算力，规模约300兆瓦。这笔交易让Anthropic能够即刻上调其服务使用上限，同时也为xAI带来了预计数十亿美元的巨额收入，是一场重大的财务胜利。此次合作本质上让xAI从算力消耗方转型为算力供给方，将该公司最引以为傲的成果之一成功变现。\n虽然部分观察人士可能会将这一举措解读为xAI在与OpenAI的 ongoing 诉讼纠纷中对后者打出的战略重拳，但埃隆·马斯克在X平台上澄清称，xAI早已将模型训练业务迁移到更新的巨像2号数据中心，根本不需要两个数据中心同时满负荷运转。\n这一举措的短期逻辑十分明确：今年早些时候的图片生成争议事件过后，xAI的旗舰产品Grok的用户活跃度大幅跳水。通过与Anthropic合作，xAI可","source":"tc","created_at":"2026-05-07T00:11:37.838581+00:00","original_url":"https://techcrunch.com/2026/05/06/is-xai-a-neocloud-now/","categories":{"id":"9126cc45-ac4c-42de-aca8-175d51351ab2","title":"tech","sort_order":0}},{"id":"be667557-44cf-40db-bf70-d80da08fb95b","title":"Snap says its $400M deal with Perplexity &#8216;amicably ended&#8217; → Snap表示，其与Perplexity价值4亿美元的交易已“友好终止”。","title_en":"Snap says its $400M deal with Perplexity &#8216;amicably ended&#8217;","title_zh":"Snap表示，其与Perplexity价值4亿美元的交易已“友好终止”。","content_en":"Snap has confirmed that its $400 million partnership with AI search startup Perplexity has ended. The deal, which was announced last November, would have seen Perplexity's AI-powered search engine integrated directly into the Snapchat platform. According to statements from Snap, the termination of the agreement was mutual and amicable, concluding without any public disputes or disclosed reasons for the split. This marks a significant shift in Snap's AI strategy, as the company had previously positioned the Perplexity integration as a key feature for enhancing user engagement within its camera and messaging ecosystem. The cancellation leaves Perplexity to continue seeking distribution partnerships elsewhere, while Snap will need to reassess its approach to incorporating advanced AI search capabilities into its services.","content_zh":"Snap公司已证实，其与AI搜索初创企业Perplexity价值4亿美元的合作已终止。该交易于去年11月官宣，原本计划将Perplexity旗下的AI搜索引擎直接集成到Snapchat平台中。据Snap方面的声明，本次协议终止是双方共同做出的友好决定，全程未出现公开纠纷，也未披露双方拆分的原因。这一变动标志着Snap的AI战略出现重大转向，此前该公司曾将集成Perplexity服务定位为提升旗下相机、消息生态用户参与度的核心功能。本次合作取消后，Perplexity将继续在其他渠道寻求分发合作，而Snap则需要重新评估如何将先进AI搜索能力整合到自身服务当中。","source":"tc","created_at":"2026-05-07T00:09:33.137579+00:00","original_url":"https://techcrunch.com/2026/05/06/snap-says-its-400m-deal-with-perplexity-amicably-ended/","categories":{"id":"9126cc45-ac4c-42de-aca8-175d51351ab2","title":"tech","sort_order":0}},{"id":"3d91c495-4483-40f7-9606-129212742dac","title":"Barry Diller trusts Sam Altman. But &#8216;trust is irrelevant&#8217; as AGI nears, he says. → 巴里·迪勒信任萨姆·阿尔特曼。但他表示，随着AGI临近，\"信任无关紧要\"。","title_en":"Barry Diller trusts Sam Altman. But &#8216;trust is irrelevant&#8217; as AGI nears, he says.","title_zh":"巴里·迪勒信任萨姆·阿尔特曼。但他表示，随着AGI临近，\"信任无关紧要\"。","content_en":"Barry Diller, the veteran media executive, publicly defended OpenAI CEO Sam Altman, saying he trusts him personally, but warned that as artificial general intelligence (AGI) approaches, trust alone is insufficient and essentially irrelevant to mitigating its risks. Speaking at the WSJ’s Future of Everything event, Diller argued that AGI is an unpredictable force that demands robust guardrails and governance mechanisms rather than reliance on individual trustworthiness. While he expressed confidence in Altman’s leadership, he stressed that the development of AGI is a broader societal challenge requiring institutional safeguards, oversight, and careful regulation to prevent unintended consequences. Diller’s remarks highlight the growing tension between rapid AI advancement and the need for responsible stewardship, underscoring that personal trust in a few leaders cannot be the sole defense against the systemic impacts of AGI.","content_zh":"巴里·迪勒，这位资深媒体高管，公开为OpenAI CEO萨姆·阿尔特曼辩护，称他个人信任阿尔特曼，但警告称，随着通用人工智能（AGI）的临近，仅靠信任是不够的，而且对于降低其风险来说几乎毫无意义。在《华尔街日报》的\"一切未来\"活动上，迪勒认为，AGI是一股不可预测的力量，需要强有力的护栏和治理机制，而不是依赖个人可信度。虽然他对阿尔特曼的领导力表示了信心，但他强调，AGI的发展是一个更广泛的社会挑战，需要制度性的保障措施、监督和谨慎的监管来防止意外后果。迪勒的言论突出了快速AI发展与需要负责任管理之间日益紧张的矛盾，强调仅靠对少数几位领导人的个人信任不能成为防御AGI系统性影响的唯一手段。","source":"tc","created_at":"2026-05-07T00:08:13.321313+00:00","original_url":"https://techcrunch.com/2026/05/06/barry-diller-trusts-sam-altman-but-trust-is-irrelevant-as-agi-nears-he-says/","categories":{"id":"9126cc45-ac4c-42de-aca8-175d51351ab2","title":"tech","sort_order":0}},{"id":"56b8a22b-8b99-4947-bcd0-e0d42263e69c","title":"A 20-minute pitch wins Indian startup Pronto backing from Lachy Groom → 一场20分钟的路演为印度初创企业Pronto赢得了拉奇·格鲁姆的投资支持。","title_en":"A 20-minute pitch wins Indian startup Pronto backing from Lachy Groom","title_zh":"一场20分钟的路演为印度初创企业Pronto赢得了拉奇·格鲁姆的投资支持。","content_en":"The Indian startup Pronto has secured investment from renowned venture capitalist Lachy Groom after a concise 20-minute pitch, according to a TechCrunch report published on May 6, 2026. The rapid success of the pitch highlights the growing confidence in Pronto's business model and its potential within a rapidly expanding market. The investment comes at a time when Pronto is experiencing significant traction, scaling to 26,000 daily bookings. Industry analysts suggest the market Pronto operates in could reach a size of $18 billion. This backing from Groom, a well-known figure in the tech investment community, is expected to propel Pronto's growth trajectory and solidify its position in the competitive landscape.","content_zh":"据2026年5月6日TechCrunch发布的报道，印度初创企业Pronto在仅为时20分钟的简短推介后，便获得了知名风险投资人拉奇·格鲁姆的投资。本次推介的快速成功，凸显出市场对Pronto的商业模式及其在高速扩张赛道中的潜力信心持续提升。\n该笔投资落地之际，Pronto正处于业务强劲增长阶段，日预订量已攀升至2.6万单。行业分析师预计，Pronto所处的市场规模可达180亿美元。作为科技投资界的知名人物，格鲁姆的此次注资预计将推动Pronto的增长步伐，巩固其在竞争激烈的行业格局中的地位。","source":"tc","created_at":"2026-05-07T00:06:24.721282+00:00","original_url":"https://techcrunch.com/2026/05/06/a-20-minute-pitch-wins-indian-startup-pronto-backing-from-lachy-groom/","categories":{"id":"9126cc45-ac4c-42de-aca8-175d51351ab2","title":"tech","sort_order":0}},{"id":"91fc394b-b0fa-46e1-ab2a-96335a835db2","title":"Vibe coding and agentic engineering are getting closer than I'd like → Vibe coding和agentic工程正变得比我预想的更加趋同。","title_en":"Vibe coding and agentic engineering are getting closer than I'd like","title_zh":"Vibe coding和agentic工程正变得比我预想的更加趋同。","content_en":"Summary\n\nIn this May 2026 blog post, Simon Willison discusses his recent appearance on Heavybit's High Leverage podcast with Joseph Ruscio, where he explored AI coding tools and arrived at what he describes as a \"disturbing realization.\" The piece reflects on how two distinct approaches to AI-assisted programming—\"vibe coding\" and \"agentic engineering\"—have begun to overlap in his own practice.\n\nWillison had previously defined vibe coding as a hands-off approach where programmers (or even non-programmers) use AI tools without examining the generated code, simply iterating based on whether the output works. He argued this approach is acceptable for personal tools but \"grossly irresponsible\" when building software for others, since bugs can harm users.\n\nAgentic engineering, by contrast, involves professional software engineers leveraging AI tools while drawing on extensive experience in security, maintainability, operations, and performance. The goal is to build higher-quality software","content_zh":"摘要\n\n在这篇2026年5月的博客文章中，Simon Willison讨论了他最近在Heavybit的High Leverage播客上与Joseph Ruscio的对话，节目中他探讨了AI编程工具，并得出了他所说的“令人不安的认知”。文章反思了他自己的实践中，AI辅助编程的两种不同方式——“氛围编程”和“智能体工程”——如何开始重叠。\n\nWillison之前将氛围编程定义为一种放手不管的方式，程序员（甚至非程序员）使用AI工具时不检查生成的代码，仅根据输出是否有效进行迭代。他认为这种方式用于个人工具是可以接受的，但在为他人构建软件时是“极其不负责任的”，因为bug可能会伤害用户。\n\n相比之下，智能体工程涉及专业软件工程师利用AI工具，同时运用他们在安全、可维护性、运维和性能方面的丰富经验。目标是构建更高质量的软件。","source":"hn","created_at":"2026-05-07T00:04:37.663306+00:00","original_url":"https://simonwillison.net/2026/May/6/vibe-coding-and-agentic-engineering/","categories":{"id":"9126cc45-ac4c-42de-aca8-175d51351ab2","title":"tech","sort_order":0}},{"id":"b8677753-4288-40c1-8538-587a5e3b7d9a","title":"Higher usage limits for Claude and a compute deal with SpaceX → 克劳德（Claude）更高的使用限额，以及与太空探索技术公司（SpaceX）的算力合作协议","title_en":"Higher usage limits for Claude and a compute deal with SpaceX","title_zh":"克劳德（Claude）更高的使用限额，以及与太空探索技术公司（SpaceX）的算力合作协议","content_en":"Anthropic has announced a significant partnership with SpaceX that will substantially increase their compute capacity, enabling the company to raise usage limits for Claude Code and the Claude API effective immediately. The improvements include doubling Claude Code's five-hour rate limits for Pro, Max, Team, and seat-based Enterprise plans, removing the peak hours limit reduction for Pro and Max accounts, and considerably raising API rate limits for Claude Opus models. The SpaceX agreement gives Anthropic access to all compute capacity at the Colossus 1 data center, providing more than 300 megawatts of new capacity with over 220,000 NVIDIA GPUs available within the month. This new capacity will directly benefit Claude Pro and Max subscribers. This partnership joins Anthropic's other major compute deals, including an up to 5 gigawatt agreement with Amazon that includes nearly 1 gigawatt of new capacity by the end of 2026, a 5 gigawatt agreement with Google and Broadcom coming online in","content_zh":"Anthropic宣布与SpaceX达成重磅合作，将大幅提升自身算力，即刻起上调Claude Code与Claude API的使用限额。\n本次升级内容包括：Pro、Max、团队版及按席位计费的企业版方案的Claude Code五小时速率限制翻倍，取消Pro与Max账户的高峰时段限额下调规则，同时大幅提高Claude Opus模型的API速率限制。\n按照与SpaceX的协议，Anthropic可使用巨像1号（Colossus 1）数据中心的全部算力，一个月内即可新增超300兆瓦算力，配套超过22万张英伟达GPU。这些新增算力将直接惠及Claude Pro和Max订阅用户。\n除本次合作外，Anthropic还手握其他多项大型算力合作协议，包括与亚马逊达成的最高5吉瓦的合作（其中近1吉瓦的新增算力将于2026年底前落地），以及与谷歌、博通签订的5吉瓦算力协议正逐步上线。","source":"hn","created_at":"2026-05-07T00:01:59.004846+00:00","original_url":"https://www.anthropic.com/news/higher-limits-spacex","categories":{"id":"9126cc45-ac4c-42de-aca8-175d51351ab2","title":"tech","sort_order":0}},{"id":"7e8c63a6-ce3b-451f-98e2-72a816fd9092","title":"Google shuts down Project Mariner → 谷歌关闭“水手计划”","title_en":"Google shuts down Project Mariner","title_zh":"谷歌关闭“水手计划”","content_en":"Google has officially shut down Project Mariner, the company's experimental AI-powered web browsing agent that was designed to autonomously navigate websites and complete tasks on behalf of users. According to the report published by The Verge on May 6, 2026, the Project Mariner experiment, which originated from Google's research initiatives, will not continue as a standalone project. However, the technology and capabilities developed through Project Mariner have been integrated into Google's existing AI products. Specifically, the functionality and features pioneered in Project Mariner will continue to exist within Gemini Agent and AI Mode, which are components of Google's Gemini artificial intelligence platform. This integration represents Google's strategy to consolidate its experimental AI research into more mature, commercially available products. The shutdown marks the end of Project Mariner as an independent initiative while ensuring that the research and development work behind","content_zh":"谷歌已正式关停“水手项目”（Project Mariner），这是该公司旗下实验性AI驱动网页浏览代理，设计初衷是自主浏览网站，代用户完成各项任务。据科技媒体The Verge2026年5月6日发布的报道，源自谷歌研究项目的水手项目实验将不再作为独立项目推进。不过水手项目期间开发的技术与能力已被整合进谷歌现有AI产品中，具体而言，该项目首创的功能特性将继续留存于谷歌Gemini人工智能平台的两大组件——Gemini代理（Gemini Agent）和AI模式（AI Mode）当中。此次整合体现了谷歌将实验性AI研究并入更成熟商用产品的战略，本次关停标志着水手项目作为独立项目的终结，同时也保障了其背后的研发工作\n（注：原文此处内容不完整）","source":"verge","created_at":"2026-05-06T21:26:31.022107+00:00","original_url":"https://www.theverge.com/tech/925559/google-project-mariner-shut-down","categories":{"id":"9126cc45-ac4c-42de-aca8-175d51351ab2","title":"tech","sort_order":0}},{"id":"db7fb4dd-1e72-4eea-9480-cd22ee91f772","title":"Two Britons self-isolating in UK after leaving hantavirus cruise ship early → 两名英国人提前离开涉汉坦病毒游轮后，正在英国进行自我隔离。","title_en":"Two Britons self-isolating in UK after leaving hantavirus cruise ship early","title_zh":"两名英国人提前离开涉汉坦病毒游轮后，正在英国进行自我隔离。","content_en":"Two British nationals who left the MV Hondius cruise ship early are now self‑isolating at home in the United Kingdom after potential exposure to a hantavirus outbreak, the UK Health Security Agency (UKHSA) has reported. The pair disembarked at St Helena on 22–24 April, flew back to the UK via Johannesburg, and contacted health authorities after learning of cases aboard the vessel. They are not showing symptoms, but tracing of their contacts on the return journey is under way, and the agency stresses the risk to the general public remains very low. The cruise ship, which departed Argentina a month ago, has recorded three deaths linked to the virus; Spanish authorities have granted permission for it to dock in the Canary Islands despite local concerns. About 150 people remain on board under strict precautionary measures, including 19 passengers and four crew members who are British. One of the evacuees, a 56‑year‑old British man, is in a stable condition after being taken off the ship on","content_zh":"两名提前离开“汉迪乌斯”号邮轮的英国公民，据英国卫生安全局报告，目前正在英国家中进行自我隔离，此前他们可能接触到汉坦病毒疫情。这两人于4月22日至24日在圣赫勒拿岛下船，经约翰内斯堡飞回英国，在得知船上的病例后联系了卫生部门。他们目前没有出现症状，但回程途中接触者的追踪正在进行，该机构强调对公众的风险仍然很低。这艘一个月前从阿根廷出发的邮轮已记录了3例与该病毒相关的死亡；尽管当地担忧，西班牙当局已允许其在加那利群岛停靠。约150人仍在船上接受严格预防措施，其中包括19名乘客和4名船员是英国公民。其中一名被撤离者，一名56岁的英国男子，在被从船上转移后目前情况稳定。","source":"bbc","created_at":"2026-05-06T21:18:49.821646+00:00","original_url":"https://www.bbc.com/news/articles/c9wepl8we90o?at_medium=RSS&amp;at_campaign=rss","categories":{"id":"c3d4e5f6-a7b8-9012-cdef-123456789012","title":"新闻","sort_order":3}}];
-  </script>
-  <script>
-    const SUPABASE_URL = 'https://fzxuotfihpbzozjoplim.supabase.co';
-    const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6eHVvdGZpaHBiem96am9wbGltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3OTM1MzMsImV4cCI6MjA5MTM2OTUzM30.pfhwZ7kv4CUy5PT_s62WzfIC3cHeXR2Z4YIXUjjqY1c';
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>潮汐 · Tides</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap"
+      media="print"
+      onload="this.media = 'all'"
+    />
+    <noscript
+      ><link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap"
+    /></noscript>
+    <style>
+      :root {
+        --bg-primary: #0f0e0d;
+        --bg-secondary: #1a1816;
+        --bg-tertiary: #242220;
+        --text-primary: #e8e2d8;
+        --text-secondary: #9a9288;
+        --text-tertiary: #5a5650;
+        --accent: #d4a055;
+        --accent-dim: rgba(212, 160, 85, 0.12);
+        --border: #2a2724;
+        --border-light: #383530;
+        --font-display: "Cormorant Garamond", Georgia, serif;
+        --font-mono: "Courier Prime", "Courier New", monospace;
+        --transition-fast: 0.15s ease;
+        --transition-slow: 0.4s ease;
+      }
+      [data-theme="light"] {
+        --bg-primary: #f5f0e8;
+        --bg-secondary: #ebe5db;
+        --bg-tertiary: #e0d9cc;
+        --text-primary: #1e1a16;
+        --text-secondary: #5c5650;
+        --text-tertiary: #9a9590;
+        --accent: #9b6238;
+        --accent-dim: rgba(155, 98, 56, 0.1);
+        --border: #d4cdc2;
+        --border-light: #e0d9cc;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        font-family: var(--font-display);
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        line-height: 1.7;
+        min-height: 100vh;
+        transition:
+          background var(--transition-slow),
+          color var(--transition-slow);
+      }
+      ::selection {
+        background: var(--accent);
+        color: var(--bg-primary);
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+      .container {
+        max-width: 680px;
+        margin: 0 auto;
+        padding: 100px 32px 140px;
+      }
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+        opacity: 0.025;
+        z-index: 9999;
+      }
+      .site-header {
+        margin-bottom: 80px;
+        position: relative;
+      }
+      .site-meta {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--text-tertiary);
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      .site-meta::after {
+        content: "";
+        display: block;
+        width: 40px;
+        height: 1px;
+        background: var(--border);
+      }
+      .site-title {
+        font-size: clamp(36px, 6vw, 56px);
+        font-weight: 300;
+        letter-spacing: -0.02em;
+        line-height: 1.05;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+      }
+      .site-title span {
+        color: var(--accent);
+        font-style: italic;
+      }
+      .site-tagline {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--text-tertiary);
+        letter-spacing: 0.08em;
+      }
+      .controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 56px;
+        padding-bottom: 32px;
+        border-bottom: 1px solid var(--border);
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+      .toggles-row {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .lang-toggle,
+      .source-toggle {
+        display: flex;
+        gap: 0;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        overflow: hidden;
+      }
+      .lang-toggle button,
+      .source-toggle button {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        padding: 6px 12px;
+        border: none;
+        background: transparent;
+        color: var(--text-tertiary);
+        cursor: pointer;
+        transition: all var(--transition-fast);
+        letter-spacing: 0.05em;
+      }
+      .lang-toggle button:hover,
+      .source-toggle button:hover {
+        color: var(--text-primary);
+        background: var(--bg-secondary);
+      }
+      .lang-toggle button.active,
+      .source-toggle button.active {
+        background: var(--text-primary);
+        color: var(--bg-primary);
+      }
+      .lang-toggle button + button,
+      .source-toggle button + button {
+        border-left: 1px solid var(--border);
+      }
+      .theme-toggle {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.05em;
+        color: var(--text-tertiary);
+        cursor: pointer;
+        padding: 6px 12px;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        background: transparent;
+        transition: all var(--transition-fast);
+      }
+      .theme-toggle:hover {
+        color: var(--text-primary);
+        border-color: var(--text-tertiary);
+      }
+      .posts-list {
+        list-style: none;
+      }
+      .post-item {
+        border-bottom: 1px solid var(--border);
+      }
+      .post-link {
+        display: block;
+        padding: 40px 0;
+        cursor: pointer;
+        transition: padding-left var(--transition-fast);
+      }
+      .post-link:hover {
+        padding-left: 16px;
+      }
+      .post-link:hover .post-item-title {
+        color: var(--accent);
+      }
+      .post-item-title {
+        font-size: clamp(20px, 3.5vw, 26px);
+        font-weight: 400;
+        line-height: 1.25;
+        letter-spacing: -0.01em;
+        margin-bottom: 10px;
+        transition: color var(--transition-fast);
+      }
+      .post-item-meta {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--text-tertiary);
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+      }
+      .post-item-meta span {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .post-item-meta .dot {
+        width: 3px;
+        height: 3px;
+        background: var(--border-light);
+        border-radius: 50%;
+      }
+      .post-item-excerpt {
+        font-size: 14px;
+        color: var(--text-secondary);
+        line-height: 1.7;
+        font-style: italic;
+        display: -webkit-box;
+        -webkit-line-clamp: 8;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        white-space: pre-line;
+      }
+      .post-detail {
+        animation: fadeIn 0.5s ease;
+      }
+      .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--text-tertiary);
+        margin-bottom: 56px;
+        cursor: pointer;
+        transition: color var(--transition-fast);
+        letter-spacing: 0.05em;
+      }
+      .back-link:hover {
+        color: var(--accent);
+      }
+      .back-link svg {
+        transition: transform var(--transition-fast);
+      }
+      .back-link:hover svg {
+        transform: translateX(-4px);
+      }
+      .post-header {
+        margin-bottom: 48px;
+      }
+      .post-category {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        color: var(--accent);
+        margin-bottom: 20px;
+      }
+      .post-title {
+        font-size: clamp(28px, 5vw, 44px);
+        font-weight: 400;
+        line-height: 1.15;
+        letter-spacing: -0.02em;
+        margin-bottom: 24px;
+      }
+      .post-meta {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--text-tertiary);
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        padding-bottom: 32px;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 40px;
+      }
+      .post-meta span {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .post-body {
+        font-size: 18px;
+        line-height: 1.85;
+        color: var(--text-secondary);
+      }
+      .post-body p {
+        margin-bottom: 28px;
+      }
+      .post-body p:last-child {
+        margin-bottom: 0;
+      }
+      .content-divider {
+        border: none;
+        border-top: 1px solid var(--border);
+        margin: 48px 0;
+      }
+      .post-url {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 48px;
+        padding: 14px 28px;
+        background: var(--accent);
+        color: var(--bg-primary);
+        font-family: var(--font-mono);
+        font-size: 11px;
+        border-radius: 3px;
+        transition:
+          opacity var(--transition-fast),
+          transform var(--transition-fast);
+      }
+      .post-url:hover {
+        opacity: 0.85;
+        transform: translateY(-1px);
+      }
+      .loading {
+        text-align: center;
+        padding: 100px 0;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--text-tertiary);
+        letter-spacing: 0.1em;
+      }
+      .loading::after {
+        content: "";
+        display: inline-block;
+        width: 4px;
+        height: 4px;
+        background: var(--accent);
+        border-radius: 50%;
+        margin-left: 10px;
+        animation: blink 1.2s ease infinite;
+      }
+      .error-msg {
+        text-align: center;
+        padding: 60px 40px;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--text-secondary);
+      }
+      .more-btn {
+        display: block;
+        width: 100%;
+        margin: 64px 0;
+        padding: 18px 0;
+        background: transparent;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        color: var(--text-tertiary);
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        transition: all var(--transition-slow);
+      }
+      .more-btn::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: var(--accent-dim);
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform var(--transition-slow);
+      }
+      .more-btn:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+      .more-btn:hover::before {
+        transform: scaleX(1);
+      }
+      .more-btn.loading {
+        color: var(--text-tertiary);
+        border-color: var(--border);
+        cursor: default;
+        pointer-events: none;
+      }
+      .more-btn.loading::before {
+        display: none;
+      }
+      .more-btn.loading::after {
+        content: "";
+        display: inline-block;
+        width: 4px;
+        height: 4px;
+        background: var(--accent);
+        border-radius: 50%;
+        margin-left: 10px;
+        animation: blink 1.2s ease infinite;
+      }
+      footer {
+        margin-top: 100px;
+        padding-top: 32px;
+        border-top: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--text-tertiary);
+        letter-spacing: 0.05em;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(16px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes blink {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.2;
+        }
+      }
+      @media (max-width: 600px) {
+        .container {
+          padding: 60px 20px 80px;
+        }
+        .post-link {
+          padding: 28px 0;
+        }
+        .post-link:hover {
+          padding-left: 0;
+        }
+        .controls {
+          flex-direction: column;
+          gap: 12px;
+          align-items: flex-start;
+        }
+        .post-url {
+          display: block;
+          text-align: center;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div id="app"></div>
+      <footer>
+        <span>潮汐 Tides · Powered by Supabase</span>
+        <span id="theme-label">Dark Mode</span>
+      </footer>
+    </div>
+    <script>
+      // Embedded posts data — generated at 2026-05-07T09:30:17.168Z
+      window.__POSTS_DATA__ = [
+        {
+          id: "5b4123f6-7466-4682-9109-83101e127c2f",
+          title:
+            "Watch: Drone delivers first Amazon parcels in UK → 视频：无人机首次在英国投递亚马逊包裹",
+          title_en: "Watch: Drone delivers first Amazon parcels in UK",
+          title_zh: "视频：无人机首次在英国投递亚马逊包裹",
+          content_en:
+            "Summary: Amazon Drone Delivery Service Launches in UK\n\nAmazon has become the first retailer in the United Kingdom to launch a commercial drone delivery service, marking a significant milestone in the country's logistics and e-commerce sectors. The service began with a limited rollout in Darlington, County Durham, where packages weighing up to 5 pounds (2.2 kilograms) and containing everyday items can now be delivered within a 7.5-mile radius of Amazon's local fulfillment center. Customers can receive their orders in as little as two hours, representing a major advancement in ultra-fast delivery capabilities.\n\nDuring this initial testing phase, Amazon plans to conduct up to ten flights per hour, enabling approximately one hundred deliveries per day on weekdays. While the service is currently restricted to a single location, the company has expressed intentions to gradually expand operations as consumer demand for rapid delivery options continues to grow.\n\nThis development positions Da",
+          content_zh:
+            "摘要：亚马逊无人机配送服务在英国启动\n\n亚马逊已成为英国首家推出商业无人机配送服务的零售商，标志着该国物流和电子商务行业的一个重要里程碑。该服务首先在达灵顿（达勒姆郡）进行有限推广，在亚马逊当地配送中心7.5英里半径范围内，现在可以投递重量高达5磅（2.2公斤）的日常用品包裹。客户最快可在两小时内收到订单，这代表着超快速配送能力的重大进步。\n\n在初始测试阶段，亚马逊计划每小时进行多达十次飞行，工作日每天可完成约一百次配送。虽然该服务目前仅限于一个地点，但该公司已表示，随着消费者对快速配送选择的需求持续增长，计划逐步扩大运营范围。\n\n这一发展使...",
+          source: "bbc",
+          created_at: "2026-05-07T09:01:57.05722+00:00",
+          original_url:
+            "https://www.bbc.com/news/videos/c0l21992z75o?at_medium=RSS&amp;at_campaign=rss",
+          categories: {
+            id: "c3d4e5f6-a7b8-9012-cdef-123456789012",
+            title: "新闻",
+            sort_order: 3,
+          },
+        },
+        {
+          id: "7f1d934c-4750-4cb6-af0a-a37fbda400e5",
+          title:
+            "The AI fitness instructors selling unreal gains → 推销虚假健身效果的 AI 健身教练",
+          title_en: "The AI fitness instructors selling unreal gains",
+          title_zh: "推销虚假健身效果的 AI 健身教练",
+          content_en:
+            'The BBC Sport investigation reveals that artificial intelligence-generated fitness instructors are flooding social media with misleading advertisements promising dramatic body transformations that are often scientifically implausible. These AI-created characters, which can be difficult to distinguish from real people, are being used to sell fitness app subscriptions while making claims such as helping users look 20 years younger or lose 40 pounds in a single month.\n\nThe investigation found that many of these advertisements breach UK advertising rules by failing to make clear that the featured individuals are not real. Users who engage with such content find their social media feeds quickly populated with similar material through algorithmic recommendation systems.\n\nThe trend has grown substantially over the past two years, with AI experts describing the phenomenon as "huge." People searching for fitness guidance are particularly susceptible to these persuasive AI-generated personas, wh',
+          content_zh:
+            "BBC体育的调查揭示，人工智能生成的健身教练正充斥社交媒体，发布具有误导性的广告，承诺戏剧性的身体转变，而这些承诺往往在科学上站不住脚。这些人工智能创造的虚拟人物可能难以与真人区分，被用于销售健身应用订阅，同时做出诸如帮助用户在一个月内看起来年轻20岁或减重40磅的宣传。\n\n调查发现，这些广告中有许多违反了英国的广告规则，因为它们未能明确表明所展示的个人并非真实存在。参与此类内容的用户会发现，通过算法推荐系统，他们的社交媒体动态中很快充斥着类似的材料。\n\n这一趋势在过去两年中大幅增长，人工智能专家将其描述为“巨大的”现象。搜索健身指导的人特别容易受到这些具有说服力的人工智能生成角色的影响。",
+          source: "bbc",
+          created_at: "2026-05-07T08:56:00.717386+00:00",
+          original_url:
+            "https://www.bbc.com/sport/articles/c5ye7dnxv86o?at_medium=RSS&amp;at_campaign=rss",
+          categories: {
+            id: "c3d4e5f6-a7b8-9012-cdef-123456789012",
+            title: "新闻",
+            sort_order: 3,
+          },
+        },
+        {
+          id: "02873be6-2d41-4f8d-bc89-0ff69d6af37c",
+          title:
+            "What photo ID will you need to vote in the elections? → 你需要什么照片证件才能在选举中投票？",
+          title_en: "What photo ID will you need to vote in the elections?",
+          title_zh: "你需要什么照片证件才能在选举中投票？",
+          content_en:
+            "Summary: Photo ID Requirements for May Elections\n\nIn the upcoming local elections in England on 7 May, all voters casting ballots in person will be required to present valid photo identification at their polling station. However, this requirement does not extend to Scotland and Wales, where voters participating in Scottish Parliament or Senedd elections on the same day will not need to show any form of ID.\n\nThe UK government has approved more than twenty different forms of photo ID that voters in England can use, including passports, driving licences, older or Disabled Person's bus passes, Oyster 60+ cards, and Armed Forces Veteran Cards. Importantly, out-of-date photo identification remains valid provided the voter still resembles their photograph. Voters wearing face coverings for medical or religious reasons will be asked to briefly remove them so polling station staff can verify that the ID matches the individual presenting it.\n\nFor voters who have lost or had their ID stolen bef",
+          content_zh:
+            "总结：五月选举的身份证照片要求\n\n即将于5月7日举行的英格兰地方选举中，所有亲自投票的选民必须在投票站出示有效的带照片身份证件。然而，这一要求不适用于苏格兰和威尔士，在同一天参加苏格兰议会或威尔士议会选举的选民不需要出示任何形式的身份证件。\n\n英国政府已批准超过二十种不同形式的身份证件供英格兰选民使用，包括护照、驾驶执照、老年人或残疾人公交车票、牡蛎卡60岁以上卡和武装部队退伍军人卡。重要的是，只要选民的照片仍然与其本人相似，过期的身份证件仍然有效。\n\n出于医疗或宗教原因佩戴面罩的选民将被要求短暂取下面罩，以便投票站工作人员核实身份证件与持证人相符。\n\n对于丢失或被盗身份证件的选民...",
+          source: "bbc",
+          created_at: "2026-05-07T08:32:24.490711+00:00",
+          original_url:
+            "https://www.bbc.com/news/articles/czjg288xk93o?at_medium=RSS&amp;at_campaign=rss",
+          categories: {
+            id: "c3d4e5f6-a7b8-9012-cdef-123456789012",
+            title: "新闻",
+            sort_order: 3,
+          },
+        },
+        {
+          id: "fd59d5e6-7476-4e1f-a9bd-138e436a79f7",
+          title:
+            "Ukraine is a global surrogacy hub - but that could be about to end → 乌克兰是全球代孕中心——但这可能即将结束",
+          title_en:
+            "Ukraine is a global surrogacy hub - but that could be about to end",
+          title_zh: "乌克兰是全球代孕中心——但这可能即将结束",
+          content_en:
+            "Ukraine has emerged as one of the world's leading commercial surrogacy destinations, second only to the United States, with foreigners comprising approximately 95% of intended parents seeking surrogacy services in the country. However, Ukraine's parliament is now considering legislation that would impose stricter regulations on the industry and effectively prohibit foreigners from accessing Ukrainian surrogacy services. The proposed bill has garnered widespread support among legislators who argue that the industry exploits vulnerable women and that Ukrainian women should not be bearing children for foreigners during a period when the nation's birthrate has sharply declined due to ongoing conflict with Russia.\n\nThe article features the personal story of Karina Tarasenko, a 22-year-old surrogate from eastern Ukraine who is six months pregnant with an embryo from Chinese parents. Karina's home in Bakhmut was destroyed during Russia's full-scale invasion, forcing her and her partner to rel",
+          content_zh:
+            "乌克兰已成为全球领先的商业代孕目的地之一，仅次于美国，外国人约占该国寻求代孕服务的准父母的95%。然而，乌克兰议会目前正在考虑立法，对该行业实施更严格的监管，并有效地禁止外国人使用乌克兰的代孕服务。该法案获得了议员们的广泛支持，他们认为该行业剥削弱势妇女，在乌克兰因与俄罗斯持续冲突导致出生率急剧下降的时期，乌克兰妇女不应该为外国人孕育孩子。该文讲述了来自乌克兰东部22岁的代孕妈妈卡丽娜·塔拉先科的个人故事，她已怀孕六个月，怀的是中国父母的孩子。卡丽娜在巴赫穆特的家园在俄罗斯全面入侵期间被摧毁，迫使她和她的伴侣重新安置。",
+          source: "bbc",
+          created_at: "2026-05-07T06:43:33.696913+00:00",
+          original_url:
+            "https://www.bbc.com/news/articles/clyp4kp687go?at_medium=RSS&amp;at_campaign=rss",
+          categories: {
+            id: "c3d4e5f6-a7b8-9012-cdef-123456789012",
+            title: "新闻",
+            sort_order: 3,
+          },
+        },
+        {
+          id: "9f6426bf-5d90-4e48-951d-312f4e9f40bc",
+          title: "Programming Still Sucks → 编程仍然很糟糕",
+          title_en: "Programming Still Sucks",
+          title_zh: "编程仍然很糟糕",
+          content_en:
+            "Summary\n\nIn this candid personal essay, Steven Langbroek addresses the anxiety surrounding AI's potential to replace programmers, using a relatable scenario at a birthday party as his starting point. A \"Guy with a Real Job\" asks the perennial question—whether programmers should fear AI taking their work—and the author admits with refreshing honesty that yes, most of them are worried, and it would be foolish not to be.\n\nHowever, Langbroek's real argument runs deeper than AI anxiety. He contends that working in tech has always been a messy, chaotic endeavor that bears little resemblance to public perception. The stereotype—a clean corner office, perfect plans, applauding employees, and flawless software rolling off an assembly line—couldn't be further from reality. In contrast, the actual experience involves constant panic, admitting you have no idea what you're doing, sudden crises where everything falls apart, and employees crying in bathrooms.\n\nLangbroek illustrates this dysfunctio",
+          content_zh:
+            "摘要\n\n在这篇坦诚的个人随笔中，史蒂文·兰布罗克探讨了围绕人工智能可能取代程序员这一问题的焦虑，以在一个生日聚会上发生的场景作为切入点。一位“从事正经工作的人”提出了那个老生常谈的问题——程序员是否应该害怕人工智能抢走他们的工作——作者以一种令人耳目一新的坦诚承认，是的，他们中的大多数人都很担忧，不担忧才是愚蠢的。\n\n然而，兰布罗克的真正论点远比人工智能焦虑更为深刻。他认为，科技行业的工作一直就是混乱无序的，与公众的认知大相径庭。刻板印象——干净的角落办公室、完美的计划、鼓掌的员工、以及像流水线一样产出的完美软件——与现实相去甚远。相比之下，实际的工作体验涉及持续的恐慌、承认自己根本不知道在做什么、突然的危机让一切崩溃、以及员工在洗手间里哭泣。\n\n兰布罗克用这种失序状态来说明……",
+          source: "hn",
+          created_at: "2026-05-07T06:20:11.485565+00:00",
+          original_url:
+            "https://www.stvn.sh/writing/programming-still-sucks-fqffhyp",
+          categories: {
+            id: "9126cc45-ac4c-42de-aca8-175d51351ab2",
+            title: "tech",
+            sort_order: 0,
+          },
+        },
+        {
+          id: "b9608a46-d94c-47dc-97bf-0a550e10079e",
+          title:
+            "Serving Met officer and four ex-officers investigated for handling of Al Fayed allegations → 现任伦敦警察厅警官及四名前警官因处理阿尔法耶德相关指控问题接受调查",
+          title_en:
+            "Serving Met officer and four ex-officers investigated for handling of Al Fayed allegations",
+          title_zh:
+            "现任伦敦警察厅警官及四名前警官因处理阿尔法耶德相关指控问题接受调查",
+          content_en:
+            "Summary\n\nA serving Metropolitan Police officer and four former officers are currently under investigation by the Independent Office for Police Conduct (IOPC) for potential misconduct related to how they handled reports of sexual abuse made against Mohamed Al Fayed, the former owner of Harrods who died in 2023. The investigation, which began in January 2025, involves allegations reported by four victim-survivors. Following the broadcast of a BBC documentary in September 2024 that exposed Al Fayed's predatory behaviour, it was revealed that the Met had previously been approached by 21 women before his death, accusing him of sexual offences including rape, sexual assault and trafficking. However, Al Fayed was never charged with any offences. Complaints from two of the women, whose allegations were originally reported in 2008, were referred to the IOPC in November 2024, with a third complaint referred in February 2025. The IOPC has stated that it has yet to determine whether any of the o",
+          content_zh:
+            "概要\n\n一名现役伦敦警察厅警员和四名前警员目前正接受警察行为独立办公室(IOPC)的调查，原因是他们涉嫌在处理针对穆罕默德·阿尔·法耶德（Mohamed Al Fayed）的性侵举报时存在不当行为。阿尔·法耶德是哈罗德百货公司前业主，于2023年去世。此次调查于2025年1月启动，涉及四名受害幸存者的举报。2024年9月BBC播出了一部揭露阿尔·法耶德 predatory行为的纪录片后，调查显示，在其去世前，伦敦警察厅曾接到21名女性的投诉，指控他犯有包括强奸、性侵和人口贩卖在内的性犯罪。然而，阿尔·法耶德从未被指控任何罪行。其中两名女性的投诉（最初于2008年举报）于2024年11月被移交给IOPC，第三名女性的投诉于2025年2月被移交。IOPC表示，尚未确定这些警员的行为是否构成不当行为。",
+          source: "bbc",
+          created_at: "2026-05-07T06:19:45.864015+00:00",
+          original_url:
+            "https://www.bbc.com/news/articles/crepwqzppqgo?at_medium=RSS&amp;at_campaign=rss",
+          categories: {
+            id: "c3d4e5f6-a7b8-9012-cdef-123456789012",
+            title: "新闻",
+            sort_order: 3,
+          },
+        },
+        {
+          id: "7f8e19b0-7961-4b1e-9c93-5090d8f32b0e",
+          title:
+            "All-new Peugeot 208 expected to debut at Paris Motor Show with new design language 2 days ago → 全新标致208有望于巴黎车展首发亮相 采用全新设计语言 2天前",
+          title_en:
+            "All-new Peugeot 208 expected to debut at Paris Motor Show with new design language 2 days ago",
+          title_zh: "全新标致208有望于巴黎车展首发亮相 采用全新设计语言 2天前",
+          content_en:
+            "The upcoming all‑new Peugeot 208 is rumored to make its public debut at the Paris Motor Show, marking the first appearance of a fresh design language for the brand’s compact hatchback. Previewed by teaser images and early spy shots, the new 208 abandons the previous softer curves in favor of crisper, more aggressive lines, a reinterpreted front grille, and new LED lighting signatures that echo the look of recent Peugeot concept cars. Inside, the cabin is set to receive the latest iteration of Peugeot’s i‑Cockpit, featuring a smaller, flat‑bottom steering wheel, a fully digital 10‑inch instrument cluster, and a larger 12‑inch central touchscreen that houses the newest infotainment software with smartphone‑mirroring, over‑the‑air updates, and enhanced voice‑assistant capabilities.  \n\nUnder the skin, the new 208 will ride on an updated version of the CMP (Common Modular Platform), which promises improved rigidity, a slight weight reduction, and a lower center of gravity for better handlin",
+          content_zh:
+            "即将推出的全新标致208据传将在巴黎车展上首次公开亮相，这将是该品牌紧凑型两厢车全新设计语言的首次亮相。从预告图和早期路试谍照来看，新款208摒弃了之前柔和的曲线，转而采用更加犀利、激进的线条、重新演绎的前格栅，以及与标致最新概念车外观相呼应的全新LED灯光设计。内饰方面，新款208将配备最新版本的标致i-Cockpit座舱系统，搭载更小巧的平底方向盘、全液晶10英寸仪表盘，以及更大的12英寸中控触摸屏，内置最新信息娱乐软件，支持手机互联、空中升级功能和增强型语音助手功能。动力方面，新款208将基于升级版CMP（共用模块化平台），该平台承诺提升车身刚性、略微减轻重量，并通过降低重心来改善操控性。",
+          source: "autohome",
+          created_at: "2026-05-07T06:18:27.21265+00:00",
+          original_url: "https://www.autohome.com.cn/news/202605/1314104.html",
+          categories: {
+            id: "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+            title: "汽车",
+            sort_order: 2,
+          },
+        },
+        {
+          id: "1d4a395c-8c18-4f47-a275-9866760dc0af",
+          title: "Inkscape 1.4.4 → Inkscape 1.4.4",
+          title_en: "Inkscape 1.4.4",
+          title_zh: "Inkscape 1.4.4",
+          content_en:
+            'Inkscape 1.4.4 Release Notes Summary\n\nInkscape 1.4.4 is a maintenance and bugfix release of the popular open-source vector graphics editor, officially released on May 6, 2026. This version addresses numerous issues discovered since the previous release and introduces several practical improvements to enhance the overall user experience.\n\nThe release includes an impressive set of fixes and enhancements: twenty crash fixes, with three particularly critical fixes addressing scenarios where Inkscape would fail to start entirely; nearly twenty additional bug fixes covering various functionality issues; six performance improvements to make the application run more smoothly and efficiently; and a new palette for expanded color options. A notable new feature is a dedicated button for rotating stars and polygons into their "neutral" or "upright" position, which simplifies a common design task.\n\nFor international users, the release delivers significant localization improvements with twenty-sev',
+          content_zh:
+            'Inkscape 1.4.4 发布说明摘要\n\nInkscape 1.4.4 是这款备受欢迎的开源矢量图形编辑器的维护和错误修复版本，于 2026 年 5 月 6 日正式发布。此版本修复了自上一版本发布以来发现的众多问题，并引入了多项实用性改进，以提升整体用户体验。\n\n本次发布包含一系列令人瞩目的修复和改进：二十个崩溃修复，其中三个特别关键的修复针对 Inkscape 完全无法启动的情况；近二十个额外的错误修复，涵盖各种功能问题；六项性能改进，使应用程序运行更加流畅高效；以及一个新调色板以扩展颜色选项。一个值得注意的新功能是一个专用按钮，用于将星形和多边形旋转到"中性"或"直立"位置，简化了一项常见的设计任务。\n\n对于国际用户，此版本带来了重要的本地化改进，包含二十多项',
+          source: "hn",
+          created_at: "2026-05-07T06:13:08.281398+00:00",
+          original_url:
+            "https://inkscape.org/doc/release_notes/1.4.4/Inkscape_1.4.4.html",
+          categories: {
+            id: "9126cc45-ac4c-42de-aca8-175d51351ab2",
+            title: "tech",
+            sort_order: 0,
+          },
+        },
+        {
+          id: "05605259-d5b3-49f2-8ed6-2f94394985d7",
+          title:
+            "Nintendo announces a new Star Fox for the Switch 2 → 任天堂宣布为 Switch 2 推出全新星际火狐游戏",
+          title_en: "Nintendo announces a new Star Fox for the Switch 2",
+          title_zh: "任天堂宣布为 Switch 2 推出全新星际火狐游戏",
+          content_en:
+            "Nintendo Announces New Star Fox Game for Switch 2\n\nNintendo has officially announced a new installment in the popular Star Fox franchise, set to be released for the company's upcoming Switch 2 console. The announcement came as a surprise to fans and industry watchers alike, as Nintendo revealed the game during an unexpected Direct presentation rather than saving it for a major press event. This marks the return of the beloved space shooter series, which has seen its most recent mainline entry on the original Wii U.\n\nThe Star Fox franchise, created by Nintendo's legendary designer Shigeru Miyamoto, has been a staple of the company's gaming lineup since its debut on the Super Nintendo Entertainment System in 1993. The series follows the adventures of Fox McCloud and his team of anthropomorphic animals as they battle the evil scientist Andross and defend the Lylat System from various threats. Over the years, the franchise has evolved to include rail shooters, open-world adventures, and",
+          content_zh:
+            "任天堂宣布新的星际火狐游戏将登陆Switch 2\n\n任天堂正式宣布其备受欢迎的星际火狐系列将推出新作，预定在该公司即将推出的Switch 2主机上发布。这一公告令粉丝和行业观察人士都感到意外，因为任天堂是在一场临时安排的Direct直面会上公布这款游戏，而非留到大型新闻发布会。这标志着这款深受喜爱的太空射击系列的回归，该系列最近的正统续作还是在原版Wii U上推出的。\n\n星际火狐系列由任天堂传奇设计师宫本茂创作，自1993年在超级任天堂上首次亮相以来，一直是该公司游戏阵容的重要组成部分。该系列讲述了福克斯·麦克劳德和他那群拟人化动物团队的故事，他们与邪恶科学家安卓斯作战，捍卫利拉特星系免受各种威胁。这些年来，该系列不断进化，涵盖了轨道射击游戏、开放世界冒险等多种游戏类型。",
+          source: "verge",
+          created_at: "2026-05-07T06:08:03.067405+00:00",
+          original_url:
+            "https://www.theverge.com/entertainment/925601/star-fox-nintendo-switch-2",
+          categories: {
+            id: "9126cc45-ac4c-42de-aca8-175d51351ab2",
+            title: "tech",
+            sort_order: 0,
+          },
+        },
+        {
+          id: "bbcb7ef5-5658-4b13-a41e-f4ec71dc328c",
+          title:
+            "Musk’s biggest loyalist became his biggest liability → 马斯克最忠诚的盟友如今成了他最大的负担",
+          title_en: "Musk’s biggest loyalist became his biggest liability",
+          title_zh: "马斯克最忠诚的盟友如今成了他最大的负担",
+          content_en:
+            "Summary: Musk's biggest loyalist became his biggest liability\n\nThis article from The Verge, published on May 6, 2026, examines the shifting dynamics between Elon Musk and Shivon Zilis, who was previously one of Musk's most trusted allies. The piece centers on Zilis's notes, which the article suggests have emerged as potentially crucial evidence in the ongoing legal proceedings involving Musk and OpenAI CEO Sam Altman. According to senior reporter Elizabeth Lopatto, these notes represent what may be the most significant documentation uncovered thus far in the case. The title itself captures the paradox at the heart of the story: someone once considered among Musk's closest supporters and defenders has now become a potential source of damaging information against him. The article falls under The Verge's AI, Tech, and Elon Musk coverage categories, indicating this development is significant within the broader context of the artificial intelligence industry and the legal battles surround",
+          content_zh:
+            "摘要：马斯克最忠心的支持者如今成了他最大的负担\n\n这篇来自The Verge的文章发表于2026年5月6日，探讨了埃隆·马斯克与希文·齐利斯之间不断变化的关系。齐利斯此前曾是马斯克最信任的盟友之一。文章聚焦于齐利斯的笔记，据文章称，这些笔记可能已成为马斯克与OpenAI首席执行官萨姆·阿尔特曼正在进行法律诉讼中的关键证据。据资深记者伊丽莎白·洛帕托报道，这些笔记可能构成了该案迄今为止发现的最重要文件记录。文章标题本身就捕捉到了这个故事的核心悖论：一个曾被视为马斯克最亲密的支持者和捍卫者，如今却可能成为对他不利的信息来源。该文章归属于The Verge的AI、科技和埃隆·马斯克报道类别，表明这一进展在人工智能行业及围绕此的法律战中具有重要意义。",
+          source: "verge",
+          created_at: "2026-05-07T06:07:08.799776+00:00",
+          original_url:
+            "https://www.theverge.com/ai-artificial-intelligence/925665/musk-altman-trial-shivon-zilis-testimony",
+          categories: {
+            id: "9126cc45-ac4c-42de-aca8-175d51351ab2",
+            title: "tech",
+            sort_order: 0,
+          },
+        },
+        {
+          id: "e79c708f-46d1-4295-8a37-d9acfd085922",
+          title:
+            "Five architects of the AI economy explain where the wheels are coming off → AI经济五巨头指出问题所在",
+          title_en:
+            "Five architects of the AI economy explain where the wheels are coming off",
+          title_zh: "AI经济五巨头指出问题所在",
+          content_en:
+            "Summary\n\nThis TechCrunch article reports on a panel discussion held at the Milken Global Conference in Beverly Hills featuring five key figures in the AI industry who offered insights into the current challenges facing the AI economy. The panel included Christophe Fouquet, CEO of ASML, the Dutch company that maintains a monopoly on extreme ultraviolet lithography machines essential for modern chip manufacturing; Francis deSouza, COO of Google Cloud, who discussed the company's massive infrastructure investments; Qasar Younis, co-founder and CEO of Applied Intuition, a $15 billion physical AI company focused on autonomous systems; Dimitry Shevelenko, chief business officer of Perplexity, an AI-native search company; and Eve Bodnia, a quantum physicist and founder of Logical Intelligence, who is questioning the foundational architecture of AI systems.\n\nThe discussion revealed several critical bottlenecks in the AI supply chain. Fouquet emphasized that despite a \"huge acceleration of ch",
+          content_zh:
+            "摘要\n\n这篇TechCrunch文章报道了在比佛利山庄举行的米尔肯全球会议上举行的一场小组讨论，该会议邀请了人工智能行业的五位关键人物，他们就人工智能经济当前面临的挑战提供了见解。小组成员包括：ASML首席执行官Christophe Fouquet，这家荷兰公司垄断了现代芯片制造所必需的极紫外光刻机；谷歌云首席运营官Francis deSouza，他讨论了该公司的大规模基础设施投资；应用智能公司联合创始人兼首席执行官Qasar Younis，这是一家专注于自动驾驶系统、估值150亿美元的物理AI公司；Perplexity首席商务官Dimitry Shevelenko，这是一家AI原生搜索公司；以及量子物理学家、逻辑智能公司创始人Eve Bodnia，她正在质疑AI系统的基础架构。\n\n讨论揭示了AI供应链中的几个关键瓶颈。Fouquet强调，尽管“巨大的加速”",
+          source: "tc",
+          created_at: "2026-05-07T06:04:27.580039+00:00",
+          original_url:
+            "https://techcrunch.com/2026/05/06/five-architects-of-the-ai-economy-explain-where-the-wheels-are-coming-off/",
+          categories: {
+            id: "9126cc45-ac4c-42de-aca8-175d51351ab2",
+            title: "tech",
+            sort_order: 0,
+          },
+        },
+        {
+          id: "2e4c132f-1e69-4063-9ca3-f611c08c0869",
+          title: "Ted Turner has died → 特德·特纳去世了",
+          title_en: "Ted Turner has died",
+          title_zh: "特德·特纳去世了",
+          content_en:
+            "Ted Turner, the visionary media entrepreneur who founded CNN and pioneered the concept of 24‑hour cable news, died on May 6 2026 at the age of 87. Turner launched CNN in 1980, forever changing the way news is produced and distributed by creating the first dedicated all‑news cable channel. Beyond CNN, he built Turner Broadcasting System, acquired the Atlanta Braves baseball franchise, and created WTBS, the superstation that brought sports and entertainment to a broad national audience. He later expanded into film by purchasing the MGM library, established the United Nations Foundation to support global causes, and became a prominent environmentalist through the Turner Endangered Species Fund. Turner’s bold gamble on continuous news coverage transformed global journalism, set the stage for modern cable and satellite news, and cemented his reputation as one of the most influential figures in modern media. His death marks the end of an era for a pioneer whose ideas reshaped how the world r",
+          content_zh:
+            "特德·特纳，这位富有远见的媒体企业家、CNN创始人以及24小时有线电视新闻概念的先驱，于2026年5月6日去世，享年87岁。特纳于1980年创办CNN，通过创建首个专业全新闻有线电视频道，永远改变了新闻的制作和传播方式。除CNN外，他还创建了特纳广播系统，收购了亚特兰大勇士棒球队，并创建了WTBS超级电视台，将体育和娱乐节目带给广大国内观众。后来他通过收购米高梅电影资料库扩展到电影领域，创立了联合国基金会以支持全球事业，并通过特纳濒危物种基金成为著名的环保主义者。特纳对持续新闻报道的大胆赌注改变了全球新闻业，为现代有线和卫星新闻奠定了基础，并巩固了他作为现代媒体最具影响力人物之一的声誉。他的去世标志着一个先驱者时代的终结，这位先驱者的理念重塑了世界了解信息的方式。",
+          source: "hn",
+          created_at: "2026-05-07T06:02:32.634887+00:00",
+          original_url: "https://www.cnn.com/2026/05/06/us/ted-turner-death",
+          categories: {
+            id: "9126cc45-ac4c-42de-aca8-175d51351ab2",
+            title: "tech",
+            sort_order: 0,
+          },
+        },
+        {
+          id: "c6cca331-cadc-4a80-820f-59b83caabc70",
+          title:
+            "Google Cloud fraud defense, the next evolution of reCAPTCHA → 谷歌云欺诈防御，reCAPTCHA 的下一代演进",
+          title_en:
+            "Google Cloud fraud defense, the next evolution of reCAPTCHA",
+          title_zh: "谷歌云欺诈防御，reCAPTCHA 的下一代演进",
+          content_en:
+            "Google Cloud has announced the launch of Fraud Defense, a comprehensive trust platform designed to address the emerging security challenges of the agentic web—where autonomous AI agents increasingly handle complex online transactions. Positioned as the next evolution of reCAPTCHA, Fraud Defense enables businesses to verify and distinguish between legitimate bots, human users, and AI agents, providing the intelligence needed to secure digital interactions and commerce.\n\nThe platform introduces several key capabilities. First, an agentic activity measurement dashboard helps organizations understand and analyze AI-driven traffic by integrating with industry standards such as Web Bot Auth and SPIFFE, while also connecting agent and human identities to assess risk. Second, the agentic policy engine provides granular control over traffic throughout the user journey, allowing businesses to allow or block agents based on conditions including risk scores, automation types, and agent identity. T",
+          content_zh:
+            "Google Cloud 宣布推出 Fraud Defense（欺诈防御），这是一个全面的信任平台，旨在应对代理网络（agentic web）新兴的安全挑战——在这个网络中，自主 AI 代理越来越多地处理复杂的在线交易。Fraud Defense 作为 reCAPTCHA 的下一代演进版本，使企业能够验证并区分合法机器人、人类用户和 AI 代理，提供保护数字互动和商务所需的智能。\n\n该平台推出了几项关键功能。首先，代理活动测量仪表板通过与 Web Bot Auth 和 SPIFFE 等行业标准集成，帮助组织理解和分析 AI 驱动的流量，同时连接代理和人类身份以评估风险。其次，代理策略引擎在整个用户旅程中对流量提供精细化控制，使企业能够根据风险评分、自动化类型和代理身份等条件允许或阻止代理。",
+          source: "hn",
+          created_at: "2026-05-07T06:01:04.67494+00:00",
+          original_url:
+            "https://cloud.google.com/blog/products/identity-security/introducing-google-cloud-fraud-defense-the-next-evolution-of-recaptcha/",
+          categories: {
+            id: "9126cc45-ac4c-42de-aca8-175d51351ab2",
+            title: "tech",
+            sort_order: 0,
+          },
+        },
+        {
+          id: "2d955e38-283b-4c70-bad9-582653a4a0bc",
+          title:
+            "Iran considering US proposal to end war, official says → 官员表示，伊朗正在考虑美国提出的结束战争提议",
+          title_en: "Iran considering US proposal to end war, official says",
+          title_zh: "官员表示，伊朗正在考虑美国提出的结束战争提议",
+          content_en:
+            'Summary: Iran Considering US Proposal to End War\n\nIran has announced that a US proposal to end the ongoing conflict is "still being reviewed" following reports that the two nations may be close to reaching an agreement. According to Axios, the White House believes it could be finalizing a 14-point memorandum of understanding with Iran, which would establish a framework for more detailed nuclear negotiations. The proposed memo reportedly includes provisions for suspending Iranian nuclear enrichment, lifting sanctions, and restoring free transit through the Strait of Hormuz.\n\nA senior member of Iran\'s parliament initially dismissed the proposal as a "wish list," while Iranian foreign ministry spokesman Ismail Baghaei stated that Tehran would share its views on the US proposal with Pakistani mediators, who have been facilitating negotiations between the two sides. Pakistan\'s foreign minister expressed his country\'s commitment to "convert this ceasefire into a permanent end to this war."',
+          content_zh:
+            "摘要：伊朗正在考虑美国提出的结束战争方案\n\n伊朗宣布，美国提出的结束持续冲突的方案“仍在审查中”。此前有报道称，两国可能即将达成协议。据Axios报道，白宫认为其可能与伊朗敲定一份包含14个要点的谅解备忘录，这将为更详细的核谈判奠定框架。据报道，该备忘录草案包括暂停伊朗核浓缩计划、解除制裁以及恢复霍尔木兹海峡自由通航等内容。\n\n伊朗议会一名高级成员最初将该方案斥为“愿望清单”，而伊朗外交部发言人伊斯梅尔·巴盖伊则表示，德黑兰将与巴基斯坦调解方分享其对美国提案的看法，巴基斯坦一直在为双方谈判提供便利。巴基斯坦外交部长表示，巴方致力于“将这份停火协议转化为永久终结这场战争”。",
+          source: "bbc",
+          created_at: "2026-05-07T02:57:31.565172+00:00",
+          original_url:
+            "https://www.bbc.com/news/articles/cj0pq2q8221o?at_medium=RSS&amp;at_campaign=rss",
+          categories: {
+            id: "c3d4e5f6-a7b8-9012-cdef-123456789012",
+            title: "新闻",
+            sort_order: 3,
+          },
+        },
+        {
+          id: "edd389b0-4ea3-426c-8cc6-3092c8c30dec",
+          title:
+            "Can CCTV really stop children being abused in nurseries? → 监控真的能阻止幼儿园儿童遭受虐待吗？",
+          title_en: "Can CCTV really stop children being abused in nurseries?",
+          title_zh: "监控真的能阻止幼儿园儿童遭受虐待吗？",
+          content_en:
+            "Summary:\n\nThis BBC News article examines whether mandatory CCTV installation in nurseries across England could effectively protect children from abuse and neglect, prompted by several high-profile cases of child deaths and abuse in early years settings. The piece details the tragic cases of Genevieve, a nine-month-old who died in 2022 at a Stockport nursery after being strapped face down to a beanbag and left unsupervised for over 90 minutes, and Noah Sibanda, a 14-month-old who died at a Dudley nursery after being wrapped in blankets with a nursery worker's leg pressed across his back. Both nurseries had existing CCTV systems, which subsequently helped convict the perpetrators, yet could not prevent the deaths from occurring. The UK government is now consulting experts on whether CCTV should be mandatory in all nurseries, while Scotland, Wales, and Northern Ireland leave such decisions to individual providers. Australia is currently trialling cameras in 300 childcare centres. The",
+          content_zh:
+            "摘要：\n\n这篇BBC新闻报道探讨了英格兰是否应在所有幼儿园强制安装闭路电视，以有效保护儿童免受虐待和忽视。这一议题的提出源于早期教育机构中多起儿童死亡和虐待事件。报道详细叙述了两起悲剧案件：2022年，9个月大的 Genevieve 在斯托克波特一家幼儿园死亡，此前她被脸朝下绑在豆袋椅上，无人看管超过90分钟；以及14个月大的 Noah Sibanda 在达德利一家幼儿园死亡，原因是工作人员用毯子将其裹住，并将腿压在其背上。这两家幼儿园当时都已安装了闭路电视系统，这些录像后来帮助定罪了肇事者，但未能阻止死亡事件的发生。英国政府目前正在咨询专家意见，探讨是否应强制所有幼儿园安装闭路电视；苏格兰、威尔士和北爱尔兰则将此类决定权交给各机构自行决定。澳大利亚目前正在300家儿童保育中心试验安装摄像头。",
+          source: "bbc",
+          created_at: "2026-05-07T00:32:26.96006+00:00",
+          original_url:
+            "https://www.bbc.com/news/articles/czx2kn4n5wxo?at_medium=RSS&amp;at_campaign=rss",
+          categories: {
+            id: "c3d4e5f6-a7b8-9012-cdef-123456789012",
+            title: "新闻",
+            sort_order: 3,
+          },
+        },
+        {
+          id: "c6799577-8a5b-4883-8a11-dcb1f6cf519e",
+          title:
+            "Israel strikes Beirut for first time since Hezbollah ceasefire → 以色列首次在真主党停火后袭击贝鲁特",
+          title_en:
+            "Israel strikes Beirut for first time since Hezbollah ceasefire",
+          title_zh: "以色列首次在真主党停火后袭击贝鲁特",
+          content_en:
+            "Summary of Israel Strikes Beirut Article\n\nIsrael has conducted an air strike on Beirut for the first time since agreeing to a ceasefire with the Lebanese armed group Hezbollah, putting renewed pressure on a fragile peace deal that has failed to halt ongoing hostilities between the two sides. The attack targeted the city's southern suburbs, known as Dahieh, which serves as a Hezbollah stronghold. Israeli Prime Minister Benjamin Netanyahu personally approved the strike, which specifically targeted a commander from Hezbollah's elite Radwan Force. Local media reported that members of the unit were holding a meeting when the strike occurred around 20:00 local time. This marks the first military action against Dahieh since US President Donald Trump announced a ceasefire agreement between Israel and Lebanon on April 16.\n\nDespite the ceasefire deal, both Israel and Hezbollah have continued their attacks, with each side accusing the other of violations. Israel's military strikes have predomin",
+          content_zh:
+            "以色列空袭贝鲁特文章摘要\n\n以色列对贝鲁特发动了空袭，这是自与黎巴嫩武装组织真主党达成停火协议以来的首次，此举给一项脆弱的和平协议带来新的压力，该协议未能阻止双方持续的敌对行动。袭击针对的是城市南部郊区达希耶，该地区是真主党的据点。以色列总理本杰明·内塔尼亚胡亲自批准了这次袭击，此次袭击专门针对真主党精锐拉德万部队的一名指挥官。当地媒体报道称，袭击发生在当地时间约20:00，该部队成员正在举行会议。这是自美国总统唐纳德·特朗普4月16日宣布以色列与黎巴嫩停火协议以来首次对达希耶采取军事行动。\n\n尽管有停火协议，以色列和真主党都继续发动攻击，双方互相指责对方违反协议。以色列的军事袭击主要",
+          source: "bbc",
+          created_at: "2026-05-07T00:31:22.234481+00:00",
+          original_url:
+            "https://www.bbc.com/news/articles/crmpjjl02l2o?at_medium=RSS&amp;at_campaign=rss",
+          categories: {
+            id: "c3d4e5f6-a7b8-9012-cdef-123456789012",
+            title: "新闻",
+            sort_order: 3,
+          },
+        },
+        {
+          id: "bc1ac8bc-91f6-4e3f-a410-d26cc05c4d23",
+          title:
+            "BYD Dahong Information Update: Expected to Debut as Early as Within May with Prices Expected in June (21 hours ago) → 比亚迪大汉信息更新 预计最快5月内完成亮相并于6月份公布价格 21小时前",
+          title_en:
+            "BYD Dahong Information Update: Expected to Debut as Early as Within May with Prices Expected in June (21 hours ago)",
+          title_zh:
+            "比亚迪大汉信息更新 预计最快5月内完成亮相并于6月份公布价格 21小时前",
+          content_en:
+            "BYD Da Han Information Update: Anticipated Market Launch Timeline\n\nAccording to Autohome's news report published on May 6, 2026, BYD's upcoming \"Da Han\" vehicle has received updated information. The Chinese automaker is reportedly planning to unveil the model at the earliest by the end of May, with official pricing expected to be announced in June.\n\nThis timeline suggests that BYD is accelerating its product launch schedule for the Da Han, positioning it as a significant addition to their growing portfolio of new energy vehicles. The company's proactive approach in providing early information updates indicates strong confidence in the vehicle's development progress.\n\nThe Da Han appears to be another strategic model in BYD's diverse lineup, following the company's aggressive expansion strategy in both domestic and international markets. As of the article's publication date, the report had garnered approximately 42,000 views, reflecting substantial public interest in BYD's upcoming rel",
+          content_zh:
+            "比亚迪“大汉”车型信息更新：预计上市时间表\n\n根据汽车之家于2026年5月6日发布的新闻报道，比亚迪即将推出的“大汉”车型获得了最新信息更新。据报道，这家中国汽车制造商计划最早于5月底亮相该车型，并有望在6月公布正式售价。\n\n这一时间表表明，比亚迪正在加快“大汉”的产品上市计划，将其定位为比亚迪不断壮大的新能源汽车产品线中的重要补充。该公司主动提前发布信息更新的做法，显示出对其车辆开发进展的强烈信心。\n\n“大汉”似乎是比亚迪多元化产品阵容中的又一款战略车型，符合该公司在国内和国际市场积极扩张的战略。截至本文发布时，该报道已获得约42,000次浏览，反映出公众对比亚迪即将推出的新车型的浓厚兴趣。",
+          source: "autohome",
+          created_at: "2026-05-07T00:30:15.164393+00:00",
+          original_url: "https://www.autohome.com.cn/news/202605/1314112.html",
+          categories: {
+            id: "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+            title: "汽车",
+            sort_order: 2,
+          },
+        },
+        {
+          id: "95ef2edb-9ced-4e9d-a8ca-e04596d3fd84",
+          title:
+            "Spooked by Mythos, Trump suddenly realized AI safety testing might be good → 被Mythos惊到的特朗普突然意识到，AI安全测试或许是件好事。",
+          title_en:
+            "Spooked by Mythos, Trump suddenly realized AI safety testing might be good",
+          title_zh: "被Mythos惊到的特朗普突然意识到，AI安全测试或许是件好事。",
+          content_en:
+            'The Trump administration has reversed its stance on AI safety testing, signing voluntary agreements with Google DeepMind, Microsoft, and xAI requiring government safety checks on frontier AI models before and after release. This marks a significant shift from Trump\'s earlier dismissal of Biden-era safety policies as overregulation, and his subsequent rebranding of the US AI Safety Institute to the Center for AI Safety Standards and Innovation (CAISI), which deliberately removed the word "safety" from its name. The reversal appears prompted by Anthropic\'s announcement that it would not release its Claude Mythos model due to concerns about its advanced cybersecurity capabilities being exploited by bad actors. According to reports, Trump may now issue an executive order mandating pre-release government testing of advanced AI systems. CAISI Director Chris Fall emphasized that "independent, rigorous measurement science is essential to understanding frontier AI and its national security impl',
+          content_zh:
+            "特朗普政府已改变其在人工智能安全测试方面的立场，与谷歌DeepMind、微软和xAI签署自愿协议，要求前沿人工智能模型在发布前后都需接受政府安全检查。\n这标志着特朗普的态度发生了重大转变：此前他曾将拜登时期的安全政策斥为过度监管，随后还将美国人工智能安全研究所更名为人工智能安全标准与创新中心（CAISI），特意将“安全”一词从名称中删去。\n此次立场反转似乎是由Anthropic的公告引发的，该公司宣布因担心旗下Claude Mythos模型的先进网络安全能力会被不法分子利用，将不会发布该模型。\n据报道，特朗普现在可能会发布一项行政命令，强制要求先进人工智能系统在发布前接受政府测试。人工智能安全标准与创新中心主任克里斯·法尔强调：“独立、严谨的测量科学对于了解前沿人工智能及其国家安全影”",
+          source: "ars",
+          created_at: "2026-05-07T00:22:19.248675+00:00",
+          original_url:
+            "https://arstechnica.com/tech-policy/2026/05/everything-that-could-go-wrong-with-trumps-ai-safety-tests-according-to-experts/",
+          categories: {
+            id: "9126cc45-ac4c-42de-aca8-175d51351ab2",
+            title: "tech",
+            sort_order: 0,
+          },
+        },
+        {
+          id: "dab4f42e-d26a-44b3-bed4-024d38d89dc3",
+          title:
+            "Court strikes down FCC anti-discrimination rule opposed by Internet providers → 法院推翻了美国联邦通信委员会（FCC）出台的、遭互联网运营商反对的反歧视规定。",
+          title_en:
+            "Court strikes down FCC anti-discrimination rule opposed by Internet providers",
+          title_zh:
+            "法院推翻了美国联邦通信委员会（FCC）出台的、遭互联网运营商反对的反歧视规定。",
+          content_en:
+            "Summary\n\nA federal court has struck down an anti-discrimination rule issued by the Federal Communications Commission (FCC) that had been strongly opposed by major internet service providers. The ruling represents a significant victory for the telecommunications industry, which had challenged the regulation on various legal grounds. The FCC's rule was designed to prevent internet providers from discriminating against certain types of internet traffic or charging different rates for different types of online services and content. Industry groups argued that the regulation overstepped the commission's authority and would stifle investment in network infrastructure. The court's decision effectively invalidates the FCC's effort to impose stricter oversight of how internet providers manage traffic on their networks. This ruling marks a reversal of the agency's attempt to apply common carrier principles to broadband services, similar to those traditionally applied to telephone networks. The",
+          content_zh:
+            "摘要\n\n一家联邦法院驳回了联邦通信委员会(FCC)发布的一项反歧视规则，该规则曾遭到主要互联网服务提供商的强烈反对。这一裁决代表了电信行业的重大胜利，该行业此前曾以各种法律理由对这一法规提出质疑。FCC的规则旨在防止互联网提供商歧视某些类型的互联网流量，或对不同类型的在线服务和内容收取不同费率。行业组织认为，该法规超越了委员会的权限，将抑制对网络基础设施的投资。法院的裁决实际上使FCC对互联网提供商管理其网络流量实施更严格监督的努力失效。这一裁决标志着该机构试图将运营商共乘原则应用于宽带服务的一次逆转，类似于传统上应用于电话网络的原则。",
+          source: "ars",
+          created_at: "2026-05-07T00:20:44.760056+00:00",
+          original_url:
+            "https://arstechnica.com/tech-policy/2026/05/court-strikes-down-fcc-anti-discrimination-rule-opposed-by-internet-providers/",
+          categories: {
+            id: "9126cc45-ac4c-42de-aca8-175d51351ab2",
+            title: "tech",
+            sort_order: 0,
+          },
+        },
+        {
+          id: "831f1a0c-fe55-4cd3-b22c-eb9c91f1505a",
+          title:
+            "TSMC taps wind power as AI chip demand soars, Taiwan feels energy crunch → 台积电押注风力发电应对AI芯片需求飙升 台湾感受能源压力",
+          title_en:
+            "TSMC taps wind power as AI chip demand soars, Taiwan feels energy crunch",
+          title_zh: "台积电押注风力发电应对AI芯片需求飙升 台湾感受能源压力",
+          content_en:
+            "Summary\n\nTSMC (Taiwan Semiconductor Manufacturing Company), the world's largest contract chipmaker, is increasingly turning to wind power to meet its massive energy demands as artificial intelligence chip demand continues to surge. The company, which produces chips for major tech firms like Apple, Nvidia, and AMD, faces significant energy challenges in Taiwan, where power grid constraints have become a growing concern.\n\nThe semiconductor manufacturing process is extremely energy-intensive, and TSMC's facilities consume substantial amounts of electricity. With the rapid expansion of AI technologies and the corresponding need for advanced chips, the company's power requirements have grown substantially, putting pressure on Taiwan's energy infrastructure.\n\nTaiwan has been working to diversify its energy sources beyond nuclear power, which has been a politically sensitive topic on the island. Wind power, particularly offshore wind farms, has emerged as a promising renewable energy source",
+          content_zh:
+            "摘要\n作为全球最大的芯片代工企业，台积电（台湾积体电路制造公司）在人工智能芯片需求持续飙升的背景下，正越来越多地转向风力发电，以满足自身庞大的能源需求。该公司为苹果、英伟达、超微半导体等头部科技企业供应芯片，目前在台湾面临严峻的能源挑战，当地的电网约束问题正引发越来越多的担忧。\n\n半导体制造过程能耗极高，台积电的生产设施耗电量巨大。随着人工智能技术快速扩张，以及随之而来的先进芯片需求增长，该公司的用电需求大幅提升，给台湾的能源基础设施造成了压力。\n\n台湾一直在推动能源来源多元化，降低对核电的依赖，核电在岛内始终是政治敏感议题。风力发电，尤其是海上风电场，已成为颇具发展前景的可再生能源。",
+          source: "ars",
+          created_at: "2026-05-07T00:19:25.313936+00:00",
+          original_url:
+            "https://arstechnica.com/gadgets/2026/05/tsmc-taps-wind-power-as-ai-chip-demand-soars-taiwan-feels-energy-crunch/",
+          categories: {
+            id: "9126cc45-ac4c-42de-aca8-175d51351ab2",
+            title: "tech",
+            sort_order: 0,
+          },
+        },
+        {
+          id: "440c3d13-728f-4ede-8db9-2297817dee71",
+          title:
+            "Anthropic raises Claude Code usage limits, credits new deal with SpaceX → Anthropic提高Claude Code使用限额，称此举得益于其与太空探索技术公司（SpaceX）达成的新合作协议。\n\n注：因Anthropic暂无官方统一中文译名，业内通常直接保留原名使用，若需音译也可译为“安索匹克”。",
+          title_en:
+            "Anthropic raises Claude Code usage limits, credits new deal with SpaceX",
+          title_zh:
+            "Anthropic提高Claude Code使用限额，称此举得益于其与太空探索技术公司（SpaceX）达成的新合作协议。\n\n注：因Anthropic暂无官方统一中文译名，业内通常直接保留原名使用，若需音译也可译为“安索匹克”。",
+          content_en:
+            "Summary:\n\nAnthropic has announced increased usage limits for its Claude Code product, attributing this expansion to a newly established partnership with SpaceX. The announcement, made on May 6, 2026, signals a significant collaboration between the AI company and the space exploration firm. Claude Code is Anthropic's coding assistant tool that allows developers to leverage AI capabilities for software development tasks. The increased usage limits indicate that Anthropic is scaling up its infrastructure and capacity, likely to accommodate higher demand or specific requirements from its new SpaceX partnership. This deal represents one of several high-profile partnerships Anthropic has established with major technology companies, as the company continues to compete in the rapidly evolving AI assistant market. The collaboration with SpaceX suggests potential applications for AI-assisted coding in aerospace and satellite development, though specific details of how SpaceX plans to utilize",
+          content_zh:
+            "摘要：\nAnthropic宣布上调旗下Claude Code产品的使用限额，并称此次扩容是基于该公司与SpaceX最新建立的合作关系。这项公告于2026年5月6日发布，标志着这家人工智能企业与太空探索公司达成了重磅合作。Claude Code是Anthropic推出的代码助手工具，可让开发者借助人工智能能力完成各类软件开发任务。使用限额上调说明Anthropic正在扩容基础设施、提升服务承载能力，此举大概率是为了应对更高的用户需求，或是满足新合作伙伴SpaceX的特定要求。该交易是Anthropic与各大科技企业达成的多起高关注度合作之一，目前该公司正持续在快速迭代的AI助手市场中展开竞争。与SpaceX的合作意味着AI辅助编码有望在航空航天及卫星开发领域得到应用，不过SpaceX计划如何应用该工具的具体细节尚未公开。",
+          source: "ars",
+          created_at: "2026-05-07T00:17:14.444037+00:00",
+          original_url:
+            "https://arstechnica.com/ai/2026/05/anthropic-raises-claude-code-usage-limits-credits-new-deal-with-spacex/",
+          categories: {
+            id: "9126cc45-ac4c-42de-aca8-175d51351ab2",
+            title: "tech",
+            sort_order: 0,
+          },
+        },
+        {
+          id: "8df867d5-fbf3-4412-9633-ba6306302c32",
+          title:
+            "SpaceX is starting to move on from the world's most successful rocket → SpaceX（太空探索技术公司）正开始逐步告别这款全球最成功的运载火箭。",
+          title_en:
+            "SpaceX is starting to move on from the world's most successful rocket",
+          title_zh:
+            "SpaceX（太空探索技术公司）正开始逐步告别这款全球最成功的运载火箭。",
+          content_en:
+            "SpaceX is beginning to shift its focus away from the Falcon 9, the workhorse rocket that has become the world’s most successful launch vehicle, as the company moves to capitalize on the capabilities of its next‑generation Starship. Over the past decade Falcon 9 has logged hundreds of missions, reliably delivering satellites, cargo and crew to orbit while pioneering first‑stage reusability that dramatically cut launch costs. Now, after achieving a high flight rate and accumulating a wealth of reuse data, SpaceX is redirecting engineering resources, production capacity and launch‑pad scheduling toward Starship, a fully reusable super‑heavy‑lift vehicle designed to serve both cis‑lunar and interplanetary missions. The transition reflects a strategic decision to move beyond the incremental improvements of Falcon 9 and to embrace a vehicle that can haul larger payloads at lower per‑kilogram cost and enable ambitious projects such as a commercial space station, lunar landing services for NAS",
+          content_zh:
+            "SpaceX开始将重点从猎鹰9号转移开来——这款主力火箭已成为全球最成功的运载火箭——该公司正着手利用其下一代星舰的能力。过去十年间，猎鹰9号已完成数百次任务，可靠地将卫星、货物和人员送入轨道，同时开创了第一级可回收技术，大幅降低了发射成本。如今，在实现高飞行频率并积累了大量回收数据后，SpaceX正将工程资源、生产能力和发射台排期转向星舰——一款完全可重复使用的超重型运载火箭，旨在执行地月空间及星际任务。此次转型反映了一个战略决策，即超越猎鹰9号的渐进式改进，拥抱一款能够以更低每公斤成本运输更大有效载荷的运载火箭，并使商业空间站、为NASA提供登月服务等雄心勃勃的项目成为可能。",
+          source: "ars",
+          created_at: "2026-05-07T00:14:52.905414+00:00",
+          original_url:
+            "https://arstechnica.com/space/2026/05/spacex-is-starting-to-move-on-from-the-worlds-most-successful-rocket/",
+          categories: {
+            id: "9126cc45-ac4c-42de-aca8-175d51351ab2",
+            title: "tech",
+            sort_order: 0,
+          },
+        },
+        {
+          id: "8331985d-c99d-487b-bf98-c2ea97f33951",
+          title:
+            "Insurance startup Corgi hits $1.3B valuation 4 months after its Series A → 保险初创公司Corgi在完成A轮融资仅4个月后估值便达到13亿美元。",
+          title_en:
+            "Insurance startup Corgi hits $1.3B valuation 4 months after its Series A",
+          title_zh:
+            "保险初创公司Corgi在完成A轮融资仅4个月后估值便达到13亿美元。",
+          content_en:
+            "Summary: Insurance Startup Corgi Achieves $1.3 Billion Valuation Just Four Months After Series A\n\nCorgi, an insurance technology startup focused on business insurance solutions, has secured a significant funding milestone by raising a $160 million Series B round led by venture capital firm TCV. This latest investment has propelled the company's valuation to an impressive $1.3 billion, marking a remarkable growth trajectory that saw the startup achieve unicorn status just four months after completing its Series A funding round.\n\nThe company's rapid ascent in valuation reflects the strong investor confidence in Corgi's approach to modernizing the business insurance industry. Founded by co NicoLaqu (name appears truncated in source), Corgi has positioned itself as an innovative player in the InsurTech space, offering digital-first solutions that streamline the process of obtaining and managing commercial insurance policies for small and medium-sized businesses.\n\nThe substantial Series B",
+          content_zh:
+            "摘要：保险初创企业Corgi A轮融资仅四个月估值便达13亿美元\n专注于商业保险解决方案的保险科技初创企业Corgi完成了由风险投资公司TCV领投的1.6亿美元B轮融资，达成了重要融资里程碑。这笔最新投资将公司估值推高至亮眼的13亿美元，凸显出其出众的增长态势，这家初创企业在完成A轮融资仅四个月后就跻身独角兽行列。\nCorgi估值的快速攀升，反映出投资者对其推动商业保险行业现代化的发展路径的高度信心。Corgi由联合创始人NicoLaqu（来源资料中该姓名有所截断）创立，是保险科技领域的创新参与者，主打数字化优先的解决方案，可简化中小企业获取和管理商业保险保单的流程。\n此次大额B轮",
+          source: "tc",
+          created_at: "2026-05-07T00:13:00.596246+00:00",
+          original_url:
+            "https://techcrunch.com/2026/05/06/insurance-startup-corgi-hits-1-3b-valuation-4-months-after-its-series-a/",
+          categories: {
+            id: "9126cc45-ac4c-42de-aca8-175d51351ab2",
+            title: "tech",
+            sort_order: 0,
+          },
+        },
+        {
+          id: "7cda82ad-40c0-47ef-8aa1-098c5e22a034",
+          title: "Is xAI a neocloud now? → xAI现在是一家新云公司了吗？",
+          title_en: "Is xAI a neocloud now?",
+          title_zh: "xAI现在是一家新云公司了吗？",
+          content_en:
+            "Summary: Is xAI a Neocloud Now?\n\nIn May 2026, xAI and Anthropic announced a surprise partnership in which Anthropic purchased all the compute capacity at xAI's Colossus 1 data center, approximately 300 megawatts. This deal allowed Anthropic to immediately raise its usage limits and represents a massive financial win for xAI, likely worth billions of dollars. The partnership essentially transforms xAI from a consumer of compute into a provider, monetizing one of the company's most impressive achievements.\n\nWhile some observers might interpret this move as a strategic shot at OpenAI amid ongoing litigation, Elon Musk clarified on X that xAI had already transitioned training operations to its newer Colossus 2 facility and simply did not need both data centers running at full capacity.\n\nThe short-term logic is evident: xAI's flagship product Grok has experienced plummeting user engagement since image generation controversies earlier in the year. By partnering with Anthropic, xAI generate",
+          content_zh:
+            "摘要：xAI如今已是新型云服务商了吗？\n2026年5月，xAI与Anthropic官宣了一项出人意料的合作：Anthropic买断了xAI旗下巨像1号数据中心的全部算力，规模约300兆瓦。这笔交易让Anthropic能够即刻上调其服务使用上限，同时也为xAI带来了预计数十亿美元的巨额收入，是一场重大的财务胜利。此次合作本质上让xAI从算力消耗方转型为算力供给方，将该公司最引以为傲的成果之一成功变现。\n虽然部分观察人士可能会将这一举措解读为xAI在与OpenAI的 ongoing 诉讼纠纷中对后者打出的战略重拳，但埃隆·马斯克在X平台上澄清称，xAI早已将模型训练业务迁移到更新的巨像2号数据中心，根本不需要两个数据中心同时满负荷运转。\n这一举措的短期逻辑十分明确：今年早些时候的图片生成争议事件过后，xAI的旗舰产品Grok的用户活跃度大幅跳水。通过与Anthropic合作，xAI可",
+          source: "tc",
+          created_at: "2026-05-07T00:11:37.838581+00:00",
+          original_url:
+            "https://techcrunch.com/2026/05/06/is-xai-a-neocloud-now/",
+          categories: {
+            id: "9126cc45-ac4c-42de-aca8-175d51351ab2",
+            title: "tech",
+            sort_order: 0,
+          },
+        },
+        {
+          id: "be667557-44cf-40db-bf70-d80da08fb95b",
+          title:
+            "Snap says its $400M deal with Perplexity &#8216;amicably ended&#8217; → Snap表示，其与Perplexity价值4亿美元的交易已“友好终止”。",
+          title_en:
+            "Snap says its $400M deal with Perplexity &#8216;amicably ended&#8217;",
+          title_zh: "Snap表示，其与Perplexity价值4亿美元的交易已“友好终止”。",
+          content_en:
+            "Snap has confirmed that its $400 million partnership with AI search startup Perplexity has ended. The deal, which was announced last November, would have seen Perplexity's AI-powered search engine integrated directly into the Snapchat platform. According to statements from Snap, the termination of the agreement was mutual and amicable, concluding without any public disputes or disclosed reasons for the split. This marks a significant shift in Snap's AI strategy, as the company had previously positioned the Perplexity integration as a key feature for enhancing user engagement within its camera and messaging ecosystem. The cancellation leaves Perplexity to continue seeking distribution partnerships elsewhere, while Snap will need to reassess its approach to incorporating advanced AI search capabilities into its services.",
+          content_zh:
+            "Snap公司已证实，其与AI搜索初创企业Perplexity价值4亿美元的合作已终止。该交易于去年11月官宣，原本计划将Perplexity旗下的AI搜索引擎直接集成到Snapchat平台中。据Snap方面的声明，本次协议终止是双方共同做出的友好决定，全程未出现公开纠纷，也未披露双方拆分的原因。这一变动标志着Snap的AI战略出现重大转向，此前该公司曾将集成Perplexity服务定位为提升旗下相机、消息生态用户参与度的核心功能。本次合作取消后，Perplexity将继续在其他渠道寻求分发合作，而Snap则需要重新评估如何将先进AI搜索能力整合到自身服务当中。",
+          source: "tc",
+          created_at: "2026-05-07T00:09:33.137579+00:00",
+          original_url:
+            "https://techcrunch.com/2026/05/06/snap-says-its-400m-deal-with-perplexity-amicably-ended/",
+          categories: {
+            id: "9126cc45-ac4c-42de-aca8-175d51351ab2",
+            title: "tech",
+            sort_order: 0,
+          },
+        },
+        {
+          id: "3d91c495-4483-40f7-9606-129212742dac",
+          title:
+            'Barry Diller trusts Sam Altman. But &#8216;trust is irrelevant&#8217; as AGI nears, he says. → 巴里·迪勒信任萨姆·阿尔特曼。但他表示，随着AGI临近，"信任无关紧要"。',
+          title_en:
+            "Barry Diller trusts Sam Altman. But &#8216;trust is irrelevant&#8217; as AGI nears, he says.",
+          title_zh:
+            '巴里·迪勒信任萨姆·阿尔特曼。但他表示，随着AGI临近，"信任无关紧要"。',
+          content_en:
+            "Barry Diller, the veteran media executive, publicly defended OpenAI CEO Sam Altman, saying he trusts him personally, but warned that as artificial general intelligence (AGI) approaches, trust alone is insufficient and essentially irrelevant to mitigating its risks. Speaking at the WSJ’s Future of Everything event, Diller argued that AGI is an unpredictable force that demands robust guardrails and governance mechanisms rather than reliance on individual trustworthiness. While he expressed confidence in Altman’s leadership, he stressed that the development of AGI is a broader societal challenge requiring institutional safeguards, oversight, and careful regulation to prevent unintended consequences. Diller’s remarks highlight the growing tension between rapid AI advancement and the need for responsible stewardship, underscoring that personal trust in a few leaders cannot be the sole defense against the systemic impacts of AGI.",
+          content_zh:
+            '巴里·迪勒，这位资深媒体高管，公开为OpenAI CEO萨姆·阿尔特曼辩护，称他个人信任阿尔特曼，但警告称，随着通用人工智能（AGI）的临近，仅靠信任是不够的，而且对于降低其风险来说几乎毫无意义。在《华尔街日报》的"一切未来"活动上，迪勒认为，AGI是一股不可预测的力量，需要强有力的护栏和治理机制，而不是依赖个人可信度。虽然他对阿尔特曼的领导力表示了信心，但他强调，AGI的发展是一个更广泛的社会挑战，需要制度性的保障措施、监督和谨慎的监管来防止意外后果。迪勒的言论突出了快速AI发展与需要负责任管理之间日益紧张的矛盾，强调仅靠对少数几位领导人的个人信任不能成为防御AGI系统性影响的唯一手段。',
+          source: "tc",
+          created_at: "2026-05-07T00:08:13.321313+00:00",
+          original_url:
+            "https://techcrunch.com/2026/05/06/barry-diller-trusts-sam-altman-but-trust-is-irrelevant-as-agi-nears-he-says/",
+          categories: {
+            id: "9126cc45-ac4c-42de-aca8-175d51351ab2",
+            title: "tech",
+            sort_order: 0,
+          },
+        },
+        {
+          id: "56b8a22b-8b99-4947-bcd0-e0d42263e69c",
+          title:
+            "A 20-minute pitch wins Indian startup Pronto backing from Lachy Groom → 一场20分钟的路演为印度初创企业Pronto赢得了拉奇·格鲁姆的投资支持。",
+          title_en:
+            "A 20-minute pitch wins Indian startup Pronto backing from Lachy Groom",
+          title_zh:
+            "一场20分钟的路演为印度初创企业Pronto赢得了拉奇·格鲁姆的投资支持。",
+          content_en:
+            "The Indian startup Pronto has secured investment from renowned venture capitalist Lachy Groom after a concise 20-minute pitch, according to a TechCrunch report published on May 6, 2026. The rapid success of the pitch highlights the growing confidence in Pronto's business model and its potential within a rapidly expanding market. The investment comes at a time when Pronto is experiencing significant traction, scaling to 26,000 daily bookings. Industry analysts suggest the market Pronto operates in could reach a size of $18 billion. This backing from Groom, a well-known figure in the tech investment community, is expected to propel Pronto's growth trajectory and solidify its position in the competitive landscape.",
+          content_zh:
+            "据2026年5月6日TechCrunch发布的报道，印度初创企业Pronto在仅为时20分钟的简短推介后，便获得了知名风险投资人拉奇·格鲁姆的投资。本次推介的快速成功，凸显出市场对Pronto的商业模式及其在高速扩张赛道中的潜力信心持续提升。\n该笔投资落地之际，Pronto正处于业务强劲增长阶段，日预订量已攀升至2.6万单。行业分析师预计，Pronto所处的市场规模可达180亿美元。作为科技投资界的知名人物，格鲁姆的此次注资预计将推动Pronto的增长步伐，巩固其在竞争激烈的行业格局中的地位。",
+          source: "tc",
+          created_at: "2026-05-07T00:06:24.721282+00:00",
+          original_url:
+            "https://techcrunch.com/2026/05/06/a-20-minute-pitch-wins-indian-startup-pronto-backing-from-lachy-groom/",
+          categories: {
+            id: "9126cc45-ac4c-42de-aca8-175d51351ab2",
+            title: "tech",
+            sort_order: 0,
+          },
+        },
+        {
+          id: "91fc394b-b0fa-46e1-ab2a-96335a835db2",
+          title:
+            "Vibe coding and agentic engineering are getting closer than I'd like → Vibe coding和agentic工程正变得比我预想的更加趋同。",
+          title_en:
+            "Vibe coding and agentic engineering are getting closer than I'd like",
+          title_zh: "Vibe coding和agentic工程正变得比我预想的更加趋同。",
+          content_en:
+            'Summary\n\nIn this May 2026 blog post, Simon Willison discusses his recent appearance on Heavybit\'s High Leverage podcast with Joseph Ruscio, where he explored AI coding tools and arrived at what he describes as a "disturbing realization." The piece reflects on how two distinct approaches to AI-assisted programming—"vibe coding" and "agentic engineering"—have begun to overlap in his own practice.\n\nWillison had previously defined vibe coding as a hands-off approach where programmers (or even non-programmers) use AI tools without examining the generated code, simply iterating based on whether the output works. He argued this approach is acceptable for personal tools but "grossly irresponsible" when building software for others, since bugs can harm users.\n\nAgentic engineering, by contrast, involves professional software engineers leveraging AI tools while drawing on extensive experience in security, maintainability, operations, and performance. The goal is to build higher-quality software',
+          content_zh:
+            "摘要\n\n在这篇2026年5月的博客文章中，Simon Willison讨论了他最近在Heavybit的High Leverage播客上与Joseph Ruscio的对话，节目中他探讨了AI编程工具，并得出了他所说的“令人不安的认知”。文章反思了他自己的实践中，AI辅助编程的两种不同方式——“氛围编程”和“智能体工程”——如何开始重叠。\n\nWillison之前将氛围编程定义为一种放手不管的方式，程序员（甚至非程序员）使用AI工具时不检查生成的代码，仅根据输出是否有效进行迭代。他认为这种方式用于个人工具是可以接受的，但在为他人构建软件时是“极其不负责任的”，因为bug可能会伤害用户。\n\n相比之下，智能体工程涉及专业软件工程师利用AI工具，同时运用他们在安全、可维护性、运维和性能方面的丰富经验。目标是构建更高质量的软件。",
+          source: "hn",
+          created_at: "2026-05-07T00:04:37.663306+00:00",
+          original_url:
+            "https://simonwillison.net/2026/May/6/vibe-coding-and-agentic-engineering/",
+          categories: {
+            id: "9126cc45-ac4c-42de-aca8-175d51351ab2",
+            title: "tech",
+            sort_order: 0,
+          },
+        },
+        {
+          id: "b8677753-4288-40c1-8538-587a5e3b7d9a",
+          title:
+            "Higher usage limits for Claude and a compute deal with SpaceX → 克劳德（Claude）更高的使用限额，以及与太空探索技术公司（SpaceX）的算力合作协议",
+          title_en:
+            "Higher usage limits for Claude and a compute deal with SpaceX",
+          title_zh:
+            "克劳德（Claude）更高的使用限额，以及与太空探索技术公司（SpaceX）的算力合作协议",
+          content_en:
+            "Anthropic has announced a significant partnership with SpaceX that will substantially increase their compute capacity, enabling the company to raise usage limits for Claude Code and the Claude API effective immediately. The improvements include doubling Claude Code's five-hour rate limits for Pro, Max, Team, and seat-based Enterprise plans, removing the peak hours limit reduction for Pro and Max accounts, and considerably raising API rate limits for Claude Opus models. The SpaceX agreement gives Anthropic access to all compute capacity at the Colossus 1 data center, providing more than 300 megawatts of new capacity with over 220,000 NVIDIA GPUs available within the month. This new capacity will directly benefit Claude Pro and Max subscribers. This partnership joins Anthropic's other major compute deals, including an up to 5 gigawatt agreement with Amazon that includes nearly 1 gigawatt of new capacity by the end of 2026, a 5 gigawatt agreement with Google and Broadcom coming online in",
+          content_zh:
+            "Anthropic宣布与SpaceX达成重磅合作，将大幅提升自身算力，即刻起上调Claude Code与Claude API的使用限额。\n本次升级内容包括：Pro、Max、团队版及按席位计费的企业版方案的Claude Code五小时速率限制翻倍，取消Pro与Max账户的高峰时段限额下调规则，同时大幅提高Claude Opus模型的API速率限制。\n按照与SpaceX的协议，Anthropic可使用巨像1号（Colossus 1）数据中心的全部算力，一个月内即可新增超300兆瓦算力，配套超过22万张英伟达GPU。这些新增算力将直接惠及Claude Pro和Max订阅用户。\n除本次合作外，Anthropic还手握其他多项大型算力合作协议，包括与亚马逊达成的最高5吉瓦的合作（其中近1吉瓦的新增算力将于2026年底前落地），以及与谷歌、博通签订的5吉瓦算力协议正逐步上线。",
+          source: "hn",
+          created_at: "2026-05-07T00:01:59.004846+00:00",
+          original_url: "https://www.anthropic.com/news/higher-limits-spacex",
+          categories: {
+            id: "9126cc45-ac4c-42de-aca8-175d51351ab2",
+            title: "tech",
+            sort_order: 0,
+          },
+        },
+        {
+          id: "7e8c63a6-ce3b-451f-98e2-72a816fd9092",
+          title: "Google shuts down Project Mariner → 谷歌关闭“水手计划”",
+          title_en: "Google shuts down Project Mariner",
+          title_zh: "谷歌关闭“水手计划”",
+          content_en:
+            "Google has officially shut down Project Mariner, the company's experimental AI-powered web browsing agent that was designed to autonomously navigate websites and complete tasks on behalf of users. According to the report published by The Verge on May 6, 2026, the Project Mariner experiment, which originated from Google's research initiatives, will not continue as a standalone project. However, the technology and capabilities developed through Project Mariner have been integrated into Google's existing AI products. Specifically, the functionality and features pioneered in Project Mariner will continue to exist within Gemini Agent and AI Mode, which are components of Google's Gemini artificial intelligence platform. This integration represents Google's strategy to consolidate its experimental AI research into more mature, commercially available products. The shutdown marks the end of Project Mariner as an independent initiative while ensuring that the research and development work behind",
+          content_zh:
+            "谷歌已正式关停“水手项目”（Project Mariner），这是该公司旗下实验性AI驱动网页浏览代理，设计初衷是自主浏览网站，代用户完成各项任务。据科技媒体The Verge2026年5月6日发布的报道，源自谷歌研究项目的水手项目实验将不再作为独立项目推进。不过水手项目期间开发的技术与能力已被整合进谷歌现有AI产品中，具体而言，该项目首创的功能特性将继续留存于谷歌Gemini人工智能平台的两大组件——Gemini代理（Gemini Agent）和AI模式（AI Mode）当中。此次整合体现了谷歌将实验性AI研究并入更成熟商用产品的战略，本次关停标志着水手项目作为独立项目的终结，同时也保障了其背后的研发工作\n（注：原文此处内容不完整）",
+          source: "verge",
+          created_at: "2026-05-06T21:26:31.022107+00:00",
+          original_url:
+            "https://www.theverge.com/tech/925559/google-project-mariner-shut-down",
+          categories: {
+            id: "9126cc45-ac4c-42de-aca8-175d51351ab2",
+            title: "tech",
+            sort_order: 0,
+          },
+        },
+      ];
+    </script>
+    <script>
+      const SUPABASE_URL = 'https://fzxuotfihpbzozjoplim.supabase.co';
+      const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6eHVvdGZpaHBiem96am9wbGltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3OTM1MzMsImV4cCI6MjA5MTM2OTUzM30.pfhwZ7kv4CUy5PT_s62WzfIC3cHeXR2Z4YIXUjjqY1c';
 
-    const app = document.getElementById('app');
+      const app = document.getElementById('app');
 
-    let titleLang = localStorage.getItem('titleLang') || 'zh';
-    let contentLang = localStorage.getItem('contentLang') || 'zh';
-    let currentTheme = localStorage.getItem('theme') || 'dark';
-    let groupFilter = localStorage.getItem('groupFilter') || 'all';
-    let categories = [];
-    let displayedPosts = [];
-    let currentOffset = 30;
-    let hasMore = false;
-    let isLoadingMore = false;
+      let titleLang = localStorage.getItem('titleLang') || 'zh';
+      let contentLang = localStorage.getItem('contentLang') || 'zh';
+      let currentTheme = localStorage.getItem('theme') || 'dark';
+      let groupFilter = localStorage.getItem('groupFilter') || 'all';
+      let categories = [];
+      let displayedPosts = [];
+      let currentOffset = 30;
+      let hasMore = false;
+      let isLoadingMore = false;
 
-    function applyTheme() {
-      document.documentElement.setAttribute('data-theme', currentTheme);
-      document.getElementById('theme-label').textContent = currentTheme === 'dark' ? 'Light Mode' : 'Dark Mode';
-    }
-    applyTheme();
-
-    function toggleTheme() {
-      currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
-      localStorage.setItem('theme', currentTheme);
+      function applyTheme() {
+        document.documentElement.setAttribute('data-theme', currentTheme);
+        document.getElementById('theme-label').textContent = currentTheme === 'dark' ? 'Light Mode' : 'Dark Mode';
+      }
       applyTheme();
-    }
 
-    function setTitleLang(lang) {
-      titleLang = lang;
-      localStorage.setItem('titleLang', lang);
-      currentOffset = 30;
-      handleRoute();
-    }
-
-    function setContentLang(lang) {
-      contentLang = lang;
-      localStorage.setItem('contentLang', lang);
-      handleRoute();
-    }
-
-    function setGroupFilter(grp) {
-      groupFilter = grp;
-      localStorage.setItem('groupFilter', grp);
-      currentOffset = 30;
-      handleRoute();
-    }
-
-    async function fetchCategories() {
-      const response = await fetch(
-        SUPABASE_URL + '/rest/v1/categories?select=id,title,sort_order&order=sort_order.asc',
-        { headers: { 'apikey': ANON_KEY, 'Authorization': 'Bearer ' + ANON_KEY } }
-      );
-      if (!response.ok) throw new Error('Failed to fetch categories');
-      return response.json();
-    }
-
-    function getPostIdFromHash() {
-      const match = window.location.hash.match(/^#/post/(.+)/);
-      return match ? match[1] : null;
-    }
-
-    function escapeHtml(text) {
-      if (!text) return '';
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
-    }
-
-    function formatDate(dateStr) {
-      const date = new Date(dateStr);
-      return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-    }
-
-    function getDisplayTitle(post) {
-      if (titleLang === 'en') return escapeHtml(post.title_en || post.title);
-      if (titleLang === 'zh') return escapeHtml(post.title_zh || post.title_en || post.title);
-      return escapeHtml(post.title);
-    }
-
-    function getDisplayContent(post) {
-      const en = post.content_en || '';
-      const zh = post.content_zh || '';
-      if (contentLang === 'en') return en;
-      if (contentLang === 'zh') return zh;
-      if (en && zh) return zh + '\n---\n' + en;
-      return zh || en;
-    }
-
-    function getDisplayExcerpt(post) {
-      const en = post.content_en || '';
-      const zh = post.content_zh || '';
-      if (titleLang === 'en') return en.substring(0, 150);
-      if (titleLang === 'zh') return zh.substring(0, 100);
-      if (titleLang === 'all') {
-        if (en && zh) return zh.substring(0, 80) + '\n\n📖 EN: ' + en.substring(0, 200);
-        if (en) return en.substring(0, 280);
-        if (zh) return zh.substring(0, 280);
+      function toggleTheme() {
+        currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        localStorage.setItem('theme', currentTheme);
+        applyTheme();
       }
-      return (zh || en).substring(0, 150);
-    }
 
-    function langToggleHtml(selected, onChange) {
-      const langs = [{ code: 'zh', label: '中文' }, { code: 'en', label: 'EN' }, { code: 'all', label: 'All' }];
-      return '<div class="lang-toggle">' +
-        langs.map(l =>
-          '<button class="' + (l.code === selected ? 'active' : '') + '" onclick="' + onChange + '(\'' + l.code + '\')">' + l.label + '</button>'
-        ).join('') +
-        '</div>';
-    }
-
-    function groupToggleHtml(selected, groups) {
-      const filtered = groups.filter(g => g.title !== '科技');
-      const items = [{ code: 'all', label: '全部' }, ...filtered.map(g => ({ code: g.title, label: g.title }))];
-      return '<div class="lang-toggle">' +
-        items.map(g =>
-          '<button class="' + (g.code === selected ? 'active' : '') + '" onclick="setGroupFilter(\'' + g.code + '\')">' + g.label + '</button>'
-        ).join('') +
-        '</div>';
-    }
-
-    async function fetchPost(id) {
-      // Try embedded data first
-      const fromEmbed = window.__POSTS_DATA__ ? window.__POSTS_DATA__.find(p => p.id === id) : null;
-      if (fromEmbed) return fromEmbed;
-      // Fallback to network
-      const response = await fetch(
-        SUPABASE_URL + '/rest/v1/blog_posts?id=eq.' + id + '&select=*,categories(id,title)',
-        { headers: { 'apikey': ANON_KEY, 'Authorization': 'Bearer ' + ANON_KEY } }
-      );
-      if (!response.ok) throw new Error('Failed to fetch');
-      const data = await response.json();
-      return data[0] || null;
-    }
-
-    function getPostUrl(post) {
-      if (post.original_url) return post.original_url;
-      if (post.content) {
-        const match = post.content.match(/https?://[^s]+/);
-        if (match) return match[0];
+      function setTitleLang(lang) {
+        titleLang = lang;
+        localStorage.setItem('titleLang', lang);
+        currentOffset = 30;
+        handleRoute();
       }
-      return null;
-    }
 
-    function goTo(path) { window.location.hash = path; }
+      function setContentLang(lang) {
+        contentLang = lang;
+        localStorage.setItem('contentLang', lang);
+        handleRoute();
+      }
 
-    async function renderPost(id) {
-      app.innerHTML = '<div class="loading">Loading...</div>';
-      try {
-        const post = await fetchPost(id);
-        if (!post) {
-          app.innerHTML = '<div class="post-detail"><div class="back-link" onclick="goTo(\'\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Back</div><div class="error-msg">Post not found</div></div>';
+      function setGroupFilter(grp) {
+        groupFilter = grp;
+        localStorage.setItem('groupFilter', grp);
+        currentOffset = 30;
+        handleRoute();
+      }
+
+      async function fetchCategories() {
+        const response = await fetch(
+          SUPABASE_URL + '/rest/v1/categories?select=id,title,sort_order&order=sort_order.asc',
+          { headers: { 'apikey': ANON_KEY, 'Authorization': 'Bearer ' + ANON_KEY } }
+        );
+        if (!response.ok) throw new Error('Failed to fetch categories');
+        return response.json();
+      }
+
+      function getPostIdFromHash() {
+        const match = window.location.hash.match(new RegExp('^#/post/(.+)'));
+        return match ? match[1] : null;
+      }
+
+      function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      function formatDate(dateStr) {
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+      }
+
+      function getDisplayTitle(post) {
+        if (titleLang === 'en') return escapeHtml(post.title_en || post.title);
+        if (titleLang === 'zh') return escapeHtml(post.title_zh || post.title_en || post.title);
+        return escapeHtml(post.title);
+      }
+
+      function getDisplayContent(post) {
+        const en = post.content_en || '';
+        const zh = post.content_zh || '';
+        if (contentLang === 'en') return en;
+        if (contentLang === 'zh') return zh;
+        if (en && zh) return zh + '\n---\n' + en;
+        return zh || en;
+      }
+
+      function getDisplayExcerpt(post) {
+        const en = post.content_en || '';
+        const zh = post.content_zh || '';
+        if (titleLang === 'en') return en.substring(0, 150);
+        if (titleLang === 'zh') return zh.substring(0, 100);
+        if (titleLang === 'all') {
+          if (en && zh) return zh.substring(0, 80) + '\n\n📖 EN: ' + en.substring(0, 200);
+          if (en) return en.substring(0, 280);
+          if (zh) return zh.substring(0, 280);
+        }
+        return (zh || en).substring(0, 150);
+      }
+
+      function langToggleHtml(selected, onChange) {
+        const langs = [{ code: 'zh', label: '中文' }, { code: 'en', label: 'EN' }, { code: 'all', label: 'All' }];
+        return '<div class="lang-toggle">' +
+          langs.map(l =>
+            '<button class="' + (l.code === selected ? 'active' : '') + '" onclick="' + onChange + '(\'' + l.code + '\')">' + l.label + '</button>'
+          ).join('') +
+          '</div>';
+      }
+
+      function groupToggleHtml(selected, groups) {
+        const filtered = groups.filter(g => g.title !== '科技');
+        const items = [{ code: 'all', label: '全部' }, ...filtered.map(g => ({ code: g.title, label: g.title }))];
+        return '<div class="lang-toggle">' +
+          items.map(g =>
+            '<button class="' + (g.code === selected ? 'active' : '') + '" onclick="setGroupFilter(\'' + g.code + '\')">' + g.label + '</button>'
+          ).join('') +
+          '</div>';
+      }
+
+      async function fetchPost(id) {
+        // Try embedded data first
+        const fromEmbed = window.__POSTS_DATA__ ? window.__POSTS_DATA__.find(p => p.id === id) : null;
+        if (fromEmbed) return fromEmbed;
+        // Fallback to network
+        const response = await fetch(
+          SUPABASE_URL + '/rest/v1/blog_posts?id=eq.' + id + '&select=*,categories(id,title)',
+          { headers: { 'apikey': ANON_KEY, 'Authorization': 'Bearer ' + ANON_KEY } }
+        );
+        if (!response.ok) throw new Error('Failed to fetch');
+        const data = await response.json();
+        return data[0] || null;
+      }
+
+      function getPostUrl(post) {
+        if (post.original_url) return post.original_url;
+        if (post.content) {
+          const match = post.content.match(/https?:\/\/[^\s]+/);
+          if (match) return match[0];
+        }
+        return null;
+      }
+
+      function goTo(path) { window.location.hash = path; }
+
+      async function renderPost(id) {
+        app.innerHTML = '<div class="loading">Loading...</div>';
+        try {
+          const post = await fetchPost(id);
+          if (!post) {
+            app.innerHTML = '<div class="post-detail"><div class="back-link" onclick="goTo(\'\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Back</div><div class="error-msg">Post not found</div></div>';
+            return;
+          }
+          const displayTitle = getDisplayTitle(post);
+          const displayContent = getDisplayContent(post);
+          const postUrl = getPostUrl(post);
+          app.innerHTML = '<div class="post-detail"><div class="back-link" onclick="goTo(\'\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Back</div>' + langToggleHtml(contentLang, 'setContentLang') + '<article><header class="post-header">' + (post.categories ? '<div class="post-category">' + escapeHtml(post.categories.title) + '</div>' : '') + '<h1 class="post-title">' + displayTitle + '</h1><div class="post-meta"><span>' + formatDate(post.created_at) + '</span></div></header><div class="post-body">' + (displayContent ? displayContent.split('\n').map(p => '<p>' + escapeHtml(p) + '</p>').join('') : '<p>No content available.</p>') + '</div>' + (postUrl ? '<a href="' + postUrl + '" target="_blank" class="post-url"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>Read Original</a>' : '') + '</article></div>';
+        } catch (err) {
+          app.innerHTML = '<div class="post-detail"><div class="back-link" onclick="goTo(\'\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Back</div><div class="error-msg">Unable to load post</div></div>';
+          console.error(err);
+        }
+      }
+
+      function renderPosts(isLoadingMoreFlag) {
+        if (displayedPosts.length === 0) {
+          app.innerHTML = '<div class="site-header"><div class="site-meta">潮汐 Tides</div><h1 class="site-title">潮汐 <span>·</span> Tides</h1><p class="site-tagline">Stories &amp; Ideas · 故事与思想</p></div><div class="controls"><div class="toggles-row">' + groupToggleHtml(groupFilter, categories) + langToggleHtml(titleLang, 'setTitleLang') + '</div><button class="theme-toggle" onclick="toggleTheme()">Light Mode</button></div><div style="text-align:center;padding:80px 0;color:var(--text-tertiary);font-family:var(--font-mono);font-size:11px;">No posts yet</div>';
           return;
         }
-        const displayTitle = getDisplayTitle(post);
-        const displayContent = getDisplayContent(post);
-        const postUrl = getPostUrl(post);
-        app.innerHTML = '<div class="post-detail"><div class="back-link" onclick="goTo(\'\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Back</div>' + langToggleHtml(contentLang, 'setContentLang') + '<article><header class="post-header">' + (post.categories ? '<div class="post-category">' + escapeHtml(post.categories.title) + '</div>' : '') + '<h1 class="post-title">' + displayTitle + '</h1><div class="post-meta"><span>' + formatDate(post.created_at) + '</span></div></header><div class="post-body">' + (displayContent ? displayContent.split('\n').map(p => '<p>' + escapeHtml(p) + '</p>').join('') : '<p>No content available.</p>') + '</div>' + (postUrl ? '<a href="' + postUrl + '" target="_blank" class="post-url"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>Read Original</a>' : '') + '</article></div>';
-      } catch (err) {
-        app.innerHTML = '<div class="post-detail"><div class="back-link" onclick="goTo(\'\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Back</div><div class="error-msg">Unable to load post</div></div>';
-        console.error(err);
+        app.innerHTML = '<div class="site-header"><div class="site-meta">潮汐 Tides</div><h1 class="site-title">潮汐 <span>·</span> Tides</h1><p class="site-tagline">Stories &amp; Ideas · 故事与思想</p></div><div class="controls"><div class="toggles-row">' + groupToggleHtml(groupFilter, categories) + langToggleHtml(titleLang, 'setTitleLang') + '</div><button class="theme-toggle" onclick="toggleTheme()">Light Mode</button></div><ul class="posts-list">' + displayedPosts.map((post, i) => '<li class="post-item" style="animation-delay:' + (i * 0.07) + 's"><div class="post-link" onclick="goTo(\'/post/' + post.id + '\')"><div class="post-item-title">' + getDisplayTitle(post) + '</div><div class="post-item-meta">' + (post.categories ? '<span>' + escapeHtml(post.categories.title) + '</span>' : '') + (post.source ? '<span>' + escapeHtml(post.source.toUpperCase()) + '</span>' : '') + '<span class="dot"></span><span>' + formatDate(post.created_at) + '</span></div>' + (post.content_zh || post.content_en ? '<div class="post-item-excerpt">' + escapeHtml(getDisplayExcerpt(post).substring(0, 350)) + '</div>' : '') + '</div></li>').join('') + '</ul>' + (hasMore ? '<button class="more-btn' + (isLoadingMoreFlag ? ' loading' : '') + '" onclick="loadMore()" ' + (isLoadingMoreFlag ? 'disabled' : '') + '>' + (isLoadingMoreFlag ? 'Loading' : 'More') + '</button>' : '') + '</div>';
       }
-    }
 
-    function renderPosts(isLoadingMoreFlag) {
-      if (displayedPosts.length === 0) {
-        app.innerHTML = '<div class="site-header"><div class="site-meta">潮汐 Tides</div><h1 class="site-title">潮汐 <span>·</span> Tides</h1><p class="site-tagline">Stories &amp; Ideas · 故事与思想</p></div><div class="controls"><div class="toggles-row">' + groupToggleHtml(groupFilter, categories) + langToggleHtml(titleLang, 'setTitleLang') + '</div><button class="theme-toggle" onclick="toggleTheme()">Light Mode</button></div><div style="text-align:center;padding:80px 0;color:var(--text-tertiary);font-family:var(--font-mono);font-size:11px;">No posts yet</div>';
-        return;
-      }
-      app.innerHTML = '<div class="site-header"><div class="site-meta">潮汐 Tides</div><h1 class="site-title">潮汐 <span>·</span> Tides</h1><p class="site-tagline">Stories &amp; Ideas · 故事与思想</p></div><div class="controls"><div class="toggles-row">' + groupToggleHtml(groupFilter, categories) + langToggleHtml(titleLang, 'setTitleLang') + '</div><button class="theme-toggle" onclick="toggleTheme()">Light Mode</button></div><ul class="posts-list">' + displayedPosts.map((post, i) => '<li class="post-item" style="animation-delay:' + (i * 0.07) + 's"><div class="post-link" onclick="goTo(\'/post/' + post.id + '\')"><div class="post-item-title">' + getDisplayTitle(post) + '</div><div class="post-item-meta">' + (post.categories ? '<span>' + escapeHtml(post.categories.title) + '</span>' : '') + (post.source ? '<span>' + escapeHtml(post.source.toUpperCase()) + '</span>' : '') + '<span class="dot"></span><span>' + formatDate(post.created_at) + '</span></div>' + (post.content_zh || post.content_en ? '<div class="post-item-excerpt">' + escapeHtml(getDisplayExcerpt(post).substring(0, 350)) + '</div>' : '') + '</div></li>').join('') + '</ul>' + (hasMore ? '<button class="more-btn' + (isLoadingMoreFlag ? ' loading' : '') + '" onclick="loadMore()" ' + (isLoadingMoreFlag ? 'disabled' : '') + '>' + (isLoadingMoreFlag ? 'Loading' : 'More') + '</button>' : '') + '</div>';
-    }
-
-    async function loadMore() {
-      if (isLoadingMore || !hasMore) return;
-      isLoadingMore = true;
-      renderPosts(true);
-      try {
-        let url = SUPABASE_URL + '/rest/v1/blog_posts?select=*,categories(id,title,sort_order)&order=created_at.desc&limit=30&offset=' + currentOffset;
-        if (groupFilter !== 'all') {
-          url += '&categories.title=eq.' + encodeURIComponent(groupFilter);
-        }
-        const response = await fetch(url, { headers: { 'apikey': ANON_KEY, 'Authorization': 'Bearer ' + ANON_KEY } });
-        const newPosts = await response.json();
-        displayedPosts = [...displayedPosts, ...newPosts];
-        hasMore = newPosts.length === 30;
-        currentOffset += 30;
-      } catch (err) { console.error(err); }
-      isLoadingMore = false;
-      renderPosts(false);
-    }
-
-    window.goTo = goTo;
-    window.setTitleLang = setTitleLang;
-    window.setContentLang = setContentLang;
-    window.setGroupFilter = setGroupFilter;
-    window.toggleTheme = toggleTheme;
-    window.loadMore = loadMore;
-
-    async function handleRoute() {
-      const postId = getPostIdFromHash();
-      if (postId) {
-        await renderPost(postId);
-      } else {
+      async function loadMore() {
+        if (isLoadingMore || !hasMore) return;
+        isLoadingMore = true;
+        renderPosts(true);
         try {
-          if (categories.length === 0) {
-            categories = await fetchCategories();
-          }
-          // Use embedded data only for "all" filter, otherwise fetch from API
+          let url = SUPABASE_URL + '/rest/v1/blog_posts?select=*,categories(id,title,sort_order)&order=created_at.desc&limit=30&offset=' + currentOffset;
           if (groupFilter !== 'all') {
-            // Find category id by title, then filter by category_id
-            const cat = categories.find(c => c.title === groupFilter);
-            if (!cat) { displayedPosts = []; hasMore = false; renderPosts(); return; }
-            const filterUrl = SUPABASE_URL + '/rest/v1/blog_posts?select=*,categories(id,title,sort_order)&category_id=eq.' + cat.id + '&order=created_at.desc&limit=30';
-            const res = await fetch(filterUrl, { headers: { 'apikey': ANON_KEY, 'Authorization': 'Bearer ' + ANON_KEY } });
-            const data = await res.json();
-            displayedPosts = data;
-            hasMore = data.length === 30;
-            currentOffset = 30;
-          } else if (window.__POSTS_DATA__ && window.__POSTS_DATA__.length > 0) {
-            // Use embedded data for "all"
-            displayedPosts = window.__POSTS_DATA__.slice(0, 30);
-            hasMore = window.__POSTS_DATA__.length === 30;
-            currentOffset = 30;
-          } else {
-            displayedPosts = [];
-            hasMore = false;
+            url += '&categories.title=eq.' + encodeURIComponent(groupFilter);
           }
-          currentOffset = 30;
-          renderPosts();
-        } catch (err) {
-          app.innerHTML = '<div class="site-header"><div class="site-meta">潮汐 Tides</div><h1 class="site-title">潮汐 <span>·</span> Tides</h1><p class="site-tagline">Stories &amp; Ideas · 故事与思想</p></div><div class="controls">' + langToggleHtml(titleLang, 'setTitleLang') + '<button class="theme-toggle" onclick="toggleTheme()">Light Mode</button></div><div class="error-msg">Unable to load posts. Please refresh.</div>';
+          const response = await fetch(url, { headers: { 'apikey': ANON_KEY, 'Authorization': 'Bearer ' + ANON_KEY } });
+          const newPosts = await response.json();
+          displayedPosts = [...displayedPosts, ...newPosts];
+          hasMore = newPosts.length === 30;
+          currentOffset += 30;
+        } catch (err) { console.error(err); }
+        isLoadingMore = false;
+        renderPosts(false);
+      }
+
+      window.goTo = goTo;
+      window.setTitleLang = setTitleLang;
+      window.setContentLang = setContentLang;
+      window.setGroupFilter = setGroupFilter;
+      window.toggleTheme = toggleTheme;
+      window.loadMore = loadMore;
+
+      async function handleRoute() {
+        const postId = getPostIdFromHash();
+        if (postId) {
+          await renderPost(postId);
+        } else {
+          try {
+            if (categories.length === 0) {
+              categories = await fetchCategories();
+            }
+            // Use embedded data only for "all" filter, otherwise fetch from API
+            if (groupFilter !== 'all') {
+              // Find category id by title, then filter by category_id
+              const cat = categories.find(c => c.title === groupFilter);
+              if (!cat) { displayedPosts = []; hasMore = false; renderPosts(); return; }
+              const filterUrl = SUPABASE_URL + '/rest/v1/blog_posts?select=*,categories(id,title,sort_order)&category_id=eq.' + cat.id + '&order=created_at.desc&limit=30';
+              const res = await fetch(filterUrl, { headers: { 'apikey': ANON_KEY, 'Authorization': 'Bearer ' + ANON_KEY } });
+              const data = await res.json();
+              displayedPosts = data;
+              hasMore = data.length === 30;
+              currentOffset = 30;
+            } else if (window.__POSTS_DATA__ && window.__POSTS_DATA__.length > 0) {
+              // Use embedded data for "all"
+              displayedPosts = window.__POSTS_DATA__.slice(0, 30);
+              hasMore = window.__POSTS_DATA__.length === 30;
+              currentOffset = 30;
+            } else {
+              displayedPosts = [];
+              hasMore = false;
+            }
+            currentOffset = 30;
+            renderPosts();
+          } catch (err) {
+            app.innerHTML = '<div class="site-header"><div class="site-meta">潮汐 Tides</div><h1 class="site-title">潮汐 <span>·</span> Tides</h1><p class="site-tagline">Stories &amp; Ideas · 故事与思想</p></div><div class="controls">' + langToggleHtml(titleLang, 'setTitleLang') + '<button class="theme-toggle" onclick="toggleTheme()">Light Mode</button></div><div class="error-msg">Unable to load posts. Please refresh.</div>';
+          }
         }
       }
-    }
 
-    window.addEventListener('hashchange', handleRoute);
-    handleRoute();
-  </script>
-</body>
+      window.addEventListener('hashchange', handleRoute);
+      handleRoute();
+    </script>
+  </body>
 </html>
