@@ -912,7 +912,8 @@ async function generateStaticIndex() {
     }
 
     function groupToggleHtml(selected, groups) {
-      const items = [{ code: 'all', label: '全部' }, ...groups.map(g => ({ code: g.title, label: g.title }))];
+      const filtered = groups.filter(g => g.title !== '科技');
+      const items = [{ code: 'all', label: '全部' }, ...filtered.map(g => ({ code: g.title, label: g.title }))];
       return '<div class="lang-toggle">' +
         items.map(g =>
           '<button class="' + (g.code === selected ? 'active' : '') + '" onclick="setGroupFilter(\\'' + g.code + '\\')">' + g.label + '</button>'
