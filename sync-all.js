@@ -637,7 +637,7 @@ async function generateStaticIndex() {
   log('[STATIC] Generating static index.html from latest posts...');
 
   // Fetch latest 100 posts from Supabase
-  let url = `${SUPABASE_URL}/rest/v1/blog_posts?select=*,categories(title,sort_order)&order=created_at.desc&limit=100`;
+  let url = `${SUPABASE_URL}/rest/v1/blog_posts?select=*,categories(id,title,sort_order)&order=created_at.desc&limit=100`;
   const res = await fetchWithRetry(url, {
     headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` }
   });
@@ -912,7 +912,7 @@ async function generateStaticIndex() {
     }
 
     function groupToggleHtml(selected, groups) {
-      const items = [{ code: 'all', label: '全部' }, ...groups.map(g => ({ code: g.id, label: g.title }))];
+      const items = [{ code: 'all', label: '全部' }, ...groups.map(g => ({ code: g.title, label: g.title }))];
       return '<div class="lang-toggle">' +
         items.map(g =>
           '<button class="' + (g.code === selected ? 'active' : '') + '" onclick="setGroupFilter(\\'' + g.code + '\\')">' + g.label + '</button>'
@@ -926,7 +926,7 @@ async function generateStaticIndex() {
       if (fromEmbed) return fromEmbed;
       // Fallback to network
       const response = await fetch(
-        SUPABASE_URL + '/rest/v1/blog_posts?id=eq.' + id + '&select=*,categories(title)',
+        SUPABASE_URL + '/rest/v1/blog_posts?id=eq.' + id + '&select=*,categories(id,title)',
         { headers: { 'apikey': ANON_KEY, 'Authorization': 'Bearer ' + ANON_KEY } }
       );
       if (!response.ok) throw new Error('Failed to fetch');
@@ -976,7 +976,7 @@ async function generateStaticIndex() {
       isLoadingMore = true;
       renderPosts(true);
       try {
-        const url = SUPABASE_URL + '/rest/v1/blog_posts?select=*,categories(title,sort_order)&order=created_at.desc&limit=30&offset=' + currentOffset;
+        const url = SUPABASE_URL + '/rest/v1/blog_posts?select=*,categories(id,title,sort_order)&order=created_at.desc&limit=30&offset=' + currentOffset;
         const response = await fetch(url, { headers: { 'apikey': ANON_KEY, 'Authorization': 'Bearer ' + ANON_KEY } });
         const newPosts = await response.json();
         displayedPosts = [...displayedPosts, ...newPosts];
@@ -1005,8 +1005,12 @@ async function generateStaticIndex() {
           }
           // Use embedded data as first page
           if (window.__POSTS_DATA__ && window.__POSTS_DATA__.length > 0) {
-            displayedPosts = window.__POSTS_DATA__.slice(0, 30);
-            hasMore = window.__POSTS_DATA__.length > 30;
+            let filtered = window.__POSTS_DATA__;
+            if (groupFilter !== 'all') {
+              filtered = filtered.filter(p => p.categories && p.categories.title === groupFilter);
+            }
+            displayedPosts = filtered.slice(0, 30);
+            hasMore = filtered.length > 30;
           } else {
             displayedPosts = [];
             hasMore = false;
