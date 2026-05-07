@@ -102,6 +102,13 @@
     .loading { text-align: center; padding: 100px 0; font-family: var(--font-mono); font-size: 11px; color: var(--text-tertiary); letter-spacing: 0.1em; }
     .loading::after { content: ''; display: inline-block; width: 4px; height: 4px; background: var(--accent); border-radius: 50%; margin-left: 10px; animation: blink 1.2s ease infinite; }
     .error-msg { text-align: center; padding: 60px 40px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 4px; font-family: var(--font-mono); font-size: 11px; color: var(--text-secondary); }
+    .more-btn { display: block; width: 100%; margin: 64px 0; padding: 18px 0; background: transparent; border: 1px solid var(--border); border-radius: 4px; color: var(--text-tertiary); font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; transition: all var(--transition-slow); position: relative; overflow: hidden; }
+    .more-btn::before { content: ''; position: absolute; inset: 0; background: var(--accent-dim); transform: scaleX(0); transform-origin: left; transition: transform var(--transition-slow); }
+    .more-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .more-btn:hover::before { transform: scaleX(1); }
+    .more-btn.loading { color: var(--text-tertiary); border-color: var(--border); cursor: default; pointer-events: none; }
+    .more-btn.loading::before { display: none; }
+    .more-btn.loading::after { content: ''; display: inline-block; width: 4px; height: 4px; background: var(--accent); border-radius: 50%; margin-left: 10px; animation: blink 1.2s ease infinite; }
     footer { margin-top: 100px; padding-top: 32px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-family: var(--font-mono); font-size: 10px; color: var(--text-tertiary); letter-spacing: 0.05em; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
