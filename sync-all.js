@@ -851,7 +851,7 @@ async function generateStaticIndex() {
     }
 
     function getPostIdFromHash() {
-      const match = window.location.hash.match(/^#/\\\/post\\\/(.+)/);
+      const match = window.location.hash.match(/^#\/post\/(.+)/);
       return match ? match[1] : null;
     }
 
@@ -930,7 +930,7 @@ async function generateStaticIndex() {
     function getPostUrl(post) {
       if (post.original_url) return post.original_url;
       if (post.content) {
-        const match = post.content.match(/https?:\\\/\/[^\\s]+/);
+        const match = post.content.match(/https?:\/\/[^\s]+/);
         if (match) return match[0];
       }
       return null;
