@@ -361,6 +361,19 @@ function isChineseText(text) {
 async function processStory(story, source, { summarizer, translator, minimaxTranslator, doubaoTranslator, judge }) {
   const cfg = SOURCES[source];
 
+  // Quick URL check before any expensive operations
+  try {
+    const urlCheckRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/blog_posts?original_url=eq.${encodeURIComponent(story.url)}&select=id`,
+      { headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` } }
+    );
+    const urlCheckData = await urlCheckRes.json();
+    if (urlCheckData && urlCheckData.length > 0) {
+      log(`  [SKIP] URL already exists: "${story.url}"`);
+      return;
+    }
+  } catch (e) {}
+
   // For Chinese sources (scrape), translate title to English for title_en
   let titleEn = story.title;
   if (cfg.parseFn === 'scrape' && isChineseText(story.title)) {
@@ -633,6 +646,11 @@ function formatDate(dateStr) {
   return new Date(dateStr).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 }
 
+function sanitizeString(s) {
+  if (typeof s !== 'string') return s;
+  return s.replace(/\ufffd/g, ' ');
+}
+
 async function generateStaticIndex() {
   log('[STATIC] Generating static index.html from latest posts...');
 
@@ -789,11 +807,11 @@ async function generateStaticIndex() {
     // Embedded posts data — generated at ${now}
     window.__POSTS_DATA__ = ${JSON.stringify(posts.map(p => ({
       id: p.id,
-      title: p.title,
-      title_en: p.title_en,
-      title_zh: p.title_zh,
-      content_en: p.content_en,
-      content_zh: p.content_zh,
+      title: sanitizeString(p.title),
+      title_en: sanitizeString(p.title_en),
+      title_zh: sanitizeString(p.title_zh),
+      content_en: sanitizeString(p.content_en),
+      content_zh: sanitizeString(p.content_zh),
       source: p.source,
       created_at: p.created_at,
       original_url: p.original_url,
@@ -1009,8 +1027,10 @@ async function generateStaticIndex() {
           }
           // Use embedded data only for "all" filter, otherwise fetch from API
           if (groupFilter !== 'all') {
-            // Fetch filtered posts from API
-            const filterUrl = SUPABASE_URL + '/rest/v1/blog_posts?select=*,categories(id,title,sort_order)&categories.title=eq.' + encodeURIComponent(groupFilter) + '&order=created_at.desc&limit=30';
+            // Find category id by title, then filter by category_id
+            const cat = categories.find(c => c.title === groupFilter);
+            if (!cat) { displayedPosts = []; hasMore = false; renderPosts(); return; }
+            const filterUrl = SUPABASE_URL + '/rest/v1/blog_posts?select=*,categories(id,title,sort_order)&category_id=eq.' + cat.id + '&order=created_at.desc&limit=30';
             const res = await fetch(filterUrl, { headers: { 'apikey': ANON_KEY, 'Authorization': 'Bearer ' + ANON_KEY } });
             const data = await res.json();
             displayedPosts = data;
@@ -1019,7 +1039,7 @@ async function generateStaticIndex() {
           } else if (window.__POSTS_DATA__ && window.__POSTS_DATA__.length > 0) {
             // Use embedded data for "all"
             displayedPosts = window.__POSTS_DATA__.slice(0, 30);
-            hasMore = window.__POSTS_DATA__.length > 30;
+            hasMore = window.__POSTS_DATA__.length === 30;
             currentOffset = 30;
           } else {
             displayedPosts = [];
