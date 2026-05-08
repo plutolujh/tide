@@ -804,7 +804,7 @@ async function generateStaticIndex() {
 </head>
 <body>
   <div class="container">
-    <div id="app"></div>
+    <div id="app"><div class="loading">Loading...</div></div>
     <footer>
       <span>潮汐 Tides · Powered by Supabase</span>
       <span id="theme-label">Dark Mode</span>
