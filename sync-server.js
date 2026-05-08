@@ -13,7 +13,7 @@ const PORT = 3001;
 
 // Read auth token from .env
 const envContent = readFileSync('.env', 'utf8');
-const token = envContent.split('\n')
+const validToken = envContent.split('\n')
   .find(l => l.startsWith('SYNC_TOKEN='))
   ?.split('=')[1]?.trim() || 'default-token-change-me';
 
@@ -35,8 +35,8 @@ function authenticate(req, res, next) {
   if (!auth || !auth.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'Missing auth token' });
   }
-  const token = auth.slice(7);
-  if (token !== process.env.SYNC_TOKEN) {
+  const authToken = auth.slice(7);
+  if (authToken !== validToken) {
     return res.status(403).json({ error: 'Invalid token' });
   }
   next();
