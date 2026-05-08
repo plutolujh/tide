@@ -648,7 +648,14 @@ function formatDate(dateStr) {
 
 function sanitizeString(s) {
   if (typeof s !== 'string') return s;
-  return s.replace(/\ufffd/g, ' ');
+  return s
+    .replace(/\ufffd/g, ' ')
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"')
+    .replace(/'/g, "\\'")
+    .replace(/\n/g, '\\n')
+    .replace(/\r/g, '')
+    .replace(/[^\x20-\x7E\u4E00-\u9FFF\u3000-\u303F\uFF00-\uFFEF]/g, ' ');
 }
 
 async function generateStaticIndex() {
