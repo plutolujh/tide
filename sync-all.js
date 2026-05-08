@@ -661,6 +661,13 @@ async function generateStaticIndex() {
   });
   const posts = await res.json();
 
+  // Fetch categories for embedding
+  const catRes = await fetchWithRetry(
+    `${SUPABASE_URL}/rest/v1/categories?select=id,title,sort_order&order=sort_order.asc`,
+    { headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` }
+  });
+  const categories = await catRes.json();
+
   // Build the posts HTML
   const postsHtml = posts.map((post, i) => `
             <li class="post-item" style="animation-delay:${i * 0.07}s">
@@ -817,6 +824,7 @@ async function generateStaticIndex() {
       original_url: p.original_url,
       categories: p.categories
     })))};
+    window.__CATEGORIES_DATA__ = ${JSON.stringify(categories)};
   </script>
   <script>
     const SUPABASE_URL = 'https://fzxuotfihpbzozjoplim.supabase.co';
@@ -867,6 +875,8 @@ async function generateStaticIndex() {
     }
 
     async function fetchCategories() {
+      // Use embedded data first
+      if (window.__CATEGORIES_DATA__) return window.__CATEGORIES_DATA__;
       const response = await fetch(
         SUPABASE_URL + '/rest/v1/categories?select=id,title,sort_order&order=sort_order.asc',
         { headers: { 'apikey': ANON_KEY, 'Authorization': 'Bearer ' + ANON_KEY } }
