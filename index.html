@@ -174,7 +174,7 @@
       try {
         await fetch('/api/sync', {
           method: 'POST',
-          headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('syncToken') || 'default-token') }
+          headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('syncToken') || 'blog-sync-secret-2026') }
         });
         await reloadPosts();
       } catch (e) {
