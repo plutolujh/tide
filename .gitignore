@@ -1,4 +1,5 @@
 *.log
 .playwright-mcp/*
 .env
-key/
+
+key/posts.json
