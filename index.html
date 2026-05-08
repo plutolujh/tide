@@ -4,12 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>潮汐 · Tides</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap"></noscript>
   <style>
     :root {
-      /* Dark theme (default) - warm tones */
       --bg-primary: #0f0e0d;
       --bg-secondary: #1a1816;
       --bg-tertiary: #242220;
@@ -20,14 +19,11 @@
       --accent-dim: rgba(212, 160, 85, 0.12);
       --border: #2a2724;
       --border-light: #383530;
-
       --font-display: 'Cormorant Garamond', Georgia, serif;
       --font-mono: 'Courier Prime', 'Courier New', monospace;
-
       --transition-fast: 0.15s ease;
       --transition-slow: 0.4s ease;
     }
-
     [data-theme="light"] {
       --bg-primary: #f5f0e8;
       --bg-secondary: #ebe5db;
@@ -40,11 +36,8 @@
       --border: #d4cdc2;
       --border-light: #e0d9cc;
     }
-
     * { margin: 0; padding: 0; box-sizing: border-box; }
-
     html { scroll-behavior: smooth; }
-
     body {
       font-family: var(--font-display);
       background: var(--bg-primary);
@@ -53,17 +46,9 @@
       min-height: 100vh;
       transition: background var(--transition-slow), color var(--transition-slow);
     }
-
     ::selection { background: var(--accent); color: var(--bg-primary); }
     a { color: inherit; text-decoration: none; }
-
-    .container {
-      max-width: 680px;
-      margin: 0 auto;
-      padding: 100px 32px 140px;
-    }
-
-    /* ---- Noise texture overlay ---- */
+    .container { max-width: 680px; margin: 0 auto; padding: 100px 32px 140px; }
     body::before {
       content: '';
       position: fixed;
@@ -73,319 +58,61 @@
       opacity: 0.025;
       z-index: 9999;
     }
-
-    /* ---- Header ---- */
-    .site-header {
-      margin-bottom: 80px;
-      position: relative;
-    }
-
-    .site-meta {
-      font-family: var(--font-mono);
-      font-size: 10px;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--text-tertiary);
-      margin-bottom: 24px;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-
-    .site-meta::after {
-      content: '';
-      display: block;
-      width: 40px;
-      height: 1px;
-      background: var(--border);
-    }
-
-    .site-title {
-      font-size: clamp(36px, 6vw, 56px);
-      font-weight: 300;
-      letter-spacing: -0.02em;
-      line-height: 1.05;
-      color: var(--text-primary);
-      margin-bottom: 8px;
-    }
-
-    .site-title span {
-      color: var(--accent);
-      font-style: italic;
-    }
-
-    .site-tagline {
-      font-family: var(--font-mono);
-      font-size: 11px;
-      color: var(--text-tertiary);
-      letter-spacing: 0.08em;
-    }
-
-    /* ---- Theme & Language Toggle Row ---- */
-    .controls {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 56px;
-      padding-bottom: 32px;
-      border-bottom: 1px solid var(--border);
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-
-    .toggles-row {
-      display: flex;
-      gap: 16px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    .lang-toggle, .source-toggle {
-      display: flex;
-      gap: 0;
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      overflow: hidden;
-    }
-
-    .lang-toggle button, .source-toggle button {
-      font-family: var(--font-mono);
-      font-size: 10px;
-      padding: 6px 12px;
-      border: none;
-      background: transparent;
-      color: var(--text-tertiary);
-      cursor: pointer;
-      transition: all var(--transition-fast);
-      letter-spacing: 0.05em;
-    }
-
+    .site-header { margin-bottom: 80px; position: relative; }
+    .site-meta { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 24px; display: flex; align-items: center; gap: 16px; }
+    .site-meta::after { content: ''; display: block; width: 40px; height: 1px; background: var(--border); }
+    .site-title { font-size: clamp(36px, 6vw, 56px); font-weight: 300; letter-spacing: -0.02em; line-height: 1.05; color: var(--text-primary); margin-bottom: 8px; }
+    .site-title span { color: var(--accent); font-style: italic; }
+    .site-tagline { font-family: var(--font-mono); font-size: 11px; color: var(--text-tertiary); letter-spacing: 0.08em; }
+    .controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 56px; padding-bottom: 32px; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 12px; }
+    .toggles-row { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+    .lang-toggle, .source-toggle { display: flex; gap: 0; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
+    .lang-toggle button, .source-toggle button { font-family: var(--font-mono); font-size: 10px; padding: 6px 12px; border: none; background: transparent; color: var(--text-tertiary); cursor: pointer; transition: all var(--transition-fast); letter-spacing: 0.05em; }
     .lang-toggle button:hover, .source-toggle button:hover { color: var(--text-primary); background: var(--bg-secondary); }
     .lang-toggle button.active, .source-toggle button.active { background: var(--text-primary); color: var(--bg-primary); }
     .lang-toggle button + button, .source-toggle button + button { border-left: 1px solid var(--border); }
-
-    .theme-toggle {
-      font-family: var(--font-mono);
-      font-size: 10px;
-      letter-spacing: 0.05em;
-      color: var(--text-tertiary);
-      cursor: pointer;
-      padding: 6px 12px;
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      background: transparent;
-      transition: all var(--transition-fast);
-    }
-
+    .theme-toggle { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.05em; color: var(--text-tertiary); cursor: pointer; padding: 6px 12px; border: 1px solid var(--border); border-radius: 4px; background: transparent; transition: all var(--transition-fast); }
     .theme-toggle:hover { color: var(--text-primary); border-color: var(--text-tertiary); }
-
-    /* ---- Post List ---- */
     .posts-list { list-style: none; }
-
-    .post-item {
-      border-bottom: 1px solid var(--border);
-      opacity: 0;
-      transform: translateY(12px);
-      animation: slideUp 0.5s ease forwards;
-    }
-
-    .post-link {
-      display: block;
-      padding: 40px 0;
-      cursor: pointer;
-      transition: padding-left var(--transition-fast);
-    }
-
+    .post-item { border-bottom: 1px solid var(--border); }
+    .post-link { display: block; padding: 40px 0; cursor: pointer; transition: padding-left var(--transition-fast); }
     .post-link:hover { padding-left: 16px; }
     .post-link:hover .post-item-title { color: var(--accent); }
-
-    .post-item-title {
-      font-size: clamp(20px, 3.5vw, 26px);
-      font-weight: 400;
-      line-height: 1.25;
-      letter-spacing: -0.01em;
-      margin-bottom: 10px;
-      transition: color var(--transition-fast);
-    }
-
-    .post-item-meta {
-      font-family: var(--font-mono);
-      font-size: 10px;
-      color: var(--text-tertiary);
-      display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
-      margin-bottom: 10px;
-    }
-
+    .post-item-title { font-size: clamp(20px, 3.5vw, 26px); font-weight: 400; line-height: 1.25; letter-spacing: -0.01em; margin-bottom: 10px; transition: color var(--transition-fast); }
+    .post-item-meta { font-family: var(--font-mono); font-size: 10px; color: var(--text-tertiary); display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 10px; }
     .post-item-meta span { display: flex; align-items: center; gap: 5px; }
     .post-item-meta .dot { width: 3px; height: 3px; background: var(--border-light); border-radius: 50%; }
-
-    .post-item-excerpt {
-      font-size: 14px;
-      color: var(--text-secondary);
-      line-height: 1.7;
-      font-style: italic;
-      display: -webkit-box;
-      -webkit-line-clamp: 8;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      white-space: pre-line;
-    }
-
-    /* ---- Post Detail ---- */
+    .post-item-excerpt { font-size: 14px; color: var(--text-secondary); line-height: 1.7; font-style: italic; display: -webkit-box; -webkit-line-clamp: 8; -webkit-box-orient: vertical; overflow: hidden; white-space: pre-line; }
     .post-detail { animation: fadeIn 0.5s ease; }
-
-    .back-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      font-family: var(--font-mono);
-      font-size: 10px;
-      color: var(--text-tertiary);
-      margin-bottom: 56px;
-      cursor: pointer;
-      transition: color var(--transition-fast);
-      letter-spacing: 0.05em;
-    }
-
+    .back-link { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 10px; color: var(--text-tertiary); margin-bottom: 56px; cursor: pointer; transition: color var(--transition-fast); letter-spacing: 0.05em; }
     .back-link:hover { color: var(--accent); }
     .back-link svg { transition: transform var(--transition-fast); }
     .back-link:hover svg { transform: translateX(-4px); }
-
     .post-header { margin-bottom: 48px; }
-
-    .post-category {
-      font-family: var(--font-mono);
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.15em;
-      color: var(--accent);
-      margin-bottom: 20px;
-    }
-
-    .post-title {
-      font-size: clamp(28px, 5vw, 44px);
-      font-weight: 400;
-      line-height: 1.15;
-      letter-spacing: -0.02em;
-      margin-bottom: 24px;
-    }
-
-    .post-meta {
-      font-family: var(--font-mono);
-      font-size: 10px;
-      color: var(--text-tertiary);
-      display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
-      padding-bottom: 32px;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 40px;
-    }
-
+    .post-category { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--accent); margin-bottom: 20px; }
+    .post-title { font-size: clamp(28px, 5vw, 44px); font-weight: 400; line-height: 1.15; letter-spacing: -0.02em; margin-bottom: 24px; }
+    .post-meta { font-family: var(--font-mono); font-size: 10px; color: var(--text-tertiary); display: flex; gap: 16px; flex-wrap: wrap; padding-bottom: 32px; border-bottom: 1px solid var(--border); margin-bottom: 40px; }
     .post-meta span { display: flex; align-items: center; gap: 6px; }
-
-    .post-body {
-      font-size: 18px;
-      line-height: 1.85;
-      color: var(--text-secondary);
-    }
-
+    .post-body { font-size: 18px; line-height: 1.85; color: var(--text-secondary); }
     .post-body p { margin-bottom: 28px; }
     .post-body p:last-child { margin-bottom: 0; }
-
-    .content-divider {
-      border: none;
-      border-top: 1px solid var(--border);
-      margin: 48px 0;
-    }
-
-    .post-url {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      margin-top: 48px;
-      padding: 14px 28px;
-      background: var(--accent);
-      color: var(--bg-primary);
-      font-family: var(--font-mono);
-      font-size: 11px;
-      border-radius: 3px;
-      transition: opacity var(--transition-fast), transform var(--transition-fast);
-    }
-
+    .content-divider { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
+    .post-url { display: inline-flex; align-items: center; gap: 8px; margin-top: 48px; padding: 14px 28px; background: var(--accent); color: var(--bg-primary); font-family: var(--font-mono); font-size: 11px; border-radius: 3px; transition: opacity var(--transition-fast), transform var(--transition-fast); }
     .post-url:hover { opacity: 0.85; transform: translateY(-1px); }
-
-    /* ---- States ---- */
-    .loading {
-      text-align: center;
-      padding: 100px 0;
-      font-family: var(--font-mono);
-      font-size: 11px;
-      color: var(--text-tertiary);
-      letter-spacing: 0.1em;
-    }
-
-    .loading::after {
-      content: '';
-      display: inline-block;
-      width: 4px;
-      height: 4px;
-      background: var(--accent);
-      border-radius: 50%;
-      margin-left: 10px;
-      animation: blink 1.2s ease infinite;
-    }
-
-    .error-msg {
-      text-align: center;
-      padding: 60px 40px;
-      background: var(--bg-secondary);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      font-family: var(--font-mono);
-      font-size: 11px;
-      color: var(--text-secondary);
-    }
-
-    /* ---- Footer ---- */
-    footer {
-      margin-top: 100px;
-      padding-top: 32px;
-      border-top: 1px solid var(--border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-family: var(--font-mono);
-      font-size: 10px;
-      color: var(--text-tertiary);
-      letter-spacing: 0.05em;
-    }
-
-    /* ---- Animations ---- */
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(16px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes slideUp {
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.2; }
-    }
-
-    /* ---- Responsive ---- */
-    @media (max-width: 600px) {
-      .container { padding: 60px 20px 80px; }
-      .post-link { padding: 28px 0; }
-      .post-link:hover { padding-left: 0; }
-      .controls { flex-direction: column; gap: 12px; align-items: flex-start; }
-      .post-url { display: block; text-align: center; }
-    }
+    .loading { text-align: center; padding: 100px 0; font-family: var(--font-mono); font-size: 11px; color: var(--text-tertiary); letter-spacing: 0.1em; }
+    .loading::after { content: ''; display: inline-block; width: 4px; height: 4px; background: var(--accent); border-radius: 50%; margin-left: 10px; animation: blink 1.2s ease infinite; }
+    .error-msg { text-align: center; padding: 60px 40px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 4px; font-family: var(--font-mono); font-size: 11px; color: var(--text-secondary); }
+    .more-btn { display: block; width: 100%; margin: 64px 0; padding: 18px 0; background: transparent; border: 1px solid var(--border); border-radius: 4px; color: var(--text-tertiary); font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; position: relative; overflow: hidden; transition: all var(--transition-slow); }
+    .more-btn::before { content: ''; position: absolute; inset: 0; background: var(--accent-dim); transform: scaleX(0); transform-origin: left; transition: transform var(--transition-slow); }
+    .more-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .more-btn:hover::before { transform: scaleX(1); }
+    .more-btn.loading { color: var(--text-tertiary); border-color: var(--border); cursor: default; pointer-events: none; }
+    .more-btn.loading::before { display: none; }
+    .more-btn.loading::after { content: ''; display: inline-block; width: 4px; height: 4px; background: var(--accent); border-radius: 50%; margin-left: 10px; animation: blink 1.2s ease infinite; }
+    footer { margin-top: 100px; padding-top: 32px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-family: var(--font-mono); font-size: 10px; color: var(--text-tertiary); letter-spacing: 0.05em; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+    @media (max-width: 600px) { .container { padding: 60px 20px 80px; } .post-link { padding: 28px 0; } .post-link:hover { padding-left: 0; } .controls { flex-direction: column; gap: 12px; align-items: flex-start; } .post-url { display: block; text-align: center; } }
   </style>
 </head>
 <body>
@@ -396,19 +123,25 @@
       <span id="theme-label">Dark Mode</span>
     </footer>
   </div>
-
+  <script>
+    // Embedded posts data — generated at 2026-05-08T00:40:00.812Z
+    window.__POSTS_DATA__ = [{"id":"0268ff8f-b44f-4bfd-b664-21d11a307c3c","title":"English clubs reach all three European finals for first time → 英格兰俱乐部首次包揽三项欧战决赛席位","title_en":"English clubs reach all three European finals for first time","title_zh":"英格兰俱乐部首次包揽三项欧战决赛席位","content_en":"English football clubs have achieved a historic milestone by reaching the finals of all three European competitions in the same season for the first time. Arsenal qualified for the Champions League final after defeating Atletico Madrid 2-1 on aggregate in their semi-final. Aston Villa, managed by Unai Emery, overturned a 1-0 first-leg deficit to beat Nottingham Forest 4-1 on aggregate and set up a Europa League final against German side Freiburg in Istanbul on 20 May. Crystal Palace completed the remarkable achievement by securing a 2-1 victory against Shakhtar Donetsk at Selhurst Park, following their 3-1 first-leg win, to reach the Conference League final where they will face Rayo Vallecano on 27 May. This marks the first time in history that English clubs have reached the finals of all three UEFA competitions simultaneously, with the Conference League being European football's third-tier competition introduced five years ago. Last season came close to this feat when Chelsea won the","content_zh":"英格兰足球俱乐部达成了历史性里程碑，首次在同一个赛季同时闯入三项欧洲赛事的决赛。阿森纳在半决赛中以总比分2-1击败马德里竞技，成功晋级欧冠决赛。在乌奈·埃梅里执教的阿斯顿维拉在首回合0-1落后的情况下实现逆转，以总比分4-1战胜诺丁汉森林，将在5月20日的伊斯坦布尔与德国球队弗赖堡进行欧联杯决赛。水晶宫在塞尔赫斯特公园以2-1战胜顿涅茨克矿工（在首回合3-1获胜之后），完成了这一非凡成就，晋级欧协杯决赛，将于5月27日对阵巴列卡诺。这是英格兰俱乐部历史上首次同时进入三项欧足联赛事的决赛，而欧协杯作为欧洲足球的第三级别赛事，在五年前才被引入。上赛季切尔西赢得冠军时，几乎实现这一壮举","source":"bbc","created_at":"2026-05-08T00:17:38.43025+00:00","original_url":"https://www.bbc.com/sport/football/articles/c5yr4vle9w2o?at_medium=RSS&amp;at_campaign=rss","categories":{"id":"c3d4e5f6-a7b8-9012-cdef-123456789012","title":"新闻","sort_order":3}},{"id":"d219539d-2a26-4dd5-b98f-46fcc82e258b","title":"Man charged with allegedly threatening Andrew Mountbatten-Windsor → 男子被指控涉嫌威胁安德鲁·蒙巴顿-温莎","title_en":"Man charged with allegedly threatening Andrew Mountbatten-Windsor","title_zh":"男子被指控涉嫌威胁安德鲁·蒙巴顿-温莎","content_en":"A 39-year-old man named Alex Jenkinson from Stowmarket, Suffolk, has been charged after allegedly threatening Andrew Mountbatten-Windsor during an incident near his home at the Sandringham Estate in Norfolk. Police arrested the suspect shortly after 19:30 BST on Wednesday following reports of a man behaving in an intimidating manner in Wolferton. According to The Daily Telegraph, Mountbatten-Windsor was reportedly threatened by a balaclava-clad man while walking his dogs and fled to his car along with his security team. Jenkinson has been remanded in custody and is scheduled to appear at Norwich Magistrates' Court on Friday. He faces two counts of using threatening, abusive, or insulting words or behavior intended to harass someone or cause alarm or distress, as well as a charge of failing to provide a blood specimen while in custody. The incident occurred near Marsh Farm, the property on the Sandringham Estate where Mountbatten-Windsor relocated after leaving Royal Lodge in Windsor am","content_zh":"一名来自萨福克郡斯托马克特的39岁男子亚历克斯·詹金森被起诉，此前他涉嫌在诺福克郡桑德灵厄姆庄园其住所附近威胁安德鲁·蒙巴顿-温莎。警方在周三英国夏令时19时30分后不久逮捕了这名嫌疑人，此前有报道称一名男子在沃尔弗顿表现得具有恐吓性。据《每日电讯报》报道，蒙巴顿-温莎在遛狗时受到一名戴面罩男子的威胁，与安保团队一起逃到车上。詹金森已被还押候审，定于周五在诺威奇裁判法院出庭。他面临两项指控：使用威胁性、辱骂性或侮辱性言语或行为骚扰他人或造成恐慌或困扰，以及在羁押期间未能提供血液样本。该事件发生在沼泽农场附近，即蒙巴顿-温莎离开温莎皇家小屋后搬到桑德灵厄姆庄园的住所。","source":"bbc","created_at":"2026-05-08T00:16:25.264691+00:00","original_url":"https://www.bbc.com/news/articles/c4g0d1wp6g8o?at_medium=RSS&amp;at_campaign=rss","categories":{"id":"c3d4e5f6-a7b8-9012-cdef-123456789012","title":"新闻","sort_order":3}},{"id":"d53c3178-741e-4e49-b9a1-7423b44bd195","title":"Labour expected to lose Senedd after century of winning elections in Wales → 工党执政百年后预计将失去威尔士议会控制权","title_en":"Labour expected to lose Senedd after century of winning elections in Wales","title_zh":"工党执政百年后预计将失去威尔士议会控制权","content_en":"Labour is expected to lose control of the Welsh Parliament (Senedd) in what would mark the end of the party's 27-year rule and its more than century-long dominance of Welsh politics. Multiple party sources have told the BBC that Labour is facing defeat in Thursday's Senedd election, with Plaid Cymru and Reform UK both vying for the top position according to opinion polls. Deputy First Minister Huw Irranca-Davies acknowledged it had been a \"tough\" campaign for Labour but stopped short of conceding. First Minister Eluned Morgan's seat is thought to be under threat, with speculation she may not return to the Senedd. A former Welsh government minister suggested that if results match predictions, UK Labour leader Sir Keir Starmer should step down as Prime Minister. Plaid Cymru MP Ben Lake expressed confidence his party would achieve a good result, describing the election as \"very close.\" Voting closed at 22:00 BST on Thursday, with counting taking place on Friday. Under Wales' new proportio","content_zh":"工党预计将失去对威尔士议会（塞纳德）的控制权，这标志着该党27年统治的结束，以及其对威尔士政治一个多世纪以来主导地位的终结。多位政党消息人士告诉BBC，工党在周四的塞纳德选举中面临失败，根据民意调查，威尔士党（Plaid Cymru）和改革英国（Reform UK）都在争夺领先地位。副首席部长休·伊兰卡-戴维斯承认，工党这是一场“艰难”的竞选，但拒绝承认败选。首席部长埃伦德·摩根的席位被认为受到威胁，有猜测她可能不会重返塞纳德。一位前威尔士政府部长建议，如果结果与预测相符，英国工党领袖基尔·斯塔默爵士应该辞去首相职务。威尔士党议员本·莱克表示对他的政党将取得好成绩充满信心，称这场选举“非常接近”。投票于周四英国夏令时间22:00结束，计票工作于周五进行。根据威尔士新比例代表制...","source":"bbc","created_at":"2026-05-08T00:15:14.027352+00:00","original_url":"https://www.bbc.com/news/articles/cdrpxvz61vko?at_medium=RSS&amp;at_campaign=rss","categories":{"id":"c3d4e5f6-a7b8-9012-cdef-123456789012","title":"新闻","sort_order":3}},{"id":"66f18847-d4e0-45ba-a4ca-5f4713c882d8","title":"Under 200,000 with Huawei ecosystem as standard? Everything you need to know about the 6-seat large SUV Huajing S, launching May 8 - 1 day ago → 不到20万标配华为全家桶？一文看懂6座大型SUV华境S 5月8日上市 1天前","title_en":"Under 200,000 with Huawei ecosystem as standard? Everything you need to know about the 6-seat large SUV Huajing S, launching May 8 - 1 day ago","title_zh":"不到20万标配华为全家桶？一文看懂6座大型SUV华境S 5月8日上市 1天前","content_en":"Summary\n\nThis automotive news article from Autohome reports on the upcoming launch of a new 6-seat large SUV called the Huajing S (华境S), scheduled for release on May 8. The vehicle is positioned as a competitively priced option in the Chinese SUV market, reportedly available for under 200,000 RMB (approximately $28,000 USD). A notable highlight of this model is its standard inclusion of Huawei's comprehensive ecosystem (referred to as \"Huawei全家桶\" in Chinese), which typically includes Huawei's intelligent cockpit technology, connectivity features, and potentially its HarmonyOS infotainment system. This bundling strategy suggests the manufacturer is targeting tech-savvy consumers who prioritize seamless integration with Huawei devices and services. The article appears to provide a comprehensive overview of the vehicle's features, specifications, and market positioning, serving as a guide for potential buyers interested in understanding what this new large SUV has to offer. The publicat","content_zh":"摘要\n\n这篇来自汽车之家的汽车新闻报道了一款名为华境S的新型6座大型SUV即将上市，该车计划于5月8日发布。这款车在中国SUV市场中定位为一款具有竞争力的平价车型，据报道售价将在20万元人民币以下（约合28,000美元）。该车型的一大亮点是全系标配华为完整生态系统（在中文中被称为\"华为全家桶\"），该生态系统通常包括华为智能座舱技术、互联功能以及可能搭载的鸿蒙信息娱乐系统。这种捆绑销售策略表明，该制造商的目标客户群体是对华为设备和服务无缝集成有需求的科技爱好者。这篇文章似乎对该车的功能、规格和市场定位进行了全面概述，可作为潜在买家了解这款新型大型SUV的参考指南。","source":"autohome","created_at":"2026-05-08T00:14:02.48999+00:00","original_url":"https://www.autohome.com.cn/news/202605/1314123.html","categories":{"id":"b2c3d4e5-f6a7-8901-bcde-f12345678901","title":"汽车","sort_order":2}},{"id":"e6d3be9e-56a5-4678-bccc-0b6b8715adb3","title":"DHS can’t create vast DNA database to track ICE critics, lawsuit says → 诉讼称国土安全部不能建立大型DNA数据库追踪ICE批评者","title_en":"DHS can’t create vast DNA database to track ICE critics, lawsuit says","title_zh":"诉讼称国土安全部不能建立大型DNA数据库追踪ICE批评者","content_en":"Four protesters who were arrested during a large demonstration against Immigration and Customs Enforcement (ICE) in Illinois have filed a lawsuit seeking to halt the Department of Homeland Security (DHS) and the FBI from seizing their DNA samples and uploading the genetic profiles to government databases. The complaint, lodged in an Illinois district court, accuses federal agents of wrongfully arresting peaceful demonstrators, collecting their DNA, permanently storing the samples in federal labs, and using the genetic information as part of an expansive surveillance program aimed at tracking ICE critics. Of the 92 non‑immigration arrests made at the Broadview ICE facility, only one led to a conviction—a guilty plea for an unrelated prior felony—while two plaintiffs faced quickly‑dropped minor charges and the other two were never charged. The plaintiffs argue that the government’s actions violate the First and Fourth Amendments as well as the Administrative Procedure Act, and that the a","content_zh":"在伊利诺伊州一次反对移民和海关执法局（ICE）的大规模示威活动中被逮捕的四名抗议者已提起诉讼，要求停止国土安全部（DHS）和联邦调查局（FBI）扣押他们的DNA样本并将这些遗传档案上传到政府数据库。该投诉在伊利诺伊州一家地区法院提起，指控联邦特工错误地逮捕和平示威者、收集他们的DNA、将样本永久存储在联邦实验室，并利用这些遗传信息作为旨在追踪批评ICE者的广泛监控计划的一部分。在Broadview ICE设施的92次非移民相关逮捕中，只有一项导致定罪——对一项无关的先前重罪的认罪——而两名原告面临很快被撤销的轻微指控，另外两人从未被起诉。原告认为政府的行为违反了第一修正案和第四修正案以及《行政程序法》，而且","source":"ars","created_at":"2026-05-08T00:12:09.287258+00:00","original_url":"https://arstechnica.com/tech-policy/2026/05/ice-protesters-sue-to-stop-dhs-from-seizing-dna-samples/","categories":{"id":"9126cc45-ac4c-42de-aca8-175d51351ab2","title":"tech","sort_order":0}},{"id":"5be76b2d-5a7d-4130-a79e-1dd880d95522","title":"Peak Design is taking up to 50 percent off some of our favorite camera bags → Peak Design 部分精选相机包最高可享 5 折优惠","title_en":"Peak Design is taking up to 50 percent off some of our favorite camera bags","title_zh":"Peak Design 部分精选相机包最高可享 5 折优惠","content_en":"Peak Design, the renowned creator of modular camera bags and accessories, is currently holding a birthday sale that offers up to 50 percent off some of its most popular camera bags. The promotion, timed to coincide with founder Peter Dering’s birthday, also includes substantial discounts on a range of accessories such as slings, motorcycle mounts, and other camera gear. According to The Verge, the sale presents a rare opportunity for photographers and videographers to purchase high‑quality carry solutions at reduced prices, with deals available on backpacks, slings, and various mounting equipment. The discounts apply to selected items in Peak Design’s lineup and are expected to be available for a limited time, encouraging customers to act quickly to secure the savings.","content_zh":"Peak Design是著名的模块化相机包和配件制造商，目前正在举办生日促销活动，部分最受欢迎的相机包可享高达50%的折扣。此次促销恰逢创始人Peter Dering的生日，还包括对各种配件的大幅折扣，如斜挎包、摩托车支架和其他相机配件。据The Verge报道，这次促销为摄影师和摄像师提供了一个难得的购买高质量携带解决方案的机会，价格优惠，包括背包、斜挎包和各种配件。折扣适用于Peak Design精选商品，预计限时供应，鼓励客户尽快行动以获取优惠。","source":"verge","created_at":"2026-05-08T00:11:07.375266+00:00","original_url":"https://www.theverge.com/gadgets/925427/peak-design-peter-dering-birthday-sale-2026-camera-backpack-sling-deal","categories":{"id":"9126cc45-ac4c-42de-aca8-175d51351ab2","title":"tech","sort_order":0}},{"id":"623116cc-8274-436a-aca1-6c06f5ed8b78","title":"SpaceX has a $55 billion plan to build AI chips in Texas → SpaceX有550亿美元计划在德克萨斯州制造AI芯片","title_en":"SpaceX has a $55 billion plan to build AI chips in Texas","title_zh":"SpaceX有550亿美元计划在德克萨斯州制造AI芯片","content_en":"SpaceX is reportedly planning a $55 billion initiative to build a dedicated AI‑chip fabrication facility in Texas, dubbed the “Terafab” plant, according to a court filing published on May 7 2026. The filing indicates that the total cost of the project could reach as high as $119 billion when infrastructure, equipment, research and development, and associated supply‑chain investments are taken into account. The plant is intended to produce custom AI accelerators for use in SpaceX’s next‑generation Starlink satellites, Starship navigation systems, and broader data‑processing needs, reducing reliance on external semiconductor suppliers such as Nvidia. The Texas site, likely near Austin or the Houston‑area tech corridor, would create thousands of high‑tech manufacturing jobs and could be operational by the early 2030s. The massive investment reflects Elon Musk’s ambition to vertically integrate AI hardware, bolster domestic chip production, and position SpaceX as a major player in the rapi","content_zh":"据报道，SpaceX正计划斥资550亿美元在德克萨斯州建设一座专用人工智能芯片制造工厂，被称为\"Terafab\"工厂，相关法院文件于2026年5月7日公布。文件显示，考虑基础设施、设备、研发及供应链相关投资后，该项目总成本可能高达1190亿美元。该工厂旨在为SpaceX的下一代星链卫星、星际飞船导航系统及更广泛的数据处理需求生产定制人工智能加速器，减少对英伟达等外部半导体供应商的依赖。德克萨斯州选址可能在奥斯汀附近或休斯顿地区科技走廊，将创造数千个高科技制造业就业岗位，并有望在2030年代初投入运营。这项巨额投资反映了埃隆·马斯克垂直整合人工智能硬件、加强国内芯片生产、将SpaceX定位为快速崛起人工智能领域主要参与者的野心。","source":"verge","created_at":"2026-05-08T00:10:01.112915+00:00","original_url":"https://www.theverge.com/ai-artificial-intelligence/926356/spacex-terafab-plant-cost-ai-chips","categories":{"id":"9126cc45-ac4c-42de-aca8-175d51351ab2","title":"tech","sort_order":0}},{"id":"e8b6841c-e233-4260-9444-8b04316fbbfb","title":"Apple&#8217;s AirPods with cameras for AI are apparently close to production → 据悉苹果搭载摄像头的AirPods即将投产","title_en":"Apple&#8217;s AirPods with cameras for AI are apparently close to production","title_zh":"据悉苹果搭载摄像头的AirPods即将投产","content_en":"Summary: Apple's AirPods with Cameras for AI Near Production\n\nAccording to a report from Bloomberg's Mark Gurman, Apple is developing a new version of its popular AirPods earbuds that will feature built-in cameras designed to enable advanced artificial intelligence capabilities. The article, published on The Verge by senior reporter Jay Peters, indicates that testers within Apple are currently \"actively using\" prototype versions of these enhanced AirPods.\n\nThis development represents a significant expansion of Apple's AI strategy and would mark a notable evolution in the company's wearable audio lineup. The integration of cameras into AirPods could potentially enable new functionality such as visual scene recognition, enhanced spatial audio experiences, and more sophisticated hands-free interactions powered by machine learning.\n\nThe timing of this report suggests that Apple is accelerating its efforts to incorporate AI features across its product ecosystem, following broader industry","content_zh":"总结：配备摄像头的苹果AirPods即将进入量产\n\n据彭博社马克·古尔曼的报道，苹果正在开发一款配备内置摄像头的新版AirPods耳机，旨在实现先进的人工智能功能。这篇由The Verge高级记者杰·彼得斯发表的文章指出，苹果内部的测试人员目前正在“积极使用”这些增强版AirPods的原型版本。\n\n这一发展代表了苹果人工智能战略的重大扩展，也将标志着该公司可穿戴音频产品线的显著演变。将摄像头集成到AirPods中可能会实现新功能，如视觉场景识别、增强的空间音频体验，以及由机器学习驱动的更复杂的免手操作交互。\n\n这份报告的时间表明，在整个行业趋势下，苹果正加速将人工智能功能融入其产品生态系统。","source":"verge","created_at":"2026-05-08T00:08:28.45596+00:00","original_url":"https://www.theverge.com/tech/926376/apple-airpods-cameras-ai-production","categories":{"id":"9126cc45-ac4c-42de-aca8-175d51351ab2","title":"tech","sort_order":0}},{"id":"931373d5-d89b-47d0-8909-90025c83e8f5","title":"Mira Murati’s deposition pulled back the curtain on Sam Altman’s ouster → Mira Murati的证词揭露了Sam Altman被罢免的内幕","title_en":"Mira Murati’s deposition pulled back the curtain on Sam Altman’s ouster","title_zh":"Mira Murati的证词揭露了Sam Altman被罢免的内幕","content_en":"Mira Murati's deposition has provided new insights into the circumstances surrounding Sam Altman's controversial removal from OpenAI. The former CTO of the artificial intelligence company reportedly came prepared with documentation and evidence, commonly referred to as \"receipts,\" to support her account of events during the proceedings. However, according to the reporting, these materials ultimately served to complicate rather than clarify her narrative, raising additional questions about the sequence of events and communications that led to Altman's brief ouster from the organization. The deposition, part of what appears to be ongoing legal or investigative proceedings related to the matter, offers another piece in the complex puzzle surrounding the leadership upheaval at one of the world's most prominent AI companies. The article suggests that while Murati sought to provide clarity through documented evidence, the resulting picture remains murky, with the information potentially crea","content_zh":"Mira Murati的证词为Sam Altman从OpenAI争议性被移除的相关情况提供了新的视角。这位人工智能公司的前首席技术官据报道在诉讼程序中准备了文件和证据，通常被称为“收据”，来支持她对事件的陈述。然而，据报道，这些材料最终非但没有澄清反而使她的叙述更加复杂，引发了关于导致Altman短暂被罢免的事件顺序和沟通的更多问题。这场证词似乎是与此事件相关的持续法律或调查程序的一部分，为这家全球最知名的人工智能公司之一的领导层动荡这一复杂谜题提供了又一个拼图。该文暗示，虽然Murati试图通过记录证据来提供清晰度，但结果画面仍然模糊不清，这些信息可能会产","source":"verge","created_at":"2026-05-08T00:07:42.626917+00:00","original_url":"https://www.theverge.com/ai-artificial-intelligence/926383/mira-murati-sam-altman-musk-trial-ouster","categories":{"id":"9126cc45-ac4c-42de-aca8-175d51351ab2","title":"tech","sort_order":0}},{"id":"2461e576-2ecc-4b7d-9bce-50f81b0a33f1","title":"Canvas is down as ShinyHunters threatens to leak schools’ data → Canvas宕机，ShinyHunters威胁泄露学校数据","title_en":"Canvas is down as ShinyHunters threatens to leak schools’ data","title_zh":"Canvas宕机，ShinyHunters威胁泄露学校数据","content_en":"Canvas Outage and ShinyHunters Data Breach Threat\n\nThe popular learning management platform Canvas has experienced a significant outage following a ransom message allegedly from the notorious ShinyHunters hacking group. The cybercriminals are threatening to leak sensitive data belonging to educational institutions that rely on the platform. ShinyHunters has gained notoriety for previous high-profile data breaches and has been known to sell or leak stolen information on dark web forums. The incident has raised concerns about the security of educational data and the vulnerability of widely-used academic technology platforms. As of the publication date, the full extent of the breach remains unclear, and authorities are likely investigating the matter while the platform works to restore services.","content_zh":"Canvas宕机与ShinyHunters数据泄露威胁\n\n热门学习管理平台Canvas在收到据称来自臭名昭著的ShinyHunters黑客组织的勒索信息后遭遇重大宕机。网络犯罪分子威胁要泄露依赖该平台的教育机构的敏感数据。ShinyHunters因此前的高调数据泄露事件而闻名，并曾在暗网论坛上出售或泄露被盗信息。该事件引发了对教育数据安全及广泛使用的学术技术平台脆弱性的担忧。截至发稿时，泄露的全部范围仍不清楚，相关机构可能在调查此事，同时该平台正在努力恢复服务。","source":"verge","created_at":"2026-05-08T00:06:38.189045+00:00","original_url":"https://www.theverge.com/tech/926458/canvas-shinyhunters-breach","categories":{"id":"9126cc45-ac4c-42de-aca8-175d51351ab2","title":"tech","sort_order":0}},{"id":"324ddcbb-f748-4595-8e12-019c6bdcef95","title":"Voi founders&#8217; new AI startup Pit has become the latest rising star out of Stockholm → Voi创始人创办的AI初创公司Pit成为斯德哥尔摩最新崛起的明星企业","title_en":"Voi founders&#8217; new AI startup Pit has become the latest rising star out of Stockholm","title_zh":"Voi创始人创办的AI初创公司Pit成为斯德哥尔摩最新崛起的明星企业","content_en":"Summary: Voi Founders' New AI Startup Pit Emerges as Stockholm's Latest Rising Star\n\nVoi, the European electric scooter giant, has produced another notable startup as its co-founders have launched a new artificial intelligence venture called Pit, which is quickly gaining attention as the latest emerging technology company from Stockholm, Sweden. The AI startup has secured significant backing from prominent venture capital firm Andreessen Horowitz (a16z), which is leading a substantial $16 million seed round for the young company.\n\nThis development marks another milestone for the Stockholm tech ecosystem, which has already produced several successful startups including Spotify, Klarna, and Voi itself. The fact that experienced founders from one of Europe's largest micromobility companies are now focusing their efforts on AI signals the growing convergence between mobility technology and artificial intelligence solutions. The involvement of a16z, one of Silicon Valley's most influentia","content_zh":"概要：Voi创始人的新人工智能初创公司Pit成为斯德哥尔摩最新崛起之星\n\n欧洲电动滑板车巨头Voi又孵化出一家知名初创公司，其联合创始人推出了一家人工智能企业Pit，这家来自瑞典斯德哥尔摩的公司正迅速成为最新崛起的科技企业。这家AI初创公司获得了知名风险投资公司安德烈森·霍罗威茨(a16z)的大力支持，该公司正在领投这家年轻公司的1600万美元种子轮融资。这一发展标志着斯德哥尔摩科技生态系统的又一个里程碑，该生态系统已经孕育了包括Spotify、Klarna和Voi本身在内的多家成功初创公司。来自欧洲最大微型交通公司之一的经验丰富的创始人现在将精力投入到人工智能领域，这一事实表明交通技术与人工智能解决方案的融合正在不断加深。安德烈森·霍罗威茨作为硅谷最具影响力的投资机构之一，其参与其中","source":"tc","created_at":"2026-05-08T00:05:22.176932+00:00","original_url":"https://techcrunch.com/2026/05/07/voi-founders-new-ai-startup-pit-has-become-the-latest-rising-star-out-of-stockholm/","categories":{"id":"9126cc45-ac4c-42de-aca8-175d51351ab2","title":"tech","sort_order":0}},{"id":"47da7a6c-e373-44b7-ac69-7a2ef295899e","title":"Disney looking to make a unified &#8216;super app,&#8217; report says → 据报道，迪士尼正寻求打造统一的“超级应用”","title_en":"Disney looking to make a unified &#8216;super app,&#8217; report says","title_zh":"据报道，迪士尼正寻求打造统一的“超级应用”","content_en":"Disney Looking to Make a Unified 'Super App,' Report Says\n\nDisney CEO Josh D'Amaro, who took over for Bob Iger earlier in 2026, has emphasized his intent to streamline the Disney experience for consumers. According to a report from TechCrunch, Disney senior executives are exploring the possibility of combining multiple Disney apps into a unified \"super app\" platform. This consolidation effort would potentially merge Disney+ with other applications such as the Disneyland Resort app and Disney Cruise Line Navigator, creating a single integrated experience for users. The initiative reflects a broader trend in the tech industry where companies seek to create all-in-one platforms that keep users engaged within their ecosystem. By consolidating these services, Disney could offer a more seamless experience for consumers who use multiple Disney products, from streaming content to planning park visits and cruise vacations. The company has been under pressure to improve profitability and user","content_zh":"据报道，迪士尼计划打造统一\"超级应用\"\n\n迪士尼首席执行官乔希·达马罗于2026年初接替鲍勃·艾格，他强调了精简迪士尼消费者体验的意图。据TechCrunch报道，迪士尼高管正在探索将多个迪士尼应用整合为统一\"超级应用\"平台的可能性。这一整合工作可能会将迪士尼+与迪士尼主题公园度假区应用和迪士尼邮轮导航等其他应用合并，为用户创造单一集成体验。该举措反映了科技行业更广泛的趋势，即企业寻求创建一体化平台，使用户在其生态系统内保持参与度。通过整合这些服务，迪士尼可以为使用多种迪士尼产品的消费者提供更无缝的体验，从流媒体内容到规划主题公园游览和邮轮度假。该公司一直面临提高盈利能力和用户体验的压力。","source":"tc","created_at":"2026-05-08T00:04:27.746802+00:00","original_url":"https://techcrunch.com/2026/05/07/disney-looking-to-make-a-unified-super-app-report-says/","categories":{"id":"9126cc45-ac4c-42de-aca8-175d51351ab2","title":"tech","sort_order":0}},{"id":"bdac2efb-8e2f-40ba-84c9-86977fa15087","title":"Kodiak AI raises $100M at a steep discount, sending its stock tumbling 37% → Kodiak AI以大幅折价融资1亿美元，股价暴跌37%","title_en":"Kodiak AI raises $100M at a steep discount, sending its stock tumbling 37%","title_zh":"Kodiak AI以大幅折价融资1亿美元，股价暴跌37%","content_en":"Summary\n\nKodiak AI has secured $100 million in funding through a significant equity raise executed at a steep discount to its previous valuation, a move that sent the company's stock price plummeting by 37%. The funding announcement came alongside the company's quarterly earnings report, during which Kodiak revealed several additional business developments. These included a new commercial contract, the launch of a pilot program in Canada, and a strategic collaboration with another entity. The discounted funding round suggests investors may have required inducements to participate amid challenging market conditions or concerns about the company's valuation. The sharp decline in Kodiak AI's stock price reflects investor unease about the dilution implications of the discounted raise and questions about the company's near-term financial trajectory. The additional announcements of commercial and international expansion initiatives indicate the company continues to pursue growth opportunit","content_zh":"摘要\n\nKodiak AI 通过大幅折价股权融资获得了 1 亿美元资金，此举导致该公司股价暴跌 37%。此次融资公告与该公司季度财报同时发布，Kodiak 在财报中还披露了多项其他业务进展，包括一份新的商业合同、在加拿大启动试点项目，以及与另一家实体建立战略合作。此次折价融资表明，在充满挑战的市场环境中或鉴于对该公司估值的担忧，投资者可能需要获得激励才会参与。Kodiak AI 股价的暴跌反映了投资者对折价融资带来的稀释效应的担忧，以及对该公司近期财务前景的质疑。额外的商业及国际扩展公告表明该公司持续寻求增长机会。","source":"tc","created_at":"2026-05-08T00:03:39.613992+00:00","original_url":"https://techcrunch.com/2026/05/07/kodiak-ai-raises-100m-at-a-steep-discount-sending-its-stock-tumbling-37/","categories":{"id":"9126cc45-ac4c-42de-aca8-175d51351ab2","title":"tech","sort_order":0}},{"id":"c8bc634b-0aa8-41bc-b9a4-9a27ef5f00ab","title":"OpenAI launches new voice intelligence features in its API → OpenAI在其API中推出新的语音智能功能","title_en":"OpenAI launches new voice intelligence features in its API","title_zh":"OpenAI在其API中推出新的语音智能功能","content_en":"OpenAI has announced the launch of new voice intelligence features within its application programming interface, marking a significant expansion of the company's capabilities beyond text-based interactions. According to the TechCrunch report published on May 7, 2026, these newly introduced tools are designed to enhance applications with advanced voice capabilities, making them particularly well-suited for customer service systems and support platforms. However, OpenAI has emphasized that the applications extend well beyond just customer service, with potential uses spanning education and creator platforms as well. This development represents OpenAI's continued efforts to integrate more multimodal capabilities into its API offerings, allowing developers to build applications that can understand, process, and respond to spoken language. The voice intelligence features are expected to provide developers with powerful tools for creating more natural and intuitive voice-based interactions w","content_zh":"OpenAI已宣布在其应用程序编程接口中推出新的语音智能功能，标志着该公司能力的显著扩展，超越了基于文本的交互。根据TechCrunch于2026年5月7日发布的报道，这些新推出的工具旨在为应用程序增强先进的语音能力，使其特别适合客户服务系统和支持平台。然而，OpenAI强调，应用范围远不止客户服务，潜在用途涵盖教育和创作者平台。这一发展代表了OpenAI将更多多模态能力整合到其API产品中的持续努力，使开发者能够构建能够理解、处理和响应口语的应用程序。语音智能功能有望为开发者提供强大的工具，用于创建更自然、更直观的语音交互。","source":"tc","created_at":"2026-05-08T00:02:50.598935+00:00","original_url":"https://techcrunch.com/2026/05/07/openai-launches-new-voice-intelligence-features-in-its-api/","categories":{"id":"9126cc45-ac4c-42de-aca8-175d51351ab2","title":"tech","sort_order":0}},{"id":"e797950f-4940-4485-996f-52958fc0238e","title":"Ramp in talks to hit $40B+ valuation, 6 months after reaching $32B → Ramp洽谈估值超400亿美元，距达到320亿美元仅六个月","title_en":"Ramp in talks to hit $40B+ valuation, 6 months after reaching $32B","title_zh":"Ramp洽谈估值超400亿美元，距达到320亿美元仅六个月","content_en":"Ramp, the corporate card and spend management company, is reportedly in talks to raise approximately $750 million in new funding at a pre-money valuation exceeding $40 billion. This latest funding round would come just six months after the company achieved a $32 billion valuation during its previous raise in November 2025. The rapid escalation in valuation demonstrates sustained investor appetite for Ramp's financial automation and expense management platform, even as the broader fintech market has faced headwinds. According to the article, investors showed strong enthusiasm for Ramp throughout 2025, positioning the company among the highest-valued privately held fintech firms globally. The potential new valuation would represent a 25% increase from the company's November valuation, suggesting robust growth in the company's user base, revenue, or both. If completed at the reported terms, the funding would further cement Ramp's status as a major player in the corporate finance technolog","content_zh":"Ramp是一家企业卡和支出管理公司，据报道该公司正在洽谈融资约7.5亿美元，其投前估值将超过400亿美元。这轮最新融资距该公司2025年11月上一轮融资时达到320亿美元估值仅相隔六个月。估值的快速攀升表明，尽管更广泛的金融科技市场面临逆风，投资者对Ramp的金融自动化和费用管理平台仍保持着持续的热情。据该文章报道，投资者在整个2025年对Ramp表现出强烈的热情，使该公司位居全球估值最高的私营金融科技公司之列。潜在的新估值将比该公司11月的估值高出25%，表明该公司用户群和营收或两者都实现了强劲增长。如果按报道的条款完成，这笔融资将进一步巩固Ramp作为企业金融技术领域主要玩家的地位。","source":"tc","created_at":"2026-05-08T00:02:01.693324+00:00","original_url":"https://techcrunch.com/2026/05/07/ramp-in-talks-to-hit-40b-valuation-6-months-after-reaching-32b/","categories":{"id":"9126cc45-ac4c-42de-aca8-175d51351ab2","title":"tech","sort_order":0}},{"id":"e1bf459c-6911-40ee-b7a3-4d2ba48c4c36","title":"Dirtyfrag: Universal Linux LPE → Dirtyfrag：通用Linux本地提权","title_en":"Dirtyfrag: Universal Linux LPE","title_zh":"Dirtyfrag：通用Linux本地提权","content_en":"Dirty Frag: Universal Linux Local Privilege Escalation Vulnerability\n\nSummary\n\nThis security advisory announces a critical vulnerability called \"Dirty Frag,\" a universal Local Privilege Escalation (LPE) flaw affecting Linux systems across all major distributions. The vulnerability was discovered and reported by Hyunwoo Kim and allows an attacker to obtain root privileges on vulnerable systems. Due to a broken embargo and responsible disclosure schedule, no official patches or CVEs exist for this vulnerability at the time of public release. The disclosure was made at the request of linux-distros@openwall.org maintainers after the embargo was violated.\n\nDirty Frag shares a similar impact level with a previously disclosed vulnerability known as \"Copy Fail,\" both enabling immediate root privilege escalation. The exploit chains together two separate kernel vulnerabilities that exist in the networking subsystem of the Linux kernel. Since no official fixes are available from kernel maint","content_zh":"Dirty Frag：通用Linux本地权限提升漏洞\n\n摘要\n\n此安全公告宣布了一个名为\"Dirty Frag\"的关键漏洞，这是一个影响所有主流发行版Linux系统的通用本地权限提升（LPE）漏洞。该漏洞由Hyunwoo Kim发现并报告，攻击者可借此在易受攻击的系统上获取root权限。由于 embargo 破裂且负责任的披露计划未能执行，在公开发布时该漏洞尚无官方补丁或CVE。在 embargo 被违反后，应 linux-distros@openwall.org 维护者的请求披露了此漏洞。\n\nDirty Frag与先前披露的名为\"Copy Fail\"的漏洞具有类似的影响级别，两者都能实现即时root权限提升。该漏洞利用将Linux内核网络子系统中存在的两个独立内核漏洞链接在一起。由于内核维护者尚未提供官方修复程序，攻击者可以直接利用此漏洞获取系统root权限。","source":"hn","created_at":"2026-05-08T00:01:17.724092+00:00","original_url":"https://www.openwall.com/lists/oss-security/2026/05/07/8","categories":{"id":"9126cc45-ac4c-42de-aca8-175d51351ab2","title":"tech","sort_order":0}},{"id":"844eecf7-d504-4982-b9d6-d26704b4c351","title":"AI slop is killing online communities → AI垃圾内容正在扼杀在线社区","title_en":"AI slop is killing online communities","title_zh":"AI垃圾内容正在扼杀在线社区","content_en":"Summary: AI Slop is Killing Online Communities\n\nIn this candid rant from May 2026, technology blogger rmoff vents about the overwhelming wave of low-quality AI-generated content flooding online communities and platforms. The author opens by clarifying they're not an AI-hater—they actually believe AI has tremendous potential—but they're growing increasingly frustrated watching valuable communities deteriorate under an endless barrage of derivative, unoriginal work that offers little genuine value to readers or learners.\n\nThe post catalogs common examples of the problem: developers who proudly announce they've \"rewrote Kafka in COBOL\" using AI, individuals who \"wrote a blog post about Kafka\" when actually an AI assistant wrote it, creators who produce AI-generated videos claiming to teach something, and ambitious types who self-publish AI-scraped ebooks on technical topics. The author dismisses these efforts with pointed sarcasm, suggesting they're roughly equivalent to a child's crayo","content_zh":"概要：AI垃圾正在扼杀在线社区\n\n在这篇来自2026年5月的坦诚吐槽中，科技博主rmoff发泄了他对大量低质量AI生成内容涌入在线社区和平台的强烈不满。作者在开头澄清自己并不是AI仇恨者——实际上他认为AI具有巨大的潜力——但他越来越沮丧地眼看着有价值的社区在无休止的衍生性、非原创作品的冲击下不断恶化，这些作品对读者或学习者几乎没有提供任何真正的价值。\n\n这篇文章列举了这类问题的常见例子：用AI“用COBOL重写Kafka”后自豪宣布的开发者、声称自己“写了篇关于Kafka的博客文章”实则由AI助手代笔的个人、制作声称能教授某些东西的AI生成视频的创作者，以及野心勃勃地自行出版关于技术主题的AI抓取电子书的类型。作者以尖锐的讽刺口吻贬低这些努力，暗示它们大致相当于一个孩子的蜡笔作品。","source":"hn","created_at":"2026-05-07T21:25:17.962389+00:00","original_url":"https://rmoff.net/2026/05/06/ai-slop-is-killing-online-communities/","categories":{"id":"9126cc45-ac4c-42de-aca8-175d51351ab2","title":"tech","sort_order":0}},{"id":"c3efcb1b-b8de-44a5-83a8-1db918e7b89c","title":"Agents need control flow, not more prompts → 智能体需要的是控制流，而不是更多的提示词","title_en":"Agents need control flow, not more prompts","title_zh":"智能体需要的是控制流，而不是更多的提示词","content_en":"Summary\n\nThe article argues that as AI agents tackle more complex tasks, relying on increasingly elaborate prompt chains represents a fundamental dead end. The author contends that if you've ever found yourself writing \"MANDATORY\" or \"DO NOT SKIP\" in a prompt to force specific behavior, you've already hit the ceiling of what prompting can achieve. The piece draws a compelling analogy: imagine a programming language where statements were mere suggestions and functions could return \"Success\" while hallucinating incorrect results—reasoning would become impossible and reliability would collapse as complexity increased.\n\nThe author emphasizes that software scales through recursive composability, built from libraries, modules, and functions—it's \"code all the way down.\" Code exposes predictable behavior and enables local reasoning, whereas prompt chains are non-deterministic, weakly specified, and difficult to verify. The key insight is that reliability requires moving logic out of prose a","content_zh":"总结\n\n本文认为，随着AI智能体处理越来越复杂的任务，依赖日益复杂的提示链代表了一条根本的死胡同。作者认为，如果你曾在提示中写下“必须”或“不要跳过”来强制特定行为，你就已经触及了提示工程的极限。文章提出了一个引人深思的类比：想象一种编程语言，其中语句只是建议性的，函数可能返回“成功”同时产生幻觉般的错误结果——推理将变得不可能，可靠性会随着复杂性增加而崩溃。\n\n作者强调，软件通过递归可组合性扩展，由库、模块和函数构建——“代码一路到底”。代码呈现可预测的行为并支持局部推理，而提示链是非确定性的、弱指定的，难以验证。关键洞察是，可靠性需要将逻辑从散文文本中抽离出来","source":"hn","created_at":"2026-05-07T21:19:48.916832+00:00","original_url":"https://bsuh.bearblog.dev/agents-need-control-flow/","categories":{"id":"9126cc45-ac4c-42de-aca8-175d51351ab2","title":"tech","sort_order":0}},{"id":"3e4761ed-45a8-40d5-a6d9-62dd1cd936a1","title":"Grogu is real star of new Star Wars film, says Pedro Pascal → 佩德罗·帕斯卡尔表示，格洛古才是新《星球大战》电影的真正主角","title_en":"Grogu is real star of new Star Wars film, says Pedro Pascal","title_zh":"佩德罗·帕斯卡尔表示，格洛古才是新《星球大战》电影的真正主角","content_en":"Summary: Pedro Pascal and the New Star Wars Film\n\nA major Star Wars fan event was held in London's Leicester Square to celebrate the release of \"The Mandalorian & Grogu,\" marking the franchise's highly anticipated return to cinema screens for the first time in over six years. The black carpet event drew massive crowds of enthusiastic fans waving lightsabers and dressed as stormtroopers, creating an electric atmosphere for the cast arrival.\n\nPedro Pascal leads the film in his role as bounty hunter Din Djarin, joined by new cast members Sigourney Weaver and Jeremy Allen White. The film, directed by Jon Favreau, continues the story from the successful Disney+ television series and is set in the Star Wars universe following the fall of the Galactic Empire. The plot centers on Din Djarin and his young apprentice Grogu as they embark on a mission to rescue Jabba the Hutt's son, Rotta the Hutt.\n\nDuring interviews with the BBC, Pascal emphasized the strong emotional connection audiences have","content_zh":"概要：佩德罗·帕斯卡与新的星球大战电影\n\n伦敦莱斯特广场举办了一场大型星球大战粉丝活动，庆祝《曼达洛人与古古》的上映，标志着这个系列时隔六年多以来首次回归大银幕，备受期待。黑毯活动吸引了大量热情的粉丝，他们挥舞着光剑，身着冲锋队服装，为主创团队的到场营造了热烈的气氛。\n\n佩德罗·帕斯卡饰演赏金猎人丁·贾伦领衔主演，新加入的演员包括西格妮·韦弗和杰里米·艾伦·怀特。这部由乔恩·费儒执导的电影延续了迪士尼+成功剧集的故事线，设定在银河帝国陨落后的星球大战宇宙中。剧情围绕丁·贾伦和他的年轻学徒古古展开，两人踏上营救赫特人贾巴之子——赫特人罗塔的使命。\n\n在英国广播公司（BBC）的采访中，帕斯卡强调了观众与这部作品之间强烈的情感纽带。","source":"bbc","created_at":"2026-05-07T21:13:46.514768+00:00","original_url":"https://www.bbc.com/news/articles/c2421d3r736o?at_medium=RSS&amp;at_campaign=rss","categories":{"id":"c3d4e5f6-a7b8-9012-cdef-123456789012","title":"新闻","sort_order":3}},{"id":"4f8d1a28-90bb-4da5-b3f6-ade825c9b65c","title":"What you need to know about the elections in England, Scotland and Wales → 你需要了解的英格兰、苏格兰和威尔士选举情况","title_en":"What you need to know about the elections in England, Scotland and Wales","title_zh":"你需要了解的英格兰、苏格兰和威尔士选举情况","content_en":"Summary of BBC Article: UK Elections on 7 May\n\nThe article provides a comprehensive overview of the significant set of elections taking place across the United Kingdom on 7 May, which are described as the biggest since the 2024 general election. Millions of voters will head to the polls, with each nation holding different types of elections.\n\nIn England, approximately 5,000 council seats across 136 local councils are contested, alongside six mayoral races in Watford and five London boroughs including Croydon, Hackney, Lewisham, Newham, and Tower Hamlets. Local council elections use the first-past-the-post system, with the winning political party gaining control of the council. These councils manage essential local services such as social care for elderly and disabled residents, waste collection and recycling, housing, education, and road maintenance. Voters in England must present valid photo identification such as a passport or driving licence to vote in person, with polling station","content_zh":"BBC文章摘要：5月7日英国大选\n\n这篇文章全面概述了5月7日在英国各地举行的重要选举活动，这些选举被称为自2024年大选以来规模最大的一次。数百万选民将前往投票站投票，各地区将举行不同类型的选举。\n\n在英格兰，约136个地方议会的5000个席位面临改选，同时沃特福德和伦敦五个行政区（包括克罗伊登、哈克尼、刘易舍姆、纽汉和陶尔哈姆莱茨）将举行六场市长选举。地方议会选举采用简单多数制，获胜的政党将获得议会的控制权。这些地方议会负责管理重要的公共服务，如老年人和残疾居民的社会照护、垃圾收集与回收、住房、教育和道路维护。英格兰的选民必须出示有效的带照片的身份证明文件（如护照或驾驶执照）才能亲自前往投票站投票。","source":"bbc","created_at":"2026-05-07T21:03:17.985028+00:00","original_url":"https://www.bbc.com/news/articles/c62nq678nyzo?at_medium=RSS&amp;at_campaign=rss","categories":{"id":"c3d4e5f6-a7b8-9012-cdef-123456789012","title":"新闻","sort_order":3}},{"id":"4a135f97-f005-4229-b130-fdb32b73945d","title":"Mozilla says 271 vulnerabilities found by Mythos have \"almost no false positives\" → Mozilla表示，Mythos发现的271个漏洞“几乎无误报”","title_en":"Mozilla says 271 vulnerabilities found by Mythos have \"almost no false positives\"","title_zh":"Mozilla表示，Mythos发现的271个漏洞“几乎无误报”","content_en":"Summary\n\nMozilla has announced that their internal vulnerability detection tool called Mythos successfully identified 271 security vulnerabilities in their codebase, with the company reporting that these findings demonstrated what they described as \"almost no false positives.\" This represents a significant advancement in automated security testing, as false positives have historically been a major challenge for vulnerability scanning tools, often leading to wasted developer time investigating non-existent issues. The high accuracy rate of Mythos suggests that Mozilla has developed or refined machine learning and static analysis techniques that can more reliably distinguish between genuine security flaws and benign code patterns. The announcement highlights growing industry interest in improving the signal-to-noise ratio of automated security tools, which could help organizations identify and patch critical vulnerabilities more efficiently. This development comes as software security","content_zh":"摘要\n\nMozilla宣布，其内部漏洞检测工具Mythos成功在其代码库中发现了271个安全漏洞，该公司报告称这些发现表明其“几乎没有误报”。这代表了自动化安全测试的重大进步，因为误报一直是漏洞扫描工具面临的主要挑战，往往导致开发人员浪费时间调查不存在的问题。Mythos的高准确率表明，Mozilla已经开发或改进了机器学习和静态分析技术，能够更可靠地区分真正的安全漏洞和良性代码模式。该公告凸显了业界对提高自动化安全工具信噪比的日益增长的兴趣，这可以帮助组织更有效地识别和修补关键漏洞。这一发展正值软件安全","source":"ars","created_at":"2026-05-07T21:02:08.811897+00:00","original_url":"https://arstechnica.com/information-technology/2026/05/mozilla-says-271-vulnerabilities-found-by-mythos-have-almost-no-false-positives/","categories":{"id":"9126cc45-ac4c-42de-aca8-175d51351ab2","title":"tech","sort_order":0}},{"id":"3e7a021d-70e9-4527-83ee-14597f57089d","title":"AlphaEvolve: Gemini-powered coding agent scaling impact across fields → AlphaEvolve：Gemini驱动的编程智能体扩大跨领域影响力","title_en":"AlphaEvolve: Gemini-powered coding agent scaling impact across fields","title_zh":"AlphaEvolve：Gemini驱动的编程智能体扩大跨领域影响力","content_en":"AlphaEvolve represents Google DeepMind's effort to develop a coding agent powered by their Gemini language model, designed to amplify impact across multiple fields and domains. The article, published in May 2026, discusses how this AI-powered system is being utilized to advance research and development initiatives. While the detailed content of the blog post appears limited in the provided markdown, the title and metadata indicate that AlphaEvolve serves as a sophisticated coding assistant capable of contributing to various scientific and technological endeavors. This development reflects Google's broader commitment to leveraging advanced AI systems like Gemini to address complex challenges and scale productive outcomes across different areas of research and application. The system appears to demonstrate how AI-driven coding agents can meaningfully contribute to advancing knowledge and capabilities in fields ranging from software development to scientific discovery.","content_zh":"AlphaEvolve代表了Google DeepMind开发由其Gemini语言模型驱动的编程智能体的努力，旨在放大对多个领域的影响。这篇文章发表于2026年5月，讨论了这个AI驱动的系统如何被用于推进研发计划。虽然提供的markdown中博客文章的具体内容似乎有限，但标题和元数据表明AlphaEvolve是一个复杂的编程助手，能够为各种科学和技术工作做出贡献。这一发展反映了Google更广泛的承诺，即利用Gemini等先进AI系统来解决复杂挑战，并在不同的研究和应用领域扩展生产性成果。该系统似乎展示了AI驱动的编程智能体如何有意义地贡献于推进从软件开发到科学发现等领域的知识和能力。","source":"hn","created_at":"2026-05-07T21:01:10.936959+00:00","original_url":"https://deepmind.google/blog/alphaevolve-impact/","categories":{"id":"9126cc45-ac4c-42de-aca8-175d51351ab2","title":"tech","sort_order":0}},{"id":"3cf16c39-0f12-4820-bfb2-f927bc178978","title":"Tome, another Goodreads booktracker rival, shuts down → Tome，又一个 Goodreads 图书追踪竞争对手关闭运营","title_en":"Tome, another Goodreads booktracker rival, shuts down","title_zh":"Tome，又一个 Goodreads 图书追踪竞争对手关闭运营","content_en":"Tome, a book-tracking application that gained traction among the BookTok community as a rival to Goodreads, has shut down. The closure was reported by TechCrunch on May 7, 2026, marking another instance of a Goodreads competitor exiting the market. Tome differentiated itself by targeting readers who discovered books through the social video platform TikTok, offering features tailored to that community's preferences. The shutdown highlights the challenges faced by smaller players in the competitive book-tracking space, where they must compete against Amazon-owned Goodreads and other established platforms. Users are being notified of the closure, and the app will no longer be available for new sign-ups or updates. This news adds to a series of closures of similar apps in recent years, illustrating the difficulty of sustaining a business in a niche market dominated by a major player.","content_zh":"Tome是一款图书追踪应用，作为Goodreads的竞争对手，在BookTok社区中获得了关注，现已关闭。TechCrunch于2026年5月7日报道了这一关闭消息，标志着又一个Goodreads竞争对手退出市场。Tome的与众不同之处在于它瞄准了通过社交视频平台TikTok发现书籍的读者，提供专为该社区偏好设计的功能。此次关闭突显了小型参与者在竞争激烈的图书追踪领域面临的挑战，他们必须与亚马逊旗下的Goodreads及其他成熟平台竞争。用户已收到关闭通知，该应用将不再接受新注册或更新。这一消息使得近年来类似应用的一系列关闭事件又多了一例，说明在由大型企业主导的小众市场维持业务的困难。","source":"tc","created_at":"2026-05-07T18:42:12.525662+00:00","original_url":"https://techcrunch.com/2026/05/07/tome-another-goodreads-booktracker-rival-shuts-down/","categories":{"id":"9126cc45-ac4c-42de-aca8-175d51351ab2","title":"tech","sort_order":0}},{"id":"7567540e-fa7f-4023-9a56-dfd342c4e3c8","title":"Chrome removes claim of On-device Al not sending data to Google Servers → Chrome移除关于设备端AI不会将数据发送至Google服务器的声明","title_en":"Chrome removes claim of On-device Al not sending data to Google Servers","title_zh":"Chrome移除关于设备端AI不会将数据发送至Google服务器的声明","content_en":"Summary:\n\nThis entry documents a failed attempt to access a Reddit post. When the user attempted to visit the URL https://old.reddit.com/r/chrome/comments/1t5qayz/chrome_removes_claim_of_ondevice_al_not_sending/, the Reddit platform returned a 403 Forbidden error, displaying a \"Blocked\" message. The blocking page displays Reddit's standard access restriction notice, informing the user that their request was blocked due to a network policy. The message advises the user to either log in or create a Reddit account to regain browsing access. Additionally, the notice provides guidance for developers running scripts or applications, instructing them to register or sign in with their developer credentials. The message also suggests verifying that the User-Agent header is not empty and is unique and descriptive, recommending a return to default settings if an alternate User-Agent string was previously used. The page references Reddit's Terms of Service and offers the option to file a ticke","content_zh":"摘要：\n\n本条目记录了一次访问 Reddit 帖子失败的尝试。当用户尝试访问网址 https://old.reddit.com/r/chrome/comments/1t5qayz/chrome_removes_claim_of_ondevice_al_not_sending/ 时，Reddit 平台返回了 403 禁止访问错误，并显示了“已阻止”消息。阻止页面显示了 Reddit 标准的访问限制通知，告知用户其请求因网络策略被阻止。该消息建议用户登录或创建 Reddit 账户以恢复浏览访问。此外，该通知为运行脚本或应用程序的开发人员提供了指导，指导他们使用开发者凭据注册或登录。该消息还建议验证 User-Agent 标头不为空且唯一且具有描述性，建议如果之前使用了备用 User-Agent 字符串则返回默认设置。该页面引用了 Reddit 的服务条款，并提供了提交工单的选项。","source":"hn","created_at":"2026-05-07T18:41:08.909197+00:00","original_url":"https://old.reddit.com/r/chrome/comments/1t5qayz/chrome_removes_claim_of_ondevice_al_not_sending/","categories":{"id":"9126cc45-ac4c-42de-aca8-175d51351ab2","title":"tech","sort_order":0}},{"id":"853edfda-d014-455a-a822-bee9625db3e2","title":"Permacomputing Principles → 永续计算原则","title_en":"Permacomputing Principles","title_zh":"永续计算原则","content_en":"Summary: Principles\n\nThis article introduces the ten principles that form the foundation of permacomputing, a movement that applies permaculture ethics—Earth Care, People Care, and Fair Share—to digital technology and computing practices. The piece emphasizes that these principles are designed to be accessible to everyone, from tech specialists to casual computer users, offering practical strategies to reduce the environmental and socio-economic impact of digital activities.\n\nEach principle is presented with three components: an issue or background explanation, actionable strategies for individuals and groups, and real-world examples of implementation. The article stresses that permacomputing takes a holistic approach to technology design, considering social and ecological factors while promoting resilience and equitable coexistence.\n\nCrucially, the principles are not meant to be prescriptive rules but rather flexible guidelines that encourage situated awareness and contextual unders","content_zh":"概述：原则\n\n本文介绍了构成永久计算基础的十项原则。永久计算是一场将永续农业伦理——地球关怀、人们关怀和公平分享——应用于数字技术和计算实践的运动。本文强调，这些原则旨在让每个人都能理解，从技术专家到普通电脑用户，为减少数字活动的环境和 socio-economic 影响提供实用策略。\n\n每项原则都包含三个组成部分：一个议题或背景说明、个人和群体的可行策略，以及实施的实际案例。本文强调，永久计算采用整体方法进行技术设计，考虑社会和生态因素，同时促进韧性和公平共存。\n\n关键的是，这些原则并非规范性的规则，而是灵活的指导方针，鼓励情境意识和语境理解","source":"hn","created_at":"2026-05-07T18:40:23.619463+00:00","original_url":"https://permacomputing.net/principles/","categories":{"id":"9126cc45-ac4c-42de-aca8-175d51351ab2","title":"tech","sort_order":0}},{"id":"d48be9b7-0a10-4300-aeef-1b8fd795358e","title":"Could Lovable&#8217;s automatic 10% pay raise be the cure for toxic cultures? → Lovable的自动10%加薪能治愈有毒的企业文化吗？","title_en":"Could Lovable&#8217;s automatic 10% pay raise be the cure for toxic cultures?","title_zh":"Lovable的自动10%加薪能治愈有毒的企业文化吗？","content_en":"Stockholm-based vibe coding platform Lovable is implementing an automatic 10% pay raise for all employees as a strategic approach to eliminate traditional corporate politics and potentially transform toxic workplace cultures. The initiative, reported by Julie Bort on TechCrunch, represents an unconventional human resources strategy that aims to address common workplace issues by removing the need for negotiation, performance reviews, and salary discussions that often create tension and favoritism in organizations. By guaranteeing automatic raises, Lovable hopes to create a more transparent, fair, and collaborative environment where employees feel valued without having to navigate complex corporate hierarchies or engage in office politics to advance their compensation. This approach challenges conventional wisdom about employee retention and workplace satisfaction, suggesting that eliminating the ambiguity around salary increases could be a fundamental step toward building healthier org","content_zh":"斯德哥尔摩的vibe coding平台Lovable正在为所有员工实施自动加薪10%的措施，作为消除传统企业政治和潜在改造有毒职场文化的战略性方法。这一举措由Julie Bort在TechCrunch上报道，代表了一种非传统的人力资源策略，旨在通过消除谈判、绩效评估和薪酬讨论的需求来解决常见的职场问题，这些问题往往在组织中造成紧张气氛和偏袒现象。通过保证自动加薪，Lovable希望创造一个更加透明、公平和协作的环境，让员工感到被重视，而无需在复杂的公司层级中周旋或参与办公室政治来提升薪酬。这种方法挑战了关于员工留任和职场满意度的传统观念，表明消除薪酬增长的不确定性可能是建设更健康组织的基本步骤。","source":"tc","created_at":"2026-05-07T18:38:12.333577+00:00","original_url":"https://techcrunch.com/2026/05/07/could-lovables-automatic-10-pay-raise-be-the-cure-for-toxic-cultures/","categories":{"id":"9126cc45-ac4c-42de-aca8-175d51351ab2","title":"tech","sort_order":0}},{"id":"e997a36b-a4ae-4216-b09b-aa992d710677","title":"Child marriages plunged when girls stayed in school in Nigeria → 尼日利亚：女孩继续上学，童婚大幅下降","title_en":"Child marriages plunged when girls stayed in school in Nigeria","title_zh":"尼日利亚：女孩继续上学，童婚大幅下降","content_en":"Summary\n\nA groundbreaking policy brief published in March 2026 highlights the remarkable success of a locally tailored, multipronged intervention program that reduced child marriage rates in northern Nigeria by approximately 80%. The study, conducted across 18 communities in northern Nigeria, demonstrates that rates of marriage for unmarried adolescent girls dropped from 86% to just 21% when interventions addressed the complex, interconnected factors that drive early marriage. These factors include poverty, lack of educational opportunities, deeply entrenched social norms, and the absence of viable alternatives to marriage for young girls. The research suggests that while such \"big-push\" interventions require significant upfront investment, they can yield substantial net positive benefits for individuals, families, and entire communities. The findings are particularly significant given that nearly 80% of girls in northern Nigeria traditionally marry before age 18, contributing to glo","content_zh":"摘要\n\n2026年3月发布的一份具有开创性的政策简报强调，一项本地化、多管齐下的干预计划取得了显著成效，将尼日利亚北部的童婚率降低了约80%。这项在尼日利亚北部18个社区进行的研究表明，当干预措施解决推动早婚的复杂、相互关联的因素时，未婚少女的结婚率从86%大幅下降到仅21%。这些因素包括贫困、教育机会匮乏、根深蒂固的社会规范以及年轻女孩缺乏可行的婚姻替代方案。研究表明，尽管这类\"大力推动\"干预措施需要大量的前期投资，但它们可以为个人、家庭和整个社区带来 substantial net positive benefits 研究结果尤其重要，因为尼日利亚北部近80%的女孩传统上在18岁之前结婚，这对 glo","source":"hn","created_at":"2026-05-07T18:36:26.053351+00:00","original_url":"https://www.nature.com/articles/d41586-026-00720-8","categories":{"id":"9126cc45-ac4c-42de-aca8-175d51351ab2","title":"tech","sort_order":0}},{"id":"7344ae65-ceed-4877-b4a2-aad6f15bd3e4","title":"Hackers hack victims hacked by other hackers → 黑客入侵被其他黑客入侵的受害者","title_en":"Hackers hack victims hacked by other hackers","title_zh":"黑客入侵被其他黑客入侵的受害者","content_en":"Summary:\n\nA mysterious group of hackers has been actively targeting systems that were previously compromised by the cybercrime organization known as TeamPCP. Once these new hackers gain access to the already-breached systems, they immediately remove TeamPCP's unauthorized access and eliminate the hacking tools that the original attackers had installed on the victims' networks. This appears to be an unusual case of cyber-vigilantism, where one criminal group is essentially \"hacking back\" against another criminal organization's victims. The motivations behind this counter-hacking campaign remain unclear, though it could involve various factors such as taking control of compromised infrastructure for their own purposes, disrupting rival criminal operations, or possibly attempting to present themselves as digital Robin Hoods by \"rescuing\" hacked systems. However, the legitimate victims of these breaches remain in a precarious position regardless of which malicious actors control their","content_zh":"摘要：\n\n一个神秘黑客组织一直在积极针对此前被网络犯罪组织TeamPCP入侵的系统。一旦这些新黑客获得对这些已被入侵系统的访问权限，他们立即清除TeamPCP的未授权访问，并消除原始攻击者在受害者网络上安装的黑客工具。这似乎是一起不同寻常的网络“ vigilance”行为，一个犯罪组织本质上是在对另一个犯罪组织的受害者进行“反向黑客攻击”。这场反黑客活动的动机仍不明确，可能涉及多种因素，例如接管被入侵的基础设施供自己使用、破坏竞争对手的犯罪活动，或者可能试图将自己塑造成数字罗宾汉，通过“拯救”被入侵的系统来博取声誉。然而，无论哪个恶意行为者控制这些系统，这些入侵事件的合法受害者仍处于危险境地。","source":"tc","created_at":"2026-05-07T18:33:37.489271+00:00","original_url":"https://techcrunch.com/2026/05/07/hackers-hack-victims-hacked-by-other-hackers/","categories":{"id":"9126cc45-ac4c-42de-aca8-175d51351ab2","title":"tech","sort_order":0}},{"id":"2ca85ab9-44d9-4afe-9243-ab3b6a8b5620","title":"Google unveils screenless Fitbit Air and Google Health app to replace Fitbit → Google 推出无屏幕 Fitbit Air 及 Google 健康应用以取代 Fitbit","title_en":"Google unveils screenless Fitbit Air and Google Health app to replace Fitbit","title_zh":"Google 推出无屏幕 Fitbit Air 及 Google 健康应用以取代 Fitbit","content_en":"Google has announced a screenless wearable called Fitbit Air and a new Google Health app, marking a strategic shift away from the traditional Fitbit brand. The Fitbit Air is designed to be minimal and lightweight, relying on haptic feedback and voice integration rather than a display, aiming to provide a more seamless and unobtrusive user experience. The accompanying Google Health app consolidates health tracking, offering features such as activity monitoring, sleep analysis, and heart health insights, all integrated with Google's advanced AI capabilities. This move reflects Google's broader strategy to embed health services into its ecosystem, moving beyond hardware to a more software-centric approach. The transition indicates that Google plans to phase out the Fitbit brand in favor of its own branding, leveraging Fitbit's established user base and health data expertise to enhance its broader health initiatives. This rebranding effort is expected to provide users with a unified health","content_zh":"Google已发布一款名为Fitbit Air的无屏幕可穿戴设备以及一款新的Google Health应用，标志着战略方向的转变，偏离了传统Fitbit品牌。Fitbit Air被设计成极简且轻量的设备，依靠触觉反馈和语音集成而非显示屏，旨在提供更无缝且不显眼的用户体验。配套的Google Health应用整合了健康追踪功能，提供活动监测、睡眠分析和心脏健康洞察等功能，所有功能都与Google先进的AI能力相集成。这一举措反映了Google更广泛的战略，即将其健康服务嵌入其生态系统，从硬件转向更加以软件为中心的方法。这一过渡表明Google计划逐步淘汰Fitbit品牌，转而使用自己的品牌，利用Fitbit现有的用户基础和健康数据专业知识来加强其更广泛的健康计划。这一品牌重塑工作预计将为用户提供统一的健康","source":"ars","created_at":"2026-05-07T18:22:12.959739+00:00","original_url":"https://arstechnica.com/gadgets/2026/05/google-unveils-screenless-fitbit-air-and-google-health-app-to-replace-fitbit/","categories":{"id":"9126cc45-ac4c-42de-aca8-175d51351ab2","title":"tech","sort_order":0}},{"id":"7e7b968b-75cf-4655-a3c9-05f80522b52a","title":"Rosenberg: Russia's Victory Day parade with no tanks a sign Ukraine war not going to plan → 罗森伯格：俄罗斯胜利日阅兵无坦克 表明乌克兰战争未按计划进行","title_en":"Rosenberg: Russia's Victory Day parade with no tanks a sign Ukraine war not going to plan","title_zh":"罗森伯格：俄罗斯胜利日阅兵无坦克 表明乌克兰战争未按计划进行","content_en":"Russia's annual Victory Day parade on May 9th has been significantly scaled back for the first time in nearly two decades, with no military hardware—including tanks or ballistic missiles—appearing on Red Square. The parade typically showcases Russia's military might as part of celebrations commemorating the Soviet victory over Nazi Germany in World War Two, which has become Russia's most important national holiday under President Putin's leadership. However, Russian MP Yevgeny Popov stated that tanks are needed on the battlefield in Ukraine rather than on display in Moscow, suggesting that the ongoing war—now in its fifth year—is affecting how Russia can present its military strength. The absence of military equipment at the parade is being interpreted as a sign that Russia's war on Ukraine is not proceeding according to plan. Despite continuing the full-scale invasion that began in February 2022, Ukraine has been able to push back against Russian forces, and the war is increasingly co","content_zh":"俄罗斯每年5月9日的胜利日阅兵活动近二十年来首次大幅缩减，红场上没有出现任何军事装备——包括坦克或弹道导弹。阅兵式通常展示俄罗斯的军事实力，作为庆祝二战苏联战胜纳粹德国的一部分，在普京总统领导下这已成为俄罗斯最重要的国庆日。然而，俄罗斯议员叶夫根尼·波波夫表示，坦克需要用在乌克兰战场而不是在莫斯科展示，这表明持续至今已进入第五年的战争正在影响俄罗斯展示军事实力的方式。阅兵式上军事装备的缺席被解读为俄罗斯对乌克兰战争未按计划进行的迹象。尽管继续着2022年2月开始的全面入侵，乌克兰已能够击退俄罗斯军队，战争日益加","source":"bbc","created_at":"2026-05-07T18:06:23.798627+00:00","original_url":"https://www.bbc.com/news/articles/cwy2gj2jlr8o?at_medium=RSS&amp;at_campaign=rss","categories":{"id":"c3d4e5f6-a7b8-9012-cdef-123456789012","title":"新闻","sort_order":3}}];
+  </script>
   <script>
     const SUPABASE_URL = 'https://fzxuotfihpbzozjoplim.supabase.co';
     const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6eHVvdGZpaHBiem96am9wbGltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3OTM1MzMsImV4cCI6MjA5MTM2OTUzM30.pfhwZ7kv4CUy5PT_s62WzfIC3cHeXR2Z4YIXUjjqY1c';
 
     const app = document.getElementById('app');
 
-    // Preferences
     let titleLang = localStorage.getItem('titleLang') || 'zh';
     let contentLang = localStorage.getItem('contentLang') || 'zh';
     let currentTheme = localStorage.getItem('theme') || 'dark';
     let groupFilter = localStorage.getItem('groupFilter') || 'all';
-    let categories = []; // fetched from Supabase
+    let categories = [];
+    let displayedPosts = [];
+    let currentOffset = 30;
+    let hasMore = false;
+    let isLoadingMore = false;
 
     function applyTheme() {
       document.documentElement.setAttribute('data-theme', currentTheme);
@@ -425,6 +158,7 @@
     function setTitleLang(lang) {
       titleLang = lang;
       localStorage.setItem('titleLang', lang);
+      currentOffset = 30;
       handleRoute();
     }
 
@@ -437,13 +171,14 @@
     function setGroupFilter(grp) {
       groupFilter = grp;
       localStorage.setItem('groupFilter', grp);
+      currentOffset = 30;
       handleRoute();
     }
 
     async function fetchCategories() {
       const response = await fetch(
-        `${SUPABASE_URL}/rest/v1/categories?select=id,title,sort_order&order=sort_order.asc`,
-        { headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` } }
+        SUPABASE_URL + '/rest/v1/categories?select=id,title,sort_order&order=sort_order.asc',
+        { headers: { 'apikey': ANON_KEY, 'Authorization': 'Bearer ' + ANON_KEY } }
       );
       if (!response.ok) throw new Error('Failed to fetch categories');
       return response.json();
@@ -486,7 +221,6 @@
       const zh = post.content_zh || '';
       if (titleLang === 'en') return en.substring(0, 150);
       if (titleLang === 'zh') return zh.substring(0, 100);
-      // All mode: show both Chinese and English
       if (titleLang === 'all') {
         if (en && zh) return zh.substring(0, 80) + '\n\n📖 EN: ' + en.substring(0, 200);
         if (en) return en.substring(0, 280);
@@ -496,45 +230,36 @@
     }
 
     function langToggleHtml(selected, onChange) {
-      const langs = [
-        { code: 'zh', label: '中文' },
-        { code: 'en', label: 'EN' },
-        { code: 'all', label: 'All' }
-      ];
+      const langs = [{ code: 'zh', label: '中文' }, { code: 'en', label: 'EN' }, { code: 'all', label: 'All' }];
       return '<div class="lang-toggle">' +
         langs.map(l =>
-          `<button class="${l.code === selected ? 'active' : ''}" onclick="${onChange}('${l.code}')">${l.label}</button>`
+          '<button class="' + (l.code === selected ? 'active' : '') + '" onclick="' + onChange + '(\'' + l.code + '\')">' + l.label + '</button>'
         ).join('') +
         '</div>';
     }
 
     function groupToggleHtml(selected, groups) {
-      const items = [{ code: 'all', label: '全部' }, ...groups.map(g => ({ code: g.id, label: g.title }))];
+      const filtered = groups.filter(g => g.title !== '科技');
+      const items = [{ code: 'all', label: '全部' }, ...filtered.map(g => ({ code: g.title, label: g.title }))];
       return '<div class="lang-toggle">' +
         items.map(g =>
-          `<button class="${g.code === selected ? 'active' : ''}" onclick="setGroupFilter('${g.code}')">${g.label}</button>`
+          '<button class="' + (g.code === selected ? 'active' : '') + '" onclick="setGroupFilter(\'' + g.code + '\')">' + g.label + '</button>'
         ).join('') +
         '</div>';
     }
 
     async function fetchPost(id) {
+      // Try embedded data first
+      const fromEmbed = window.__POSTS_DATA__ ? window.__POSTS_DATA__.find(p => p.id === id) : null;
+      if (fromEmbed) return fromEmbed;
+      // Fallback to network
       const response = await fetch(
-        `${SUPABASE_URL}/rest/v1/blog_posts?id=eq.${id}&select=*,categories(title)`,
-        { headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` } }
+        SUPABASE_URL + '/rest/v1/blog_posts?id=eq.' + id + '&select=*,categories(id,title)',
+        { headers: { 'apikey': ANON_KEY, 'Authorization': 'Bearer ' + ANON_KEY } }
       );
       if (!response.ok) throw new Error('Failed to fetch');
       const data = await response.json();
       return data[0] || null;
-    }
-
-    async function fetchPosts() {
-      let url = `${SUPABASE_URL}/rest/v1/blog_posts?select=*,categories(title,sort_order)&order=created_at.desc`;
-      if (groupFilter !== 'all') {
-        url += `&category_id=eq.${groupFilter}`;
-      }
-      const response = await fetch(url, { headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` } });
-      if (!response.ok) throw new Error('Failed to fetch');
-      return response.json();
     }
 
     function getPostUrl(post) {
@@ -546,122 +271,59 @@
       return null;
     }
 
-    function goTo(path) {
-      window.location.hash = path;
-    }
+    function goTo(path) { window.location.hash = path; }
 
     async function renderPost(id) {
       app.innerHTML = '<div class="loading">Loading...</div>';
-
       try {
         const post = await fetchPost(id);
         if (!post) {
-          app.innerHTML = `
-            <div class="post-detail">
-              <div class="back-link" onclick="goTo('')">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                Back
-              </div>
-              <div class="error-msg">Post not found</div>
-            </div>
-          `;
+          app.innerHTML = '<div class="post-detail"><div class="back-link" onclick="goTo(\'\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Back</div><div class="error-msg">Post not found</div></div>';
           return;
         }
-
         const displayTitle = getDisplayTitle(post);
         const displayContent = getDisplayContent(post);
         const postUrl = getPostUrl(post);
-
-        app.innerHTML = `
-          <div class="post-detail">
-            <div class="back-link" onclick="goTo('')">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-              Back
-            </div>
-            ${langToggleHtml(contentLang, 'setContentLang')}
-            <article>
-              <header class="post-header">
-                ${post.categories ? `<div class="post-category">${escapeHtml(post.categories.title)}</div>` : ''}
-                <h1 class="post-title">${displayTitle}</h1>
-                <div class="post-meta">
-                  <span>${formatDate(post.created_at)}</span>
-                </div>
-              </header>
-              <div class="post-body">
-                ${displayContent ? displayContent.split('\n').map(p => `<p>${escapeHtml(p)}</p>`).join('') : '<p>No content available.</p>'}
-              </div>
-              ${postUrl ? `<a href="${postUrl}" target="_blank" class="post-url">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
-                Read Original
-              </a>` : ''}
-            </article>
-          </div>
-        `;
+        app.innerHTML = '<div class="post-detail"><div class="back-link" onclick="goTo(\'\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Back</div>' + langToggleHtml(contentLang, 'setContentLang') + '<article><header class="post-header">' + (post.categories ? '<div class="post-category">' + escapeHtml(post.categories.title) + '</div>' : '') + '<h1 class="post-title">' + displayTitle + '</h1><div class="post-meta"><span>' + formatDate(post.created_at) + '</span></div></header><div class="post-body">' + (displayContent ? displayContent.split('\n').map(p => '<p>' + escapeHtml(p) + '</p>').join('') : '<p>No content available.</p>') + '</div>' + (postUrl ? '<a href="' + postUrl + '" target="_blank" class="post-url"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>Read Original</a>' : '') + '</article></div>';
       } catch (err) {
-        app.innerHTML = `
-          <div class="post-detail">
-            <div class="back-link" onclick="goTo('')">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-              Back
-            </div>
-            <div class="error-msg">Unable to load post</div>
-          </div>
-        `;
+        app.innerHTML = '<div class="post-detail"><div class="back-link" onclick="goTo(\'\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Back</div><div class="error-msg">Unable to load post</div></div>';
         console.error(err);
       }
     }
 
-    function renderPosts(posts) {
-      if (posts.length === 0) {
-        app.innerHTML = `
-          <div class="site-header">
-            <div class="site-meta">潮汐 Tides</div>
-            <h1 class="site-title">潮汐 <span>·</span> Tides</h1>
-            <p class="site-tagline">Stories &amp; Ideas · 故事与思想</p>
-          </div>
-          <div class="controls">
-            <div class="toggles-row">
-              ${groupToggleHtml(groupFilter, categories)}
-              ${langToggleHtml(titleLang, 'setTitleLang')}
-            </div>
-            <button class="theme-toggle" onclick="toggleTheme()">Light Mode</button>
-          </div>
-          <div style="text-align:center;padding:80px 0;color:var(--text-tertiary);font-family:var(--font-mono);font-size:11px;">No posts yet</div>
-        `;
+    function renderPosts(isLoadingMoreFlag) {
+      if (displayedPosts.length === 0) {
+        app.innerHTML = '<div class="site-header"><div class="site-meta">潮汐 Tides</div><h1 class="site-title">潮汐 <span>·</span> Tides</h1><p class="site-tagline">Stories &amp; Ideas · 故事与思想</p></div><div class="controls"><div class="toggles-row">' + groupToggleHtml(groupFilter, categories) + langToggleHtml(titleLang, 'setTitleLang') + '</div><button class="theme-toggle" onclick="toggleTheme()">Light Mode</button></div><div style="text-align:center;padding:80px 0;color:var(--text-tertiary);font-family:var(--font-mono);font-size:11px;">No posts yet</div>';
         return;
       }
-
-      app.innerHTML = `
-        <div class="site-header">
-          <div class="site-meta">潮汐 Tides</div>
-          <h1 class="site-title">潮汐 <span>·</span> Tides</h1>
-          <p class="site-tagline">Stories &amp; Ideas · 故事与思想</p>
-        </div>
-        <div class="controls">
-          <div class="toggles-row">
-            ${groupToggleHtml(groupFilter, categories)}
-            ${langToggleHtml(titleLang, 'setTitleLang')}
-          </div>
-          <button class="theme-toggle" onclick="toggleTheme()">Light Mode</button>
-        </div>
-        <ul class="posts-list">
-          ${posts.map((post, i) => `
-            <li class="post-item" style="animation-delay:${i * 0.07}s">
-              <div class="post-link" onclick="goTo('/post/${post.id}')">
-                <div class="post-item-title">${getDisplayTitle(post)}</div>
-                <div class="post-item-meta">
-                  ${post.categories ? `<span>${escapeHtml(post.categories.title)}</span>` : ''}
-                  ${post.source ? `<span>${escapeHtml(post.source.toUpperCase())}</span>` : ''}
-                  <span class="dot"></span>
-                  <span>${formatDate(post.created_at)}</span>
-                </div>
-                ${post.content_zh || post.content_en ? `<div class="post-item-excerpt">${escapeHtml(getDisplayExcerpt(post).substring(0, 350))}</div>` : ''}
-              </div>
-            </li>
-          `).join('')}
-        </ul>
-      `;
+      app.innerHTML = '<div class="site-header"><div class="site-meta">潮汐 Tides</div><h1 class="site-title">潮汐 <span>·</span> Tides</h1><p class="site-tagline">Stories &amp; Ideas · 故事与思想</p></div><div class="controls"><div class="toggles-row">' + groupToggleHtml(groupFilter, categories) + langToggleHtml(titleLang, 'setTitleLang') + '</div><button class="theme-toggle" onclick="toggleTheme()">Light Mode</button></div><ul class="posts-list">' + displayedPosts.map((post, i) => '<li class="post-item" style="animation-delay:' + (i * 0.07) + 's"><div class="post-link" onclick="goTo(\'/post/' + post.id + '\')"><div class="post-item-title">' + getDisplayTitle(post) + '</div><div class="post-item-meta">' + (post.categories ? '<span>' + escapeHtml(post.categories.title) + '</span>' : '') + (post.source ? '<span>' + escapeHtml(post.source.toUpperCase()) + '</span>' : '') + '<span class="dot"></span><span>' + formatDate(post.created_at) + '</span></div>' + (post.content_zh || post.content_en ? '<div class="post-item-excerpt">' + escapeHtml(getDisplayExcerpt(post).substring(0, 350)) + '</div>' : '') + '</div></li>').join('') + '</ul>' + (hasMore ? '<button class="more-btn' + (isLoadingMoreFlag ? ' loading' : '') + '" onclick="loadMore()" ' + (isLoadingMoreFlag ? 'disabled' : '') + '>' + (isLoadingMoreFlag ? 'Loading' : 'More') + '</button>' : '') + '</div>';
     }
+
+    async function loadMore() {
+      if (isLoadingMore || !hasMore) return;
+      isLoadingMore = true;
+      renderPosts(true);
+      try {
+        let url = SUPABASE_URL + '/rest/v1/blog_posts?select=*,categories(id,title,sort_order)&order=created_at.desc&limit=30&offset=' + currentOffset;
+        if (groupFilter !== 'all') {
+          url += '&categories.title=eq.' + encodeURIComponent(groupFilter);
+        }
+        const response = await fetch(url, { headers: { 'apikey': ANON_KEY, 'Authorization': 'Bearer ' + ANON_KEY } });
+        const newPosts = await response.json();
+        displayedPosts = [...displayedPosts, ...newPosts];
+        hasMore = newPosts.length === 30;
+        currentOffset += 30;
+      } catch (err) { console.error(err); }
+      isLoadingMore = false;
+      renderPosts(false);
+    }
+
+    window.goTo = goTo;
+    window.setTitleLang = setTitleLang;
+    window.setContentLang = setContentLang;
+    window.setGroupFilter = setGroupFilter;
+    window.toggleTheme = toggleTheme;
+    window.loadMore = loadMore;
 
     async function handleRoute() {
       const postId = getPostIdFromHash();
@@ -669,36 +331,38 @@
         await renderPost(postId);
       } else {
         try {
-          // Fetch categories if not yet loaded
           if (categories.length === 0) {
             categories = await fetchCategories();
           }
-          const posts = await fetchPosts();
-          renderPosts(posts);
+          // Use embedded data only for "all" filter, otherwise fetch from API
+          if (groupFilter !== 'all') {
+            // Find category id by title, then filter by category_id
+            const cat = categories.find(c => c.title === groupFilter);
+            if (!cat) { displayedPosts = []; hasMore = false; renderPosts(); return; }
+            const filterUrl = SUPABASE_URL + '/rest/v1/blog_posts?select=*,categories(id,title,sort_order)&category_id=eq.' + cat.id + '&order=created_at.desc&limit=30';
+            const res = await fetch(filterUrl, { headers: { 'apikey': ANON_KEY, 'Authorization': 'Bearer ' + ANON_KEY } });
+            const data = await res.json();
+            displayedPosts = data;
+            hasMore = data.length === 30;
+            currentOffset = 30;
+          } else if (window.__POSTS_DATA__ && window.__POSTS_DATA__.length > 0) {
+            // Use embedded data for "all"
+            displayedPosts = window.__POSTS_DATA__.slice(0, 30);
+            hasMore = window.__POSTS_DATA__.length === 30;
+            currentOffset = 30;
+          } else {
+            displayedPosts = [];
+            hasMore = false;
+          }
+          currentOffset = 30;
+          renderPosts();
         } catch (err) {
-          app.innerHTML = `
-            <div class="site-header">
-              <div class="site-meta">潮汐 Tides</div>
-              <h1 class="site-title">潮汐 <span>·</span> Tides</h1>
-              <p class="site-tagline">Stories &amp; Ideas · 故事与思想</p>
-            </div>
-            <div class="controls">
-              ${langToggleHtml(titleLang, 'setTitleLang')}
-              <button class="theme-toggle" onclick="toggleTheme()">Light Mode</button>
-            </div>
-            <div class="error-msg">Unable to load posts. Please refresh.</div>
-          `;
+          app.innerHTML = '<div class="site-header"><div class="site-meta">潮汐 Tides</div><h1 class="site-title">潮汐 <span>·</span> Tides</h1><p class="site-tagline">Stories &amp; Ideas · 故事与思想</p></div><div class="controls">' + langToggleHtml(titleLang, 'setTitleLang') + '<button class="theme-toggle" onclick="toggleTheme()">Light Mode</button></div><div class="error-msg">Unable to load posts. Please refresh.</div>';
         }
       }
     }
 
     window.addEventListener('hashchange', handleRoute);
-    window.goTo = goTo;
-    window.setTitleLang = setTitleLang;
-    window.setContentLang = setContentLang;
-    window.setGroupFilter = setGroupFilter;
-    window.toggleTheme = toggleTheme;
-
     handleRoute();
   </script>
 </body>

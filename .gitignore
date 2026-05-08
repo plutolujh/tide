@@ -1,3 +1,4 @@
 *.log
 .playwright-mcp/*
 .env
+key/

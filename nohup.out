@@ -1,0 +1,14 @@
+::1 - - [07/May/2026 17:31:21] "GET / HTTP/1.1" 200 -
+::1 - - [07/May/2026 17:31:21] code 404, message File not found
+::1 - - [07/May/2026 17:31:21] "GET /favicon.ico HTTP/1.1" 404 -
+::1 - - [07/May/2026 17:31:25] code 404, message File not found
+::1 - - [07/May/2026 17:31:25] "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 -
+::1 - - [07/May/2026 22:04:54] "GET / HTTP/1.1" 304 -
+::1 - - [07/May/2026 22:04:54] code 404, message File not found
+::1 - - [07/May/2026 22:04:54] "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 -
+Serving HTTP on :: port 80 (http://[::]:80/) ...
+
+Keyboard interrupt received, exiting.
+Serving HTTP on :: port 80 (http://[::]:80/) ...
+
+Keyboard interrupt received, exiting.
