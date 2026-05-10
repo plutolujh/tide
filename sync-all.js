@@ -646,16 +646,23 @@ function formatDate(dateStr) {
   return new Date(dateStr).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 }
 
+function decodeHtmlEntities(text) {
+  return text.replace(/&(#\d+|#x[0-9a-fA-F]+|[a-zA-Z]+);/g, (match) => {
+    const entities = {
+      '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"',
+      '&#39;': "'", '&apos;': "'", '&#8217;': "'", '&#8212;': '—',
+      '&#8220;': '"', '&#8221;': '"', '&#8230;': '…', '&nbsp;': ' '
+    };
+    if (entities[match]) return entities[match];
+    if (match.startsWith('&#x')) return String.fromCharCode(parseInt(match.slice(2), 16));
+    if (match.startsWith('&#')) return String.fromCharCode(parseInt(match.slice(2), 10));
+    return match;
+  });
+}
+
 function sanitizeString(s) {
   if (typeof s !== 'string') return s;
-  return s
-    .replace(/\ufffd/g, ' ')
-    .replace(/\\/g, '\\\\')
-    .replace(/"/g, '\\"')
-    .replace(/'/g, "\\'")
-    .replace(/\n/g, '\\n')
-    .replace(/\r/g, '')
-    .replace(/[^\x20-\x7E\u4E00-\u9FFF\u3000-\u303F\uFF00-\uFFEF]/g, ' ');
+  return decodeHtmlEntities(s.replace(/\ufffd/g, ' '));
 }
 
 async function generateStaticIndex() {
