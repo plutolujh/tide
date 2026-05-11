@@ -656,7 +656,7 @@ function decodeHtmlEntities(text) {
       '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"',
       '&#39;': "'", '&apos;': "'", '&#8217;': "'", '&#8212;': '—',
       '&#8220;': '"', '&#8221;': '"', '&#8230;': '…', '&nbsp;': ' ',
-      '&ndash;': '–', '&mdash;': '—', '&lsquo;': ''', '&rsquo;': ''',
+      '&ndash;': '–', '&mdash;': '—',
       '&ldquo;': '"', '&rdquo;': '"', '&hellip;': '…'
     };
     if (entities[match]) return entities[match];
