@@ -305,6 +305,10 @@ async function upsertBlogPost(story, {
     log(`  [SKIP] content_zh too short (${contentZh?.length || 0}), need 300+`);
     return;
   }
+  if (!titleZh || titleZh === 'null' || titleZh === 'undefined') {
+    log(`  [SKIP] title_zh is null/invalid`);
+    return;
+  }
 
   const payload = {
     title: `${titleEn} → ${titleZh}`,
@@ -651,7 +655,9 @@ function decodeHtmlEntities(text) {
     const entities = {
       '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"',
       '&#39;': "'", '&apos;': "'", '&#8217;': "'", '&#8212;': '—',
-      '&#8220;': '"', '&#8221;': '"', '&#8230;': '…', '&nbsp;': ' '
+      '&#8220;': '"', '&#8221;': '"', '&#8230;': '…', '&nbsp;': ' ',
+      '&ndash;': '–', '&mdash;': '—', '&lsquo;': ''', '&rsquo;': ''',
+      '&ldquo;': '"', '&rdquo;': '"', '&hellip;': '…'
     };
     if (entities[match]) return entities[match];
     if (match.startsWith('&#x')) return String.fromCharCode(parseInt(match.slice(2), 16));

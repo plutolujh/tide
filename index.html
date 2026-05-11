@@ -256,8 +256,22 @@
 
     function escapeHtml(text) {
       if (!text) return '';
+      // First decode HTML entities, then safely encode for HTML display
+      const decoded = text.replace(/&(#\d+|#x[0-9a-fA-F]+|[a-zA-Z]+);/g, (match) => {
+        const entities = {
+          '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"',
+          '&#39;': "'", '&apos;': "'", '&#8217;': "'", '&#8212;': '—',
+          '&#8220;': '"', '&#8221;': '"', '&#8230;': '…', '&nbsp;': ' ',
+          '&ndash;': '–', '&mdash;': '—', '&lsquo;': ''', '&rsquo;': ''',
+          '&ldquo;': '"', '&rdquo;': '"', '&hellip;': '…'
+        };
+        if (entities[match]) return entities[match];
+        if (match.startsWith('&#x')) return String.fromCharCode(parseInt(match.slice(2), 16));
+        if (match.startsWith('&#')) return String.fromCharCode(parseInt(match.slice(2), 10));
+        return match;
+      });
       const div = document.createElement('div');
-      div.textContent = text;
+      div.textContent = decoded;
       return div.innerHTML;
     }
 
