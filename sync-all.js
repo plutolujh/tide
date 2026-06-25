@@ -295,14 +295,17 @@ async function upsertBlogPost(story, {
   titleEn, titleZh, contentEn, contentZh,
   titleZhMinimax, titleZhDoubao, titleTranslationScore, titleWinner,
   contentZhMinimax, contentZhDoubao, contentTranslationScore, contentWinner,
-  source, categoryId
+  source, categoryId,
+  usingFallback = false
 }) {
-  if (!contentEn || contentEn.length < 200) {
-    log(`  [SKIP] content_en too short (${contentEn?.length || 0}), need 300+`);
+  const minContentLen = usingFallback ? 80 : 200;
+  if (!contentEn || contentEn.length < minContentLen) {
+    log(`  [SKIP] content_en too short (${contentEn?.length || 0}), need ${minContentLen}+`);
     return;
   }
-  if (!contentZh || contentZh.length < 200) {
-    log(`  [SKIP] content_zh too short (${contentZh?.length || 0}), need 300+`);
+  const minZhLen = usingFallback ? 50 : 200;
+  if (!contentZh || contentZh.length < minZhLen) {
+    log(`  [SKIP] content_zh too short (${contentZh?.length || 0}), need ${minZhLen}+`);
     return;
   }
   if (!titleZh || titleZh === 'null' || titleZh === 'undefined') {
@@ -411,22 +414,36 @@ async function processStory(story, source, { summarizer, translator, minimaxTran
     return;
   }
 
-  // Fetch article text
-  const articleText = await fetchArticleText(story.url);
+  // Fetch article text, fallback to RSS description if unavailable
+  let articleText = await fetchArticleText(story.url);
+  let usingFallback = false;
   if (!articleText) {
-    log(`  No article text, skipping`);
-    return;
+    if (story.desc && story.desc.length > 50) {
+      articleText = story.desc;
+      usingFallback = true;
+      log(`  [FALLBACK] Using RSS description (${articleText.length} chars)`);
+    } else {
+      log(`  No article text, skipping`);
+      return;
+    }
+  } else {
+    log(`  Article fetched (${articleText.length} chars), summarizing...`);
   }
-
-  log(`  Article fetched (${articleText.length} chars), summarizing...`);
 
   // Step 1: Summarize article
   let contentEn;
   try {
-    contentEn = await summarizer.complete(
-      `Write a detailed English summary, at least 300 characters, plain prose:\n\n${articleText.substring(0, 3000)}`,
-      'You are a tech writer. Write clear, detailed summaries.'
-    );
+    if (usingFallback) {
+      contentEn = await summarizer.complete(
+        `Write the longest and most detailed English summary possible from this short description. Try to expand on every point mentioned:\n\n${articleText.substring(0, 1500)}`,
+        'You are a tech writer. Write the longest, most detailed summary possible. Do not abbreviate or simplify.'
+      );
+    } else {
+      contentEn = await summarizer.complete(
+        `Write a detailed English summary, at least 300 characters, plain prose:\n\n${articleText.substring(0, 3000)}`,
+        'You are a tech writer. Write clear, detailed summaries.'
+      );
+    }
   } catch (err) {
     log(`  [ERROR] Summarization failed: ${err.message}`);
     return;
@@ -444,8 +461,8 @@ async function processStory(story, source, { summarizer, translator, minimaxTran
     .replace(/^- {1,3}/gm, '').replace(/^[\s]*[-*_]{3,}\s*$/gm, '')
     .replace(/\n{3,}/g, '\n\n').trim();
 
-  if (cleanedContentEn.length < 200) {
-    log(`  [SKIP] Summary too short (${cleanedContentEn.length}), need 300+`);
+  if (cleanedContentEn.length < (usingFallback ? 80 : 200)) {
+    log(`  [SKIP] Summary too short (${cleanedContentEn.length}), need ${usingFallback ? 80 : 200}+`);
     return;
   }
 
@@ -564,7 +581,8 @@ CONTENT_SCORE: <0-100> | CONTENT_WINNER: <minimax|doubao>`,
     contentTranslationScore: TRANSLATOR_PROVIDER === 'both' ? contentScore : null,
     contentWinner: TRANSLATOR_PROVIDER === 'both' ? contentWinner : TRANSLATOR_PROVIDER,
     source,
-    categoryId: cfg?.category_id
+    categoryId: cfg?.category_id,
+    usingFallback
   });
 
   await new Promise(r => setTimeout(r, 500));
