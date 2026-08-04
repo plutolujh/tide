@@ -23,7 +23,10 @@
       --font-mono: 'Courier Prime', 'Courier New', monospace;
       --transition-fast: 0.15s ease;
       --transition-slow: 0.4s ease;
+      --font-size-base: 1;
     }
+    [data-font-size="large"] { --font-size-base: 1.15; }
+    [data-font-size="xlarge"] { --font-size-base: 1.3; }
     [data-theme="light"] {
       --bg-primary: #f5f0e8;
       --bg-secondary: #ebe5db;
@@ -71,8 +74,8 @@
     .lang-toggle button:hover, .source-toggle button:hover { color: var(--text-primary); background: var(--bg-secondary); }
     .lang-toggle button.active, .source-toggle button.active { background: var(--text-primary); color: var(--bg-primary); }
     .lang-toggle button + button, .source-toggle button + button { border-left: 1px solid var(--border); }
-    .theme-toggle { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.05em; color: var(--text-tertiary); cursor: pointer; padding: 6px 12px; border: 1px solid var(--border); border-radius: 4px; background: transparent; transition: all var(--transition-fast); }
-    .theme-toggle:hover { color: var(--text-primary); border-color: var(--text-tertiary); }
+    .theme-toggle, .font-size-toggle { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.05em; color: var(--text-tertiary); cursor: pointer; padding: 6px 12px; border: 1px solid var(--border); border-radius: 4px; background: transparent; transition: all var(--transition-fast); }
+    .theme-toggle:hover, .font-size-toggle:hover { color: var(--text-primary); border-color: var(--text-tertiary); }
     .posts-list { list-style: none; }
     .post-item { border-bottom: 1px solid var(--border); }
     .post-link { display: block; padding: 40px 0; cursor: pointer; transition: padding-left var(--transition-fast); }
@@ -82,7 +85,7 @@
     .post-item-meta { font-family: var(--font-mono); font-size: 10px; color: var(--text-tertiary); display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 10px; }
     .post-item-meta span { display: flex; align-items: center; gap: 5px; }
     .post-item-meta .dot { width: 3px; height: 3px; background: var(--border-light); border-radius: 50%; }
-    .post-item-excerpt { font-size: 14px; color: var(--text-secondary); line-height: 1.7; font-style: italic; display: -webkit-box; -webkit-line-clamp: 8; -webkit-box-orient: vertical; overflow: hidden; white-space: pre-line; }
+    .post-item-excerpt { font-size: calc(14px * var(--font-size-base)); color: var(--text-secondary); line-height: 1.7; font-style: italic; display: -webkit-box; -webkit-line-clamp: 8; -webkit-box-orient: vertical; overflow: hidden; white-space: pre-line; }
     .post-detail { animation: fadeIn 0.5s ease; }
     .back-link { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 10px; color: var(--text-tertiary); margin-bottom: 56px; cursor: pointer; transition: color var(--transition-fast); letter-spacing: 0.05em; }
     .back-link:hover { color: var(--accent); }
@@ -93,7 +96,7 @@
     .post-title { font-size: clamp(28px, 5vw, 44px); font-weight: 400; line-height: 1.15; letter-spacing: -0.02em; margin-bottom: 24px; }
     .post-meta { font-family: var(--font-mono); font-size: 10px; color: var(--text-tertiary); display: flex; gap: 16px; flex-wrap: wrap; padding-bottom: 32px; border-bottom: 1px solid var(--border); margin-bottom: 40px; }
     .post-meta span { display: flex; align-items: center; gap: 6px; }
-    .post-body { font-size: 18px; line-height: 1.85; color: var(--text-secondary); }
+    .post-body { font-size: calc(18px * var(--font-size-base)); line-height: 1.85; color: var(--text-secondary); }
     .post-body p { margin-bottom: 28px; }
     .post-body p:last-child { margin-bottom: 0; }
     .content-divider { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
@@ -137,6 +140,7 @@
     let titleLang = localStorage.getItem('titleLang') || 'zh';
     let contentLang = localStorage.getItem('contentLang') || 'zh';
     let currentTheme = localStorage.getItem('theme') || 'dark';
+    let fontSize = localStorage.getItem('fontSize') || 'normal';
     let groupFilter = localStorage.getItem('groupFilter') || 'all';
     let categories = [];
     let displayedPosts = [];
@@ -237,6 +241,22 @@
       document.getElementById('theme-label').textContent = currentTheme === 'dark' ? 'Light Mode' : 'Dark Mode';
     }
     applyTheme();
+
+    function applyFontSize() {
+      document.documentElement.setAttribute('data-font-size', fontSize);
+      const labels = { normal: '正常', large: '大', xlarge: '特大' };
+      const lbl = labels[fontSize] || '正常';
+      const controlsBtn = document.querySelector('.controls .font-size-toggle');
+      if (controlsBtn) controlsBtn.textContent = lbl;
+    }
+
+    function cycleFontSize() {
+      const sizes = ['normal', 'large', 'xlarge'];
+      const idx = sizes.indexOf(fontSize);
+      fontSize = sizes[(idx + 1) % sizes.length];
+      localStorage.setItem('fontSize', fontSize);
+      applyFontSize();
+    }
 
     function toggleTheme() {
       currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
@@ -398,10 +418,12 @@
 
     function renderPosts(isLoadingMoreFlag) {
       if (displayedPosts.length === 0) {
-        app.innerHTML = '<div class="site-header"><div class="site-meta">潮汐 Tides</div><h1 class="site-title">潮汐 <span>·</span> Tides</h1><p class="site-tagline">Stories &amp; Ideas · 故事与思想</p></div><div class="controls"><div class="toggles-row">' + groupToggleHtml(groupFilter, categories) + langToggleHtml(titleLang, 'setTitleLang') + '</div><button class="theme-toggle" onclick="toggleTheme()">Light Mode</button><button class="theme-toggle" onclick="triggerSync()" ' + (isSyncing ? 'disabled' : '') + ' style="margin-left:8px;">' + (isSyncing ? 'Syncing...' : 'Sync ↻') + '</button></div><div style="text-align:center;padding:80px 0;color:var(--text-tertiary);font-family:var(--font-mono);font-size:11px;">No posts yet</div>';
+        const fontSizeLabels = { normal: '正常', large: '大', xlarge: '特大' };
+        app.innerHTML = '<div class="site-header"><div class="site-meta">潮汐 Tides</div><h1 class="site-title">潮汐 <span>·</span> Tides</h1><p class="site-tagline">Stories &amp; Ideas · 故事与思想</p></div><div class="controls"><div class="toggles-row">' + groupToggleHtml(groupFilter, categories) + langToggleHtml(titleLang, 'setTitleLang') + '</div><div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="font-size-toggle" onclick="cycleFontSize()">' + (fontSizeLabels[fontSize] || '正常') + '</button><button class="theme-toggle" onclick="toggleTheme()">Light Mode</button><button class="theme-toggle" onclick="triggerSync()" ' + (isSyncing ? 'disabled' : '') + '>' + (isSyncing ? 'Syncing...' : 'Sync ↻') + '</button></div></div><div style="text-align:center;padding:80px 0;color:var(--text-tertiary);font-family:var(--font-mono);font-size:11px;">No posts yet</div>';
         return;
       }
-      app.innerHTML = '<div class="site-header"><div class="site-meta">潮汐 Tides</div><h1 class="site-title">潮汐 <span>·</span> Tides</h1><p class="site-tagline">Stories &amp; Ideas · 故事与思想</p></div><div class="controls"><div class="toggles-row">' + groupToggleHtml(groupFilter, categories) + langToggleHtml(titleLang, 'setTitleLang') + '</div><button class="theme-toggle" onclick="toggleTheme()">Light Mode</button><button class="theme-toggle" onclick="triggerSync()" ' + (isSyncing ? 'disabled' : '') + ' style="margin-left:8px;">' + (isSyncing ? 'Syncing...' : 'Sync ↻') + '</button></div><ul class="posts-list">' + displayedPosts.map((post, i) => '<li class="post-item" style="animation-delay:' + (i * 0.07) + 's"><div class="post-link" onclick="goTo(\'/post/' + post.id + '\')"><div class="post-item-title">' + getDisplayTitle(post) + '</div><div class="post-item-meta">' + (post.categories ? '<span>' + escapeHtml(post.categories.title) + '</span>' : '') + (post.source ? '<span>' + escapeHtml(post.source.toUpperCase()) + '</span>' : '') + '<span class="dot"></span><span>' + formatDate(post.created_at) + '</span></div>' + (post.content_zh || post.content_en ? '<div class="post-item-excerpt">' + escapeHtml(getDisplayExcerpt(post).substring(0, 350)) + '</div>' : '') + '</div></li>').join('') + '</ul>' + (hasMore ? '<button class="more-btn' + (isLoadingMoreFlag ? ' loading' : '') + '" onclick="loadMore()" ' + (isLoadingMoreFlag ? 'disabled' : '') + '>' + (isLoadingMoreFlag ? 'Loading' : 'More') + '</button>' : '') + '</div>';
+      const fontSizeLabels = { normal: '正常', large: '大', xlarge: '特大' };
+      app.innerHTML = '<div class="site-header"><div class="site-meta">潮汐 Tides</div><h1 class="site-title">潮汐 <span>·</span> Tides</h1><p class="site-tagline">Stories &amp; Ideas · 故事与思想</p></div><div class="controls"><div class="toggles-row">' + groupToggleHtml(groupFilter, categories) + langToggleHtml(titleLang, 'setTitleLang') + '</div><div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="font-size-toggle" onclick="cycleFontSize()">' + (fontSizeLabels[fontSize] || '正常') + '</button><button class="theme-toggle" onclick="toggleTheme()">Light Mode</button><button class="theme-toggle" onclick="triggerSync()" ' + (isSyncing ? 'disabled' : '') + '>' + (isSyncing ? 'Syncing...' : 'Sync ↻') + '</button></div></div><ul class="posts-list">' + displayedPosts.map((post, i) => '<li class="post-item" style="animation-delay:' + (i * 0.07) + 's"><div class="post-link" onclick="goTo(\'/post/' + post.id + '\')"><div class="post-item-title">' + getDisplayTitle(post) + '</div><div class="post-item-meta">' + (post.categories ? '<span>' + escapeHtml(post.categories.title) + '</span>' : '') + (post.source ? '<span>' + escapeHtml(post.source.toUpperCase()) + '</span>' : '') + '<span class="dot"></span><span>' + formatDate(post.created_at) + '</span></div>' + (post.content_zh || post.content_en ? '<div class="post-item-excerpt">' + escapeHtml(getDisplayExcerpt(post).substring(0, 350)) + '</div>' : '') + '</div></li>').join('') + '</ul>' + (hasMore ? '<button class="more-btn' + (isLoadingMoreFlag ? ' loading' : '') + '" onclick="loadMore()" ' + (isLoadingMoreFlag ? 'disabled' : '') + '>' + (isLoadingMoreFlag ? 'Loading' : 'More') + '</button>' : '') + '</div>';
     }
 
     async function loadMore() {
@@ -490,6 +512,7 @@
     }
 
     window.addEventListener('hashchange', handleRoute);
+    applyFontSize();
     handleRoute();
   </script>
 </body>
