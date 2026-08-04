@@ -81,6 +81,7 @@
     .post-link { display: block; padding: 40px 0; cursor: pointer; transition: padding-left var(--transition-fast); }
     .post-link:hover { padding-left: 16px; }
     .post-link:hover .post-item-title { color: var(--accent); }
+    .post-item-title.is-read { opacity: 0.45; }
     .post-item-title { font-size: clamp(20px, 3.5vw, 26px); font-weight: 400; line-height: 1.25; letter-spacing: -0.01em; margin-bottom: 10px; transition: color var(--transition-fast); }
     .post-item-meta { font-family: var(--font-mono); font-size: 10px; color: var(--text-tertiary); display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 10px; }
     .post-item-meta span { display: flex; align-items: center; gap: 5px; }
@@ -122,8 +123,11 @@
   <div class="container">
     <div id="app"><div class="loading">Loading...</div></div>
     <footer>
-      <span>潮汐 Tides · Powered by Supabase</span>
-      <span id="theme-label">Dark Mode</span>
+      <div style="display:flex;flex-direction:column;gap:4px;margin-top:24px;padding-top:24px;border-top:1px solid var(--border);">
+        <span style="font-size:10px;color:var(--text-tertiary);">潮汐 Tides · Powered by Supabase</span>
+        <span style="font-size:9px;color:var(--text-tertiary);">v2026.08 · 修复返回列表重置 · 字体大小切换 · 已读状态</span>
+        <span id="theme-label" style="font-size:9px;color:var(--text-tertiary);">Dark Mode</span>
+      </div>
     </footer>
   </div>
   <script>
@@ -148,6 +152,14 @@
     let hasMore = false;
     let isLoadingMore = false;
     let isSyncing = false;
+    let readPostIds = JSON.parse(localStorage.getItem('tides_read') || '[]');
+
+    function markAsRead(postId) {
+      if (!readPostIds.includes(postId)) {
+        readPostIds.push(postId);
+        localStorage.setItem('tides_read', JSON.stringify(readPostIds));
+      }
+    }
 
     // Persist list state so returning from a post restores position
     function saveListState() {
@@ -400,6 +412,7 @@
 
     async function renderPost(id) {
       app.innerHTML = '<div class="loading">Loading...</div>';
+      markAsRead(id);
       try {
         const post = await fetchPost(id);
         if (!post) {
@@ -423,7 +436,7 @@
         return;
       }
       const fontSizeLabels = { normal: '正常', large: '大', xlarge: '特大' };
-      app.innerHTML = '<div class="site-header"><div class="site-meta">潮汐 Tides</div><h1 class="site-title">潮汐 <span>·</span> Tides</h1><p class="site-tagline">Stories &amp; Ideas · 故事与思想</p></div><div class="controls"><div class="toggles-row">' + groupToggleHtml(groupFilter, categories) + langToggleHtml(titleLang, 'setTitleLang') + '</div><div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="font-size-toggle" onclick="cycleFontSize()">' + (fontSizeLabels[fontSize] || '正常') + '</button><button class="theme-toggle" onclick="toggleTheme()">Light Mode</button><button class="theme-toggle" onclick="triggerSync()" ' + (isSyncing ? 'disabled' : '') + '>' + (isSyncing ? 'Syncing...' : 'Sync ↻') + '</button></div></div><ul class="posts-list">' + displayedPosts.map((post, i) => '<li class="post-item" style="animation-delay:' + (i * 0.07) + 's"><div class="post-link" onclick="goTo(\'/post/' + post.id + '\')"><div class="post-item-title">' + getDisplayTitle(post) + '</div><div class="post-item-meta">' + (post.categories ? '<span>' + escapeHtml(post.categories.title) + '</span>' : '') + (post.source ? '<span>' + escapeHtml(post.source.toUpperCase()) + '</span>' : '') + '<span class="dot"></span><span>' + formatDate(post.created_at) + '</span></div>' + (post.content_zh || post.content_en ? '<div class="post-item-excerpt">' + escapeHtml(getDisplayExcerpt(post).substring(0, 350)) + '</div>' : '') + '</div></li>').join('') + '</ul>' + (hasMore ? '<button class="more-btn' + (isLoadingMoreFlag ? ' loading' : '') + '" onclick="loadMore()" ' + (isLoadingMoreFlag ? 'disabled' : '') + '>' + (isLoadingMoreFlag ? 'Loading' : 'More') + '</button>' : '') + '</div>';
+      app.innerHTML = '<div class="site-header"><div class="site-meta">潮汐 Tides</div><h1 class="site-title">潮汐 <span>·</span> Tides</h1><p class="site-tagline">Stories &amp; Ideas · 故事与思想</p></div><div class="controls"><div class="toggles-row">' + groupToggleHtml(groupFilter, categories) + langToggleHtml(titleLang, 'setTitleLang') + '</div><div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="font-size-toggle" onclick="cycleFontSize()">' + (fontSizeLabels[fontSize] || '正常') + '</button><button class="theme-toggle" onclick="toggleTheme()">Light Mode</button><button class="theme-toggle" onclick="triggerSync()" ' + (isSyncing ? 'disabled' : '') + '>' + (isSyncing ? 'Syncing...' : 'Sync ↻') + '</button></div></div><ul class="posts-list">' + displayedPosts.map((post, i) => '<li class="post-item" style="animation-delay:' + (i * 0.07) + 's"><div class="post-link" onclick="goTo(\'/post/' + post.id + '\')"><div class="post-item-title' + (readPostIds.includes(post.id) ? ' is-read' : '') + '">' + getDisplayTitle(post) + '</div><div class="post-item-meta">' + (post.categories ? '<span>' + escapeHtml(post.categories.title) + '</span>' : '') + (post.source ? '<span>' + escapeHtml(post.source.toUpperCase()) + '</span>' : '') + '<span class="dot"></span><span>' + formatDate(post.created_at) + '</span></div>' + (post.content_zh || post.content_en ? '<div class="post-item-excerpt">' + escapeHtml(getDisplayExcerpt(post).substring(0, 350)) + '</div>' : '') + '</div></li>').join('') + '</ul>' + (hasMore ? '<button class="more-btn' + (isLoadingMoreFlag ? ' loading' : '') + '" onclick="loadMore()" ' + (isLoadingMoreFlag ? 'disabled' : '') + '>' + (isLoadingMoreFlag ? 'Loading' : 'More') + '</button>' : '') + '</div>';
     }
 
     async function loadMore() {
