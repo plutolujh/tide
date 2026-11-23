@@ -1,5 +1,7 @@
 *.log
 .playwright-mcp/*
 .env
-
-key/posts.json
+posts.json
+nohup.out
+.DS_Store
+page-screenshot.png
