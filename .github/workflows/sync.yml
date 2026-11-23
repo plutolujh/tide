@@ -1,0 +1,85 @@
+name: Sync & Publish
+
+on:
+  schedule:
+    # Every 3 hours, offset from the old VPS cron (which ran at :00)
+    - cron: '17 */3 * * *'
+  workflow_dispatch:
+    inputs:
+      count:
+        description: 'Posts per source'
+        required: false
+        default: '5'
+
+# Never let two syncs race on the same posts.json
+concurrency:
+  group: tide-sync-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Sync & publish to VPS
+    runs-on: ubuntu-latest
+    # tideenv holds the AI keys. The MiniMax key lives ONLY here --
+    # the copy on the VPS is revoked (401), so this workflow is the only
+    # place a real summary/translation can be produced.
+    environment: tideenv
+
+    env:
+      VPS_HOST: ${{ vars.VPS_HOST }}
+      VPS_USER: ${{ vars.VPS_USER }}
+      VPS_DEPLOY_PATH: ${{ vars.VPS_DEPLOY_PATH }}
+      DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+      SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+      MINIMAX_API_KEY: ${{ secrets.MINIMAX_API_KEY }}
+      DOUBAO_API_KEY: ${{ secrets.DOUBAO_API_KEY }}
+      SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # sync-all.js and the providers read .env from disk, not process.env
+      - name: Write .env
+        run: |
+          {
+            printf 'SUPABASE_URL=%s\n' "$SUPABASE_URL"
+            printf 'SUPABASE_KEY=%s\n' "$SUPABASE_KEY"
+            printf 'MINIMAX_API_KEY=%s\n' "$MINIMAX_API_KEY"
+            printf 'DOUBAO_API_KEY=%s\n' "$DOUBAO_API_KEY"
+            printf 'SYNC_TOKEN=%s\n' "$SYNC_TOKEN"
+          } > .env
+          echo "wrote .env ($(wc -c < .env) bytes)"
+
+      - name: Run sync
+        run: node sync-all.js ${{ github.event.inputs.count || '5' }}
+
+      - name: Prepare SSH
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      # posts.json is the only generated artifact nginx serves.
+      # Source code stays authoritative on the VPS and is mirrored up via git.
+      - name: Deploy posts.json to VPS
+        run: |
+          rsync -az --checksum \
+            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes -o UserKnownHostsFile=~/.ssh/known_hosts" \
+            posts.json "$VPS_USER@$VPS_HOST:$VPS_DEPLOY_PATH/posts.json"
+
+      - name: Upload posts.json artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: posts.json
+          path: posts.json
+          retention-days: 7

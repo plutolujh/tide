@@ -1,5 +1,5 @@
 {
-  "name": "refine-blog-frontend",
+  "name": "tide",
   "version": "1.0.0",
   "type": "module",
   "description": "HN Top Stories → Supabase bilingual blog",

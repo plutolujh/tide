@@ -9,7 +9,7 @@
 - **VPS IP**: `23.94.99.235`
 - **域名**: `hao123456.cn`
 - **子域名**: `blog.hao123456.cn`
-- **网站目录**: `/var/www/refine-blog-frontend`
+- **网站目录**: `/var/www/tide`
 
 ## Nginx 配置文件
 
@@ -18,7 +18,7 @@
 ```nginx
 server {
     server_name hao123456.cn blog.hao123456.cn;
-    root /var/www/refine-blog-frontend;
+    root /var/www/tide;
     index index.html;
 
     location / {

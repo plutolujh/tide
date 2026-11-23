@@ -38,13 +38,12 @@
 - **网站**: https://hao123456.cn
 - **博客**: https://blog.hao123456.cn
 - **GitHub**: https://github.com/plutolujh/tide
-- **Gitee**: https://gitee.com/plutos-echo/refine-blog-frontend
 
 ### VPS 配置
 - **系统**: Ubuntu
 - **Web服务器**: Nginx (端口 80/443)
 - **证书**: Let's Encrypt (Certbot)
-- **项目目录**: /var/www/refine-blog-frontend
+- **项目目录**: /var/www/tide
 - **Cron**: 每3小时执行 sync-all.js 并推送到 GitHub
 
 ### 最近修复
@@ -88,4 +87,4 @@
 - **网站**: https://hao123456.cn
 - **博客**: https://blog.hao123456.cn
 - **GitHub**: https://github.com/plutolujh/tide
-- **Gitee**: https://gitee.com/plutos-echo/refine-blog-frontend
+

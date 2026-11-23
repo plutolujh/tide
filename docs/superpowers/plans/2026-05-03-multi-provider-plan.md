@@ -13,7 +13,7 @@
 ## File Structure
 
 ```
-refine-blog-frontend/
+tide/
 ├── providers/
 │   ├── index.js           # 工厂函数 createProvider(type)
 │   ├── minimax.js         # MiniMax Provider 实现
@@ -484,7 +484,7 @@ JUDGE_PROVIDER=deepseek
 
 MINIMAX_API_KEY=你的MiniMax_key
 DOUBAO_API_KEY=你的豆包_key
-DEEPSEEK_API_KEY=sk-edaaa522f8374ebcb3e8312bcee81294
+DEEPSEEK_API_KEY=你的DeepSeek_key
 ```
 
 - [ ] **Step 1: 更新 .env 配置**

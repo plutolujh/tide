@@ -79,7 +79,7 @@ JUDGE_PROVIDER=deepseek
 # API Keys
 MINIMAX_API_KEY=你的MiniMax_key
 DOUBAO_API_KEY=你的豆包_key
-DEEPSEEK_API_KEY=sk-edaaa522f8374ebcb3e8312bcee81294
+DEEPSEEK_API_KEY=你的DeepSeek_key
 ```
 
 ---

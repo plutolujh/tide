@@ -19,7 +19,7 @@ A bilingual (English/Chinese) blog that automatically syncs Hacker News top stor
 ## 项目结构
 
 ```
-refine-blog-frontend/
+tide/
 ├── sync-hn.js          # HN 文章同步脚本（Node.js）
 ├── index.html           # 前端页面（纯静态）
 ├── .env                 # 环境变量（API keys）
