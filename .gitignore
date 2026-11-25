@@ -5,3 +5,4 @@ posts.json
 nohup.out
 .DS_Store
 page-screenshot.png
+node_modules/

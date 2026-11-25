@@ -11,5 +11,8 @@
     "sync-tc": "node sync-all.js 5 --source=tc",
     "sync-verge": "node sync-all.js 5 --source=verge",
     "sync-ars": "node sync-all.js 5 --source=ars"
+  },
+  "dependencies": {
+    "express": "^5.3.0"
   }
 }

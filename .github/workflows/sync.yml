@@ -34,7 +34,6 @@ jobs:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
       MINIMAX_API_KEY: ${{ secrets.MINIMAX_API_KEY }}
-      DOUBAO_API_KEY: ${{ secrets.DOUBAO_API_KEY }}
       SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
 
     steps:
@@ -53,7 +52,6 @@ jobs:
             printf 'SUPABASE_URL=%s\n' "$SUPABASE_URL"
             printf 'SUPABASE_KEY=%s\n' "$SUPABASE_KEY"
             printf 'MINIMAX_API_KEY=%s\n' "$MINIMAX_API_KEY"
-            printf 'DOUBAO_API_KEY=%s\n' "$DOUBAO_API_KEY"
             printf 'SYNC_TOKEN=%s\n' "$SYNC_TOKEN"
           } > .env
           echo "wrote .env ($(wc -c < .env) bytes)"

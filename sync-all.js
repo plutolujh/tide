@@ -5,10 +5,10 @@
  *
  * Usage: node sync-all.js [count] [--loop=hours] [--source=hn|tc|verge|ars|all]
  *
- * Providers:
- * - SUMMARIZER_PROVIDER: minimax/doubao for summarizing articles
- * - TRANSLATOR_PROVIDER: minimax/doubao/both for translation
- * - JUDGE_PROVIDER: deepseek to score translations and determine winners
+ * Provider:
+ * - minimax for both summarizing and translation.
+ *   (doubao / deepseek removed on 2026-11-25 -- the `both` race-and-judge
+ *    mode was never enabled; minimax is used exclusively now.)
  */
 
 import { createProvider } from './providers/index.js';
@@ -75,10 +75,9 @@ readFileSync('.env', 'utf8').split('\n').forEach(line => {
 const SUPABASE_URL = env.SUPABASE_URL;
 const SUPABASE_KEY = env.SUPABASE_KEY;
 
-// Provider configuration
+// Provider configuration (minimax only)
 const SUMMARIZER_PROVIDER = env.SUMMARIZER_PROVIDER || 'minimax';
 const TRANSLATOR_PROVIDER = env.TRANSLATOR_PROVIDER || 'minimax';
-const JUDGE_PROVIDER = env.JUDGE_PROVIDER || 'deepseek';
 
 const JINA_API_URL = 'https://r.jina.ai/';
 
@@ -277,24 +276,11 @@ async function fetchArticleText(url) {
   }
 }
 
-// ---------- Parse judge result ----------
-function parseJudgeResult(result) {
-  const titleMatch = result.match(/TITLE_SCORE:\s*(\d+)\s*\|\s*TITLE_WINNER:\s*(minimax|doubao)/i);
-  const contentMatch = result.match(/CONTENT_SCORE:\s*(\d+)\s*\|\s*CONTENT_WINNER:\s*(minimax|doubao)/i);
-
-  return {
-    titleScore: titleMatch ? parseInt(titleMatch[1]) : null,
-    titleWinner: titleMatch ? titleMatch[2].toLowerCase() : null,
-    contentScore: contentMatch ? parseInt(contentMatch[1]) : null,
-    contentWinner: contentMatch ? contentMatch[2].toLowerCase() : null
-  };
-}
-
 // ---------- Upsert ----------
 async function upsertBlogPost(story, {
   titleEn, titleZh, contentEn, contentZh,
-  titleZhMinimax, titleZhDoubao, titleTranslationScore, titleWinner,
-  contentZhMinimax, contentZhDoubao, contentTranslationScore, contentWinner,
+  titleZhMinimax, titleZhDoubao = null, titleTranslationScore = null, titleWinner = 'minimax',
+  contentZhMinimax, contentZhDoubao = null, contentTranslationScore = null, contentWinner = 'minimax',
   source, categoryId,
   usingFallback = false
 }) {
@@ -365,7 +351,7 @@ function isChineseText(text) {
 }
 
 // ---------- Process single story ----------
-async function processStory(story, source, { summarizer, translator, minimaxTranslator, doubaoTranslator, judge }) {
+async function processStory(story, source, { summarizer, translator, minimaxTranslator }) {
   const cfg = SOURCES[source];
 
   // Quick URL check before any expensive operations
@@ -386,7 +372,7 @@ async function processStory(story, source, { summarizer, translator, minimaxTran
   if (cfg.parseFn === 'scrape' && isChineseText(story.title)) {
     log(`  Detected Chinese source, translating title to English...`);
     try {
-      // Use minimaxTranslator for Chinese->English since translator may be null when TRANSLATOR_PROVIDER=both
+      // Use minimaxTranslator for Chinese->English translation
       titleEn = await minimaxTranslator.complete(
         `Translate to English: ${story.title}`,
         'You are a professional translator. Output only the English translation.'
@@ -468,101 +454,26 @@ async function processStory(story, source, { summarizer, translator, minimaxTran
 
   log(`  EN: ${cleanedContentEn.substring(0, 60)}...`);
 
-  // Step 2: Translate with both providers
-  let titleZhMinimax, titleZhDoubao, contentZhMinimax, contentZhDoubao;
+  // Step 2: Translate (minimax only)
   let titleZh, contentZh;
-  let titleScore = 80, titleWinner = TRANSLATOR_PROVIDER, contentScore = 80, contentWinner = TRANSLATOR_PROVIDER;
+  let titleZhMinimax, contentZhMinimax;
 
-  if (TRANSLATOR_PROVIDER === 'both') {
-    log(`  Translating title and content with both providers in parallel...`);
-
-    try {
-      const [zhMinimaxResult, zhDoubaoResult] = await Promise.all([
-        minimaxTranslator.complete(
-          `Translate to Chinese: ${story.title}`,
-          'You are a professional translator. Output only the Chinese translation.'
-        ),
-        doubaoTranslator.complete(
-          `Translate to Chinese: ${story.title}`,
-          'You are a professional translator. Output only the Chinese translation.'
-        )
-      ]);
-      titleZhMinimax = zhMinimaxResult;
-      titleZhDoubao = zhDoubaoResult;
-
-      const [contentZhMinimaxResult, contentZhDoubaoResult] = await Promise.all([
-        minimaxTranslator.complete(
-          `Translate to Chinese. Only output Chinese, nothing else:\n${cleanedContentEn.substring(0, 1500)}`,
-          'You are a professional translator.'
-        ),
-        doubaoTranslator.complete(
-          `Translate to Chinese. Only output Chinese, nothing else:\n${cleanedContentEn.substring(0, 1500)}`,
-          'You are a professional translator.'
-        )
-      ]);
-      contentZhMinimax = contentZhMinimaxResult;
-      contentZhDoubao = contentZhDoubaoResult;
-    } catch (err) {
-      log(`  [ERROR] Translation failed: ${err.message}`);
-      return;
-    }
-
-    // Step 3: Judge which translation is better
-    titleScore = 80; titleWinner = 'minimax'; contentScore = 80; contentWinner = 'minimax';
-    log(`  Judging translations...`);
-    try {
-      const judgeResult = await judge.complete(
-        `Compare these two Chinese translations and decide which is better.
-
-ORIGINAL ENGLISH TITLE: ${story.title}
-TRANSLATION A (Minimax): ${titleZhMinimax || 'FAILED'}
-TRANSLATION B (Doubao): ${titleZhDoubao || 'FAILED'}
-
-ORIGINAL ENGLISH SUMMARY: ${cleanedContentEn.substring(0, 500)}
-TRANSLATION A (Minimax): ${contentZhMinimax ? contentZhMinimax.substring(0, 300) : 'FAILED'}
-TRANSLATION B (Doubao): ${contentZhDoubao ? contentZhDoubao.substring(0, 300) : 'FAILED'}
-
-Respond with:
-TITLE_SCORE: <0-100> | TITLE_WINNER: <minimax|doubao>
-CONTENT_SCORE: <0-100> | CONTENT_WINNER: <minimax|doubao>`,
-        'You are a translation quality judge. Score translations 0-100 and pick winners.'
-      );
-
-      const parsed = parseJudgeResult(judgeResult);
-      titleScore = parsed.titleScore || 80;
-      titleWinner = parsed.titleWinner || 'minimax';
-      contentScore = parsed.contentScore || 80;
-      contentWinner = parsed.contentWinner || 'minimax';
-      log(`  Title: ${titleWinner} won (score: ${titleScore})`);
-      log(`  Content: ${contentWinner} won (score: ${contentScore})`);
-
-      titleZh = titleWinner === 'doubao' ? titleZhDoubao : titleZhMinimax;
-      contentZh = contentWinner === 'doubao' ? contentZhDoubao : contentZhMinimax;
-    } catch (err) {
-      log(`  [ERROR] Judge failed: ${err.message}, using Minimax by default`);
-      titleZh = titleZhMinimax || titleZhDoubao || story.title;
-      contentZh = contentZhMinimax || contentZhDoubao || '';
-      titleScore = 80;
-      titleWinner = 'minimax';
-      contentScore = 80;
-      contentWinner = 'minimax';
-    }
-  } else {
-    // Single provider mode
-    try {
-      titleZh = await translator.complete(
-        `Translate to Chinese: ${story.title}`,
-        'You are a professional translator. Output only the Chinese translation.'
-      );
-      contentZh = await translator.complete(
-        `Translate to Chinese. Only output Chinese, nothing else:\n${cleanedContentEn.substring(0, 1500)}`,
-        'You are a professional translator.'
-      );
-    } catch (err) {
-      log(`  [ERROR] Translation failed: ${err.message}`);
-      return;
-    }
+  try {
+    titleZh = await translator.complete(
+      `Translate to Chinese: ${story.title}`,
+      "You are a professional translator. Output only the Chinese translation."
+    );
+    contentZh = await translator.complete(
+      `Translate to Chinese. Only output Chinese, nothing else:\n${cleanedContentEn.substring(0, 1500)}`,
+      "You are a professional translator."
+    );
+  } catch (err) {
+    log(`  [ERROR] Translation failed: ${err.message}`);
+    return;
   }
+
+  titleZhMinimax = titleZh;
+  contentZhMinimax = contentZh;
 
   if (!contentZh || contentZh.length < 50) {
     log(`  [SKIP] Translation too short or failed`);
@@ -574,10 +485,10 @@ CONTENT_SCORE: <0-100> | CONTENT_WINNER: <minimax|doubao>`,
     titleZh,
     contentEn: cleanedContentEn,
     contentZh,
-    titleZhMinimax, titleZhDoubao,
+    titleZhMinimax, titleZhDoubao: null,
     titleTranslationScore: TRANSLATOR_PROVIDER === 'both' ? titleScore : null,
     titleWinner: TRANSLATOR_PROVIDER === 'both' ? titleWinner : TRANSLATOR_PROVIDER,
-    contentZhMinimax, contentZhDoubao,
+    contentZhMinimax, contentZhDoubao: null,
     contentTranslationScore: TRANSLATOR_PROVIDER === 'both' ? contentScore : null,
     contentWinner: TRANSLATOR_PROVIDER === 'both' ? contentWinner : TRANSLATOR_PROVIDER,
     source,
@@ -597,15 +508,13 @@ async function main() {
   const sourceArg = args.find(a => a.startsWith('--source='))?.split('=')[1] || 'all';
   const intervalMs = loopHours > 0 ? loopHours * 60 * 60 * 1000 : 0;
 
-  log(`[PROVIDERS] summarizer=${SUMMARIZER_PROVIDER}, translator=${TRANSLATOR_PROVIDER}, judge=${JUDGE_PROVIDER}`);
+  log(`[PROVIDERS] summarizer=${SUMMARIZER_PROVIDER}, translator=${TRANSLATOR_PROVIDER}`);
 
-  let summarizer, translator, minimaxTranslator, doubaoTranslator, judge;
+  let summarizer, translator, minimaxTranslator;
   try {
     summarizer = await createProvider(SUMMARIZER_PROVIDER);
-    translator = TRANSLATOR_PROVIDER === 'both' ? null : await createProvider(TRANSLATOR_PROVIDER);
+    translator = await createProvider(TRANSLATOR_PROVIDER);
     minimaxTranslator = await createProvider('minimax');
-    doubaoTranslator = await createProvider('doubao');
-    judge = await createProvider(JUDGE_PROVIDER);
   } catch (err) {
     console.error(`[PROVIDER ERROR] Failed to initialize providers: ${err.message}`);
     process.exit(1);
@@ -643,7 +552,7 @@ async function main() {
 
       for (const story of stories) {
         log(`Processing: ${story.title}`);
-        await processStory(story, source, { summarizer, translator, minimaxTranslator, doubaoTranslator, judge });
+        await processStory(story, source, { summarizer, translator, minimaxTranslator });
       }
     }
 
