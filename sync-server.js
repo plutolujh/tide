@@ -83,6 +83,10 @@ app.get('/health', (req, res) => {
 // It was split into its own service on 2026-11-25 (see /var/www/analytics-api)
 // so that dumuqiao's dashboard does not depend on this process.
 
-app.listen(PORT, () => {
+// Bind to loopback only: nginx proxies to this service locally, and leaving
+// it on all interfaces exposed /health and /api/sync directly to the
+// internet, bypassing nginx. The standalone analytics-api service uses the
+// same 127.0.0.1 binding.
+app.listen(PORT, '127.0.0.1', () => {
   console.log(`Sync server listening on port ${PORT}`);
 });
